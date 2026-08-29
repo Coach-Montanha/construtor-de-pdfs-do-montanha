@@ -8,6 +8,7 @@ import { Switch } from "../ui/switch";
 import {
   Sparkles,
   Plus,
+  Minus,
   Trash2,
   Image as ImageIcon,
   Wand2,
@@ -16,7 +17,6 @@ import {
   CheckCircle2,
   Sliders,
   Maximize2,
-  ZoomIn,
 } from "lucide-react";
 import { generateAiImageUrl } from "../../lib/ai-service";
 
@@ -34,6 +34,19 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
       ...coverConfig,
       [field]: value,
     });
+  };
+
+  const handleSelectTextScale = (scale: number, presetId: TextScalePreset) => {
+    onChange({
+      ...coverConfig,
+      textScale: scale,
+      highlightsFontSize: presetId,
+    });
+  };
+
+  const handleAdjustScale = (delta: number) => {
+    const newScale = Math.min(160, Math.max(80, (coverConfig.textScale || 100) + delta));
+    updateField("textScale", newScale);
   };
 
   const handleAddHighlight = () => {
@@ -122,7 +135,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
     { id: "compact", label: "Compacto", scale: 90 },
     { id: "normal", label: "Padrão (100%)", scale: 100 },
     { id: "large", label: "Grande (115% - Recomendado)", scale: 115 },
-    { id: "extra-large", label: "Extra Grande (135% - Alta Legibilidade)", scale: 135 },
+    { id: "extra-large", label: "Extra Grande (135% - Máxima Legibilidade)", scale: 135 },
   ];
 
   const currentScale = coverConfig.textScale || 100;
@@ -136,40 +149,64 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
             <Type className="w-4 h-4 text-amber-500" />
             <span>Gerenciador de Tamanho & Legibilidade dos Textos da Capa</span>
           </h3>
-          <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black">
+          <span className="font-mono text-xs font-black px-2.5 py-1 rounded bg-amber-400 text-black border-2 border-black">
             ESCALA ATUAL: {currentScale}%
           </span>
         </div>
 
         {/* Quick Size Presets */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {textScalePresets.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              onClick={() => {
-                updateField("textScale", preset.scale);
-                updateField("highlightsFontSize", preset.id);
-              }}
-              className={`p-2.5 rounded-lg border-2 text-xs font-black transition-all text-center flex flex-col items-center gap-1 ${
-                currentScale === preset.scale
-                  ? "bg-amber-400 text-black border-black shadow-sm"
-                  : "theme-app-card-subtle border-slate-300 hover:border-black"
-              }`}
-            >
-              <span>{preset.label}</span>
-            </button>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {textScalePresets.map((preset) => {
+            const isSelected = currentScale === preset.scale;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => handleSelectTextScale(preset.scale, preset.id)}
+                className={`p-3 rounded-lg border-2 text-xs font-black transition-all text-center flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 ${
+                  isSelected
+                    ? "bg-amber-400 text-black border-black shadow-md ring-2 ring-amber-400"
+                    : "theme-app-card-subtle border-slate-300 hover:border-black hover:bg-amber-50"
+                }`}
+              >
+                <span>{preset.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Fine-Tuning Slider */}
-        <div className="space-y-2 pt-2 border-t border-slate-200">
-          <div className="flex justify-between text-xs font-bold">
-            <span className="flex items-center gap-1">
+        {/* Fine-Tuning Slider + Buttons */}
+        <div className="space-y-3 pt-2 border-t border-slate-200">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <span className="flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-amber-500" />
               Ajuste Fino de Escala de Todas as Fontes da Capa
             </span>
-            <span className="font-mono text-amber-600 font-black">{currentScale}%</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleAdjustScale(-5)}
+                disabled={currentScale <= 80}
+                className="px-2 py-0.5 rounded border-2 border-black font-mono font-black text-xs hover:bg-black/10 disabled:opacity-30 cursor-pointer flex items-center gap-0.5"
+                title="Diminuir 5%"
+              >
+                <Minus className="w-3 h-3" />
+                <span>5%</span>
+              </button>
+              <span className="font-mono text-amber-600 font-black text-sm w-12 text-center">
+                {currentScale}%
+              </span>
+              <button
+                type="button"
+                onClick={() => handleAdjustScale(5)}
+                disabled={currentScale >= 160}
+                className="px-2 py-0.5 rounded border-2 border-black font-mono font-black text-xs hover:bg-black/10 disabled:opacity-30 cursor-pointer flex items-center gap-0.5"
+                title="Aumentar 5%"
+              >
+                <Plus className="w-3 h-3" />
+                <span>5%</span>
+              </button>
+            </div>
           </div>
           <Slider
             value={[currentScale]}
@@ -177,7 +214,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
             min={80}
             max={160}
             step={5}
-            className="py-1"
+            className="py-1 cursor-pointer"
           />
         </div>
       </div>
@@ -196,7 +233,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
               <div
                 key={cs.id}
                 onClick={() => updateField("coverStyleVariant", cs.id)}
-                className={`theme-app-card-subtle cursor-pointer p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
+                className={`theme-app-card-subtle cursor-pointer p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between active:scale-95 ${
                   isSelected
                     ? "border-amber-500 ring-2 ring-amber-400 shadow-md"
                     : "border-slate-300 hover:border-slate-600"
