@@ -34,7 +34,7 @@ async function callGeminiApi(prompt: string, apiKey?: string, systemInstruction?
   };
 
   if (systemInstruction) {
-    requestBody.systemInstruction = {
+    requestBody["systemInstruction"] = {
       parts: [{ text: systemInstruction }],
     };
   }
@@ -288,8 +288,8 @@ export function getEditorialCuratedImage(category: string, index: number = 0): s
   };
 
   const key = category.toLowerCase().trim();
-  const list = categoryImages[key] || categoryImages.default;
-  return list[index % list.length];
+  const list = categoryImages[key] || categoryImages["default"] || [];
+  return list[index % list.length] ?? "";
 }
 
 /**
