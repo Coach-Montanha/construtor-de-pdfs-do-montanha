@@ -1,5 +1,6 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
+import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
 import { Sparkles, QrCode, Shield, Zap, Crosshair } from "lucide-react";
 
 interface CoverPageProps {
@@ -18,6 +19,9 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   const overlayOpacity = coverConfig.backgroundOverlayOpacity / 100;
   const isPeakPerformance = coverConfig.coverStyleVariant === "peak-performance";
   const isTactical = coverConfig.coverStyleVariant === "tactical-stencil";
+
+  const headlineFontClass = getHeadlineFontClass(project.fontConfig?.headlineFont);
+  const bodyFontClass = getBodyFontClass(project.fontConfig?.bodyFont);
 
   // Dynamic Text Scale Multiplier (Default: 1.0)
   const scale = (coverConfig.textScale || 100) / 100;
@@ -58,191 +62,128 @@ export const CoverPage: React.FC<CoverPageProps> = ({
 
         {/* Grafismos Angulares Inferiores */}
         <div
-          className="absolute bottom-0 left-0 w-full h-[25%] z-2"
+          className="absolute bottom-0 left-0 w-full h-[32%] z-2 pointer-events-none"
           style={{
             background: "linear-gradient(135deg, #0088cc 0%, #005588 100%)",
-            clipPath: "polygon(0 40%, 100% 15%, 100% 100%, 0 100%)",
+            clipPath: "polygon(0 35%, 100% 0, 100% 100%, 0% 100%)",
           }}
         />
         <div
-          className="absolute bottom-0 left-0 w-full h-[14%] z-3"
+          className="absolute bottom-0 left-0 w-full h-[22%] z-3 pointer-events-none"
           style={{
             background: "#111111",
-            clipPath: "polygon(0 25%, 100% 0, 100% 100%, 0 100%)",
+            clipPath: "polygon(0 45%, 100% 0, 100% 100%, 0% 100%)",
           }}
         />
 
-        {/* Cabeçalho / Masthead */}
-        <div className="absolute top-[3%] left-[5%] right-[5%] z-10 flex items-start justify-between">
+        {/* Top Header Grid */}
+        <div className="absolute top-[2.5%] inset-x-[4%] flex justify-between items-center z-20">
+          <div
+            className="bg-[#111] text-white font-extrabold px-3 py-1 uppercase shadow-md flex items-center gap-1.5"
+            style={{ fontSize: `${9.5 * scale}pt` }}
+          >
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            <span>{coverConfig.issueBadge || "PRO EDITION"}</span>
+          </div>
+          <div
+            className="font-extrabold uppercase text-[#111] tracking-wider"
+            style={{ fontSize: `${9.5 * scale}pt` }}
+          >
+            {coverConfig.issueDate || "SETEMBRO 2026"}
+          </div>
+        </div>
+
+        {/* Masthead "MONTANHA" */}
+        <div className="absolute top-[6%] inset-x-[4%] text-center z-20">
           <h1
-            className="font-black italic tracking-[-3px] text-[#0b0f14] lowercase leading-[0.85]"
+            className={`font-black text-[#111111] tracking-[-3px] uppercase leading-[0.82] m-0 ${headlineFontClass}`}
             style={{
-              fontSize: `clamp(2.8rem, ${11 * scale}cqw, 5.5rem)`,
-              textShadow: "0 2px 10px rgba(255,255,255,0.8)",
+              fontSize: `clamp(3.5rem, ${14 * scale}cqw, 6.5rem)`,
+              color: theme.primaryColor !== "#FACC15" ? theme.primaryColor : "#111111",
             }}
           >
-            {coverConfig.mastheadText ? coverConfig.mastheadText.toLowerCase() : "montanha"}
+            {coverConfig.mastheadText || "MONTANHA"}
           </h1>
-          <div className="pt-1">
-            <span
-              className="bg-[#111111] text-white px-2 py-1.5 font-black uppercase tracking-widest inline-block shadow-md"
-              style={{
-                fontSize: `${8 * scale}pt`,
-                writingMode: "vertical-rl",
-                transform: "rotate(180deg)",
-              }}
-            >
-              {coverConfig.issueBadge || "PRO EDITION"}
-            </span>
-          </div>
-        </div>
-
-        {/* Chamadas da Esquerda */}
-        <div className="absolute top-[17%] left-[5%] w-[42%] z-10 space-y-1">
-          <div className="leading-none">
-            <span
-              className="font-black text-[#111] block"
-              style={{ fontSize: `${11 * scale}pt` }}
-            >
-              THE
-            </span>
-            <span
-              className="font-black text-[#e51d24] leading-[0.85] tracking-[-1.5px] uppercase block"
-              style={{ fontSize: `clamp(1.8rem, ${6 * scale}cqw, 3.2rem)` }}
-            >
-              PEAK
-            </span>
-            <span
-              className="font-black text-[#111] leading-[0.95] uppercase block"
-              style={{ fontSize: `${12 * scale}pt` }}
-            >
-              PERFORMANCE ISSUE
-            </span>
-          </div>
-
-          <div className="mt-2 border-l-[4px] border-[#e51d24] pl-2.5 space-y-1">
-            {coverConfig.highlights && coverConfig.highlights.length > 0 ? (
-              coverConfig.highlights.slice(0, 3).map((hl) => (
-                <div
-                  key={hl.id}
-                  className="font-black uppercase text-[#1a1a1a] leading-tight flex items-center gap-1.5"
-                  style={{ fontSize: `${9 * scale}pt` }}
-                >
-                  <span className="text-[#e51d24]">■</span>
-                  <span>{hl.title}</span>
-                </div>
-              ))
-            ) : (
-              <>
-                <div className="font-extrabold uppercase text-[#1a1a1a] leading-tight" style={{ fontSize: `${9 * scale}pt` }}>
-                  ■ RECOVER FASTER
-                </div>
-                <div className="font-extrabold uppercase text-[#1a1a1a] leading-tight" style={{ fontSize: `${9 * scale}pt` }}>
-                  ■ STAY AT YOUR PEAK
-                </div>
-                <div className="font-extrabold uppercase text-[#1a1a1a] leading-tight" style={{ fontSize: `${9 * scale}pt` }}>
-                  ■ SQUAT BETTER
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Bloco Meio-Esquerda: Research Box */}
-        <div className="absolute top-[40%] left-[5%] z-10">
-          <span
-            className="bg-[#111] text-white font-black px-2 py-1 uppercase inline-block shadow-sm"
-            style={{ fontSize: `${8.5 * scale}pt` }}
-          >
-            RESEARCH
-          </span>
-          <span
-            className="bg-[#0088cc] text-white font-bold px-2 py-1 block mt-[1px] shadow-sm"
-            style={{ fontSize: `${8 * scale}pt` }}
-          >
-            The truth about Taurine
-          </span>
-        </div>
-
-        {/* Selo Promocional Circular */}
-        <div className="absolute top-[56%] left-[4%] w-[88px] h-[88px] sm:w-[98px] sm:h-[98px] rounded-full bg-[#e51d24] border-[8px] border-[#111111] z-10 flex flex-col items-center justify-center text-center text-white shadow-xl">
-          <span className="font-black uppercase leading-none" style={{ fontSize: `${8 * scale}pt` }}>
-            {coverConfig.circleBadge?.topText || "SAVE"}
-          </span>
-          <span className="font-black leading-none my-0.5" style={{ fontSize: `${13.5 * scale}pt` }}>
-            {coverConfig.circleBadge?.valueText || "R$100"}
-          </span>
-          <span className="font-extrabold uppercase leading-tight" style={{ fontSize: `${5.5 * scale}pt` }}>
-            {coverConfig.circleBadge?.subText || "SUPPLEMENT\nDISCOUNT\nVOUCHERS"}
-          </span>
-        </div>
-
-        {/* Chamadas da Direita: Top */}
-        <div className="absolute top-[17%] right-[5%] w-[40%] text-right z-10">
-          <h3
-            className="font-black text-[#111] uppercase leading-tight m-0"
-            style={{ fontSize: `${12.5 * scale}pt` }}
-          >
-            BUGGING OUT
-          </h3>
-          <p
-            className="font-bold text-[#222] uppercase leading-tight mt-0.5"
-            style={{ fontSize: `${8 * scale}pt` }}
-          >
-            IS INSECT PROTEIN THE<br />NEXT BIG TREND?
-          </p>
-        </div>
-
-        {/* Chamadas da Direita: Food Prep Box */}
-        <div className="absolute top-[26%] right-[5%] z-10 text-right">
-          <span
-            className="bg-[#111] text-white font-black px-2 py-1 uppercase inline-block shadow-sm"
-            style={{ fontSize: `${8.5 * scale}pt` }}
-          >
-            FOOD PREP
-          </span>
-          <span
-            className="bg-[#0088cc] text-white font-bold px-2 py-1 block mt-[1px] shadow-sm"
-            style={{ fontSize: `${8 * scale}pt` }}
-          >
-            Sear tuna like a top chef
-          </span>
-        </div>
-
-        {/* Chamadas da Direita: Number Hook */}
-        <div className="absolute top-[40%] right-[5%] w-[44%] text-right z-10 flex items-center justify-end gap-2">
-          <div className="text-right">
-            <span
-              className="font-black text-[#e51d24] uppercase block leading-tight"
-              style={{ fontSize: `${10.5 * scale}pt` }}
-            >
-              WAYS TO BOOST YOUR INCOME
-            </span>
-            <span
-              className="font-extrabold text-[#111] uppercase block mt-0.5"
-              style={{ fontSize: `${7.5 * scale}pt` }}
-            >
-              EARN MORE AS A PERSONAL TRAINER
-            </span>
-          </div>
-          <span
-            className="font-black text-[#e51d24] leading-[0.75]"
-            style={{ fontSize: `${3.4 * scale}rem` }}
-          >
-            5
-          </span>
-        </div>
-
-        {/* Destaque Principal Inferior */}
-        <div className="absolute bottom-[5%] inset-x-0 text-center z-20">
           <div
-            className="bg-[#111] text-white font-black px-4 py-1 uppercase inline-block shadow-md"
+            className="font-extrabold uppercase tracking-[4px] text-[#0088cc] mt-1"
+            style={{ fontSize: `${11.5 * scale}pt` }}
+          >
+            {coverConfig.sloganText || "STRENGTH & PERFORMANCE MAGAZINE"}
+          </div>
+        </div>
+
+        {/* Dynamic Story Highlights Left Cards */}
+        <div className="absolute top-[26%] left-[4%] w-[56%] z-20 flex flex-col gap-2">
+          {coverConfig.highlights.map((hl) => (
+            <div
+              key={hl.id}
+              className="bg-black/90 text-white p-2.5 rounded-sm border-l-4 shadow-xl backdrop-blur-sm"
+              style={{ borderLeftColor: theme.primaryColor }}
+            >
+              <span
+                className="font-black font-mono tracking-widest uppercase block"
+                style={{ fontSize: `${8.5 * scale}pt`, color: theme.primaryColor }}
+              >
+                {hl.tag}
+              </span>
+              <p
+                className={`font-black uppercase leading-tight mt-0.5 ${headlineFontClass}`}
+                style={{ fontSize: `${12 * scale}pt` }}
+              >
+                {hl.title}
+              </p>
+              {hl.authorCallout && (
+                <span className="text-[8pt] font-mono text-slate-300 block mt-1">
+                  POR: {hl.authorCallout.toUpperCase()}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Selo Circular Vermelho (Direita) */}
+        <div className="absolute top-[26%] right-[5%] z-20 flex flex-col items-center">
+          <div className="w-[88px] h-[88px] sm:w-[105px] sm:h-[105px] rounded-full bg-[#cc0000] text-white flex flex-col justify-center items-center text-center p-2 shadow-2xl border-2 border-white">
+            <span className="font-extrabold uppercase tracking-tight text-[7pt] sm:text-[8pt] leading-tight">
+              {coverConfig.circleBadge?.topText || "PEAK"}
+            </span>
+            <span className="font-black text-lg sm:text-2xl leading-none my-0.5">
+              {coverConfig.circleBadge?.valueText || "100%"}
+            </span>
+            <span className="font-bold text-[6.5pt] sm:text-[7.5pt] uppercase leading-tight text-white/90">
+              {coverConfig.circleBadge?.subText || "RAW POWER"}
+            </span>
+          </div>
+        </div>
+
+        {/* Feature Numérica Lateral (Direita) */}
+        <div className="absolute top-[48%] right-[5%] z-20 text-right">
+          <div className="font-black text-4xl sm:text-5xl leading-none text-[#0088cc] drop-shadow-md">
+            {coverConfig.numFeature?.number || "12"}
+          </div>
+          <div
+            className="font-black uppercase text-[#111111] leading-tight mt-0.5"
+            style={{ fontSize: `${10.5 * scale}pt` }}
+          >
+            {coverConfig.numFeature?.hook || "REPS TO MAX"}
+          </div>
+          <div
+            className="font-bold uppercase text-slate-600 text-[8pt]"
+          >
+            {coverConfig.numFeature?.sub || "HYPERTROPHY GUIDE"}
+          </div>
+        </div>
+
+        {/* Manchete Principal Inferior (Sobre os Grafismos Angulares) */}
+        <div className="absolute bottom-[8%] left-[4%] right-[4%] z-20">
+          <div
+            className="bg-[#cc0000] text-white font-extrabold px-3 py-0.5 uppercase inline-block shadow-md mb-1"
             style={{ fontSize: `${9.5 * scale}pt` }}
           >
             {coverConfig.categoryTag || "SHARPEN UP"}
           </div>
           <h2
-            className="font-black text-white uppercase tracking-[-1px] leading-[0.88] m-0 drop-shadow-md"
+            className={`font-black text-white uppercase tracking-[-1px] leading-[0.88] m-0 drop-shadow-md ${headlineFontClass}`}
             style={{ fontSize: `clamp(2rem, ${7.5 * scale}cqw, 3.8rem)` }}
           >
             {coverConfig.mainHeadline || "SHOULDER WORKOUT"}
@@ -298,24 +239,22 @@ export const CoverPage: React.FC<CoverPageProps> = ({
           style={{ opacity: overlayOpacity }}
         />
         <div
-          className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/60"
-          style={{ opacity: overlayOpacity * 0.8 }}
+          className="absolute inset-0 bg-radial from-transparent via-black/40 to-black/90 pointer-events-none"
         />
-        {/* Subtle Industrial Grid Texture Overlay */}
-        {coverConfig.showTechHud && (
-          <div className="absolute inset-0 bg-[radial-gradient(#ffffff0a_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none opacity-40" />
-        )}
       </div>
 
-      {/* Technical HUD Corner Crosshairs */}
+      {/* Decorative Tactical Crosshairs & Grid Lines */}
       {coverConfig.showTechHud && (
         <>
-          <div className="absolute top-3 left-3 z-20 text-[8px] font-mono text-amber-400/70 flex items-center gap-1 tracking-tighter">
-            <Crosshair className="w-3 h-3 text-amber-400" />
-            <span>[SYS.SPEC // {project.editionNumber || "01"}]</span>
+          <div className="absolute top-4 left-4 z-10 opacity-60 text-amber-400 font-mono text-[9px] flex items-center gap-1 pointer-events-none">
+            <Crosshair className="w-3.5 h-3.5" />
+            <span>SYS.TARGET // 45.22.89</span>
           </div>
-          <div className="absolute top-3 right-3 z-20 text-[8px] font-mono text-amber-400/70 tracking-widest">
-            + + + RAW IRON + + +
+          <div className="absolute top-4 right-4 z-10 opacity-60 text-amber-400 font-mono text-[9px] flex items-center gap-1 pointer-events-none">
+            <span>GRID-A4 // RAW</span>
+          </div>
+          <div className="absolute bottom-16 right-4 z-10 opacity-40 text-amber-400 font-mono text-[8px] pointer-events-none">
+            LAT: -23.5505 | LON: -46.6333
           </div>
         </>
       )}
@@ -326,32 +265,35 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         <div className="w-full flex items-center justify-between border-b-2 border-white/20 pb-1.5 text-[9px] sm:text-[10px] font-mono font-bold tracking-widest uppercase text-slate-200">
           <div className="flex items-center gap-2">
             {/* Hexagon / Tactical Badge */}
-            <div className="bg-amber-400 text-black px-2 py-0.5 font-black text-[9px] tracking-tight uppercase rounded-sm flex items-center gap-1 shadow-sm">
+            <div
+              className="px-2 py-0.5 font-black text-[9px] tracking-tight uppercase rounded-sm flex items-center gap-1 shadow-sm"
+              style={{ backgroundColor: theme.primaryColor, color: "#000000" }}
+            >
               <Zap className="w-3 h-3 fill-black text-black" />
               <span>{coverConfig.hexBadgeText || "VOL. 01 // ISSUE 01"}</span>
             </div>
-            <span className="hidden sm:inline text-amber-400/90 font-bold">
+            <span className="hidden sm:inline font-bold" style={{ color: theme.primaryColor }}>
               {coverConfig.issueBadge}
             </span>
           </div>
           <span className="text-white font-mono">{coverConfig.issueDate}</span>
-          <span className="bg-slate-900/90 border border-slate-700 text-amber-400 px-2 py-0.5 rounded text-[8.5px] font-mono font-bold">
+          <span
+            className="border px-2 py-0.5 rounded text-[8.5px] font-mono font-bold"
+            style={{ backgroundColor: "rgba(15,23,42,0.9)", borderColor: theme.primaryColor, color: theme.primaryColor }}
+          >
             {coverConfig.priceBadge}
           </span>
         </div>
 
-        {/* Masthead Logo: "MONTANHA" */}
+        {/* Masthead Logo */}
         <div className="w-full text-center mt-2.5 mb-1">
           <div className="relative inline-block w-full">
             <h1
-              className="font-black tracking-tighter uppercase leading-[0.88] drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] text-center"
+              className={`font-black tracking-tighter uppercase leading-[0.88] drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] text-center ${headlineFontClass}`}
               style={{
                 fontSize: `clamp(2.4rem, ${10 * scale}cqw, 4.8rem)`,
                 color: theme.primaryColor,
                 letterSpacing: "-0.04em",
-                fontFamily: isTactical
-                  ? "Impact, 'Arial Black', sans-serif"
-                  : "system-ui, -apple-system, sans-serif",
                 textShadow: "0 0 25px rgba(0,0,0,0.9), 0 4px 10px rgba(0,0,0,0.9)",
               }}
             >
@@ -361,8 +303,13 @@ export const CoverPage: React.FC<CoverPageProps> = ({
 
           {/* Subtitle / Slogan Bar */}
           <div className="mt-1 w-full flex items-center justify-center">
-            <div className="w-full bg-black/90 border-y border-amber-400/60 py-1 px-3 flex items-center justify-between font-mono font-black tracking-[0.2em] text-amber-300 uppercase shadow-md"
-              style={{ fontSize: `${9.5 * scale}px` }}
+            <div
+              className="w-full bg-black/90 border-y py-1 px-3 flex items-center justify-between font-mono font-black tracking-[0.2em] uppercase shadow-md"
+              style={{
+                fontSize: `${9.5 * scale}px`,
+                borderColor: `${theme.primaryColor}80`,
+                color: theme.primaryColor,
+              }}
             >
               <span className="text-white/40 hidden sm:inline">///</span>
               <span>{coverConfig.sloganText || "UNCONVENTIONAL STRENGTH & PERFORMANCE"}</span>
@@ -379,105 +326,105 @@ export const CoverPage: React.FC<CoverPageProps> = ({
           {coverConfig.highlights.map((hl) => (
             <div
               key={hl.id}
-              className="bg-black/85 backdrop-blur-md border-l-[4px] p-2.5 rounded-r transition-all border-amber-400 shadow-xl"
-              style={{ borderColor: theme.primaryColor }}
+              className="bg-black/90 border-l-4 p-2.5 rounded-sm shadow-xl backdrop-blur-sm transition-all"
+              style={{ borderLeftColor: theme.primaryColor }}
             >
-              <div className="flex items-center justify-between font-mono font-black tracking-wider uppercase text-amber-400 mb-0.5"
-                style={{ fontSize: `${9 * scale}px` }}
+              <span
+                className="font-mono font-black tracking-wider uppercase block"
+                style={{
+                  fontSize: `${8.5 * scale}pt`,
+                  color: theme.primaryColor,
+                }}
               >
-                <span>{hl.tag}</span>
-                {hl.pageTarget && (
-                  <span className="text-white font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 font-bold"
-                    style={{ fontSize: `${8 * scale}px` }}
-                  >
-                    PÁG {hl.pageTarget}
-                  </span>
-                )}
-              </div>
+                {hl.tag}
+              </span>
               <h3
-                className="font-black text-white leading-snug drop-shadow tracking-tight uppercase"
-                style={{ fontSize: `clamp(0.85rem, ${2.2 * scale}cqw, 1.25rem)` }}
+                className={`font-black text-white uppercase leading-tight tracking-tight mt-0.5 drop-shadow ${headlineFontClass}`}
+                style={{
+                  fontSize: `${12.5 * scale}pt`,
+                }}
               >
                 {hl.title}
               </h3>
               {hl.authorCallout && (
-                <p
-                  className="text-amber-200/90 font-mono font-bold uppercase mt-0.5"
-                  style={{ fontSize: `${9 * scale}px` }}
+                <span
+                  className="font-mono uppercase block text-slate-300 mt-1"
+                  style={{
+                    fontSize: `${7.5 * scale}pt`,
+                  }}
                 >
-                  ► {hl.authorCallout}
-                </p>
+                  AUTOR: {hl.authorCallout.toUpperCase()} {hl.pageTarget ? `// PÁG. 0${hl.pageTarget}` : ""}
+                </span>
               )}
             </div>
           ))}
         </div>
 
-        {/* Extra-Bold Main Story Headline */}
-        <div className="border-t-2 pt-2.5 border-amber-400 bg-black/80 backdrop-blur-sm p-3 rounded-t-sm shadow-xl">
+        {/* Main Cover Story Headline */}
+        <div className="bg-black/90 border-l-4 p-3.5 sm:p-4 rounded-sm shadow-2xl backdrop-blur-md"
+          style={{ borderLeftColor: theme.primaryColor }}
+        >
           <div className="flex items-center gap-2 mb-1">
             <span
-              className="bg-amber-400 text-black font-black tracking-widest uppercase px-2 py-0.5 rounded-xs"
-              style={{ fontSize: `${9.5 * scale}px` }}
+              className="font-mono font-black text-[9px] tracking-widest uppercase px-2 py-0.5 rounded-xs"
+              style={{ backgroundColor: theme.primaryColor, color: "#000000" }}
             >
               {coverConfig.categoryTag || "COVER STORY"}
             </span>
-            {coverConfig.authorCallout && (
-              <span
-                className="font-mono font-bold text-slate-300 uppercase"
-                style={{ fontSize: `${9.5 * scale}px` }}
-              >
-                {coverConfig.authorCallout}
-              </span>
-            )}
+            <span className="text-white/80 font-mono text-[9px] tracking-wider uppercase">
+              // DOSSIÊ EXCLUSIVO
+            </span>
           </div>
+
           <h2
-            className="font-black tracking-tighter uppercase leading-[0.92] text-white drop-shadow-[0_4px_12px_rgba(0,0,0,1)]"
+            className={`font-black text-white uppercase tracking-tight leading-[0.92] drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] ${headlineFontClass}`}
             style={{
-              fontSize: `clamp(1.4rem, ${5.5 * scale}cqw, 2.6rem)`,
-              textShadow: "0 2px 10px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.8)",
+              fontSize: `clamp(1.6rem, ${6.5 * scale}cqw, 3.4rem)`,
             }}
           >
             {coverConfig.mainHeadline}
           </h2>
+
           <p
-            className="text-slate-200 font-semibold leading-snug mt-1 max-w-lg drop-shadow"
-            style={{ fontSize: `${12 * scale}px` }}
+            className={`text-slate-200 font-semibold leading-snug mt-1.5 drop-shadow max-w-xl ${bodyFontClass}`}
+            style={{
+              fontSize: `${10.5 * scale}pt`,
+            }}
           >
             {coverConfig.subHeadline}
           </p>
         </div>
       </div>
 
-      {/* Bottom Hazard Stripe & Footer Bar */}
-      <div className="relative z-10 flex flex-col">
-        {coverConfig.showHazardStripe && (
-          <div className="h-1.5 w-full bg-[repeating-linear-gradient(45deg,#FACC15,#FACC15_10px,#000_10px,#000_20px)] shadow-md" />
-        )}
+      {/* Industrial Warning Hazard Stripe */}
+      {coverConfig.showHazardStripe && (
+        <div className="relative z-10 w-full h-2.5 bg-[repeating-linear-gradient(45deg,#000,#000_10px,#FACC15_10px,#FACC15_20px)] border-y border-black" />
+      )}
 
-        {/* Footer Bar & Barcode */}
-        <div className="bg-black/90 backdrop-blur-md border-t border-white/20 px-4 sm:px-6 py-2 flex items-center justify-between">
-          {/* Footer Ticker Tags */}
-          <div className="flex flex-wrap gap-2 font-mono font-bold text-slate-300 uppercase tracking-wider"
-            style={{ fontSize: `${9 * scale}px` }}
-          >
-            {coverConfig.footerHighlights.map((item, idx) => (
-              <React.Fragment key={idx}>
-                <span className="hover:text-amber-400 transition-colors">{item}</span>
-                {idx < coverConfig.footerHighlights.length - 1 && (
-                  <span className="text-amber-400 font-black">/</span>
-                )}
-              </React.Fragment>
-            ))}
+      {/* Bottom Footer Bar: Barcode, Footer Teasers & Specs */}
+      <div className="relative z-10 bg-black/95 px-4 sm:px-6 py-2.5 flex items-center justify-between border-t border-white/20 text-xs">
+        {/* Barcode Mockup */}
+        <div className="flex items-center gap-3">
+          <div className="bg-white p-1 rounded-sm border border-slate-700 shadow-sm hidden sm:block">
+            <div className="h-6 w-28 bg-[repeating-linear-gradient(90deg,#000,#000_2px,#fff_2px,#fff_4px,#000_4px,#000_5px,#fff_5px,#fff_8px)]" />
+            <span className="font-mono text-[7px] font-bold text-black block text-center leading-none mt-0.5">
+              {coverConfig.barcodeText}
+            </span>
           </div>
+          <div className="text-[9px] font-mono text-slate-300 leading-tight">
+            <span className="text-white font-bold block">{project.title} EDITORIAL CORP.</span>
+            <span>DIAGRAMAÇÃO A4 DIGITAL // PRINT-READY</span>
+          </div>
+        </div>
 
-          {/* Barcode & Tech Specs Block */}
-          <div className="hidden sm:flex items-center gap-2 bg-white text-black px-2 py-0.5 rounded-sm text-right shadow-md">
-            <div className="flex flex-col text-[6.5px] font-mono leading-none tracking-tighter">
-              <span className="font-black">{coverConfig.barcodeText}</span>
-              <div className="h-3 w-20 bg-[repeating-linear-gradient(90deg,#000,#000_1px,#fff_1px,#fff_2px,#000_2px,#000_4px,#fff_4px,#fff_5px)] mt-0.5" />
-            </div>
-            <QrCode className="w-4 h-4 text-black" />
-          </div>
+        {/* Footer Teaser Keywords */}
+        <div className="flex items-center gap-2 sm:gap-3 text-[9px] font-mono font-bold tracking-wider text-slate-300 uppercase">
+          {coverConfig.footerHighlights?.slice(0, 3).map((item, idx) => (
+            <span key={idx} className="flex items-center gap-1.5">
+              <span className="text-amber-400 font-black">/</span>
+              <span>{item}</span>
+            </span>
+          ))}
         </div>
       </div>
     </div>

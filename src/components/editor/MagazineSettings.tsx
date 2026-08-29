@@ -3,9 +3,12 @@ import {
   MagazineProject,
   MagazineThemeId,
   BackCoverConfig,
+  HeadlineFontOption,
+  BodyFontOption,
 } from "../../types/magazine";
 import { MAGAZINE_THEMES } from "../../lib/sample-data";
 import { APP_UI_THEMES, AppUiThemeMode } from "../../lib/ui-theme";
+import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
@@ -29,7 +32,8 @@ import {
   Mail,
   Sparkles,
   Layers,
-  FileCheck,
+  Type,
+  Check,
 } from "lucide-react";
 
 interface MagazineSettingsProps {
@@ -59,12 +63,37 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     ...project.pageVisibility,
   };
 
+  const fontConfig = {
+    headlineFont: project.fontConfig?.headlineFont || "bebas",
+    bodyFont: project.fontConfig?.bodyFont || "inter",
+  };
+
   const updateVisibility = (field: keyof typeof visibility, val: boolean) => {
     onChange({
       ...project,
       pageVisibility: {
         ...visibility,
         [field]: val,
+      },
+    });
+  };
+
+  const updateHeadlineFont = (font: HeadlineFontOption) => {
+    onChange({
+      ...project,
+      fontConfig: {
+        ...fontConfig,
+        headlineFont: font,
+      },
+    });
+  };
+
+  const updateBodyFont = (font: BodyFontOption) => {
+    onChange({
+      ...project,
+      fontConfig: {
+        ...fontConfig,
+        bodyFont: font,
       },
     });
   };
@@ -114,6 +143,27 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     });
   };
 
+  const headlineFontOptions: { id: HeadlineFontOption; name: string; style: string; sample: string }[] = [
+    { id: "bebas", name: "Bebas Neue", style: "Industrial & Força Bruta (Caixa Alta Pesada)", sample: "A FORÇA DO FERRO" },
+    { id: "montserrat", name: "Montserrat Black", style: "Moderno Geométrico de Alto Impacto", sample: "ALTA PERFORMANCE" },
+    { id: "playfair", name: "Playfair Display", style: "Editorial Serifado Clássico & Elegante", sample: "The Elite Method" },
+    { id: "cinzel", name: "Cinzel", style: "Romano Monumental & Prestige", sample: "DISCIPLINA & HONRA" },
+    { id: "space", name: "Space Grotesk", style: "Técnico & Futurista", sample: "SYS.PROTOCOL // 01" },
+    { id: "oswald", name: "Oswald", style: "Atlético Condensado", sample: "HEAVY TRAINING" },
+    { id: "inter", name: "Inter Bold", style: "Minimalista & Contemporâneo", sample: "DESIGN EDITORIAL" },
+  ];
+
+  const bodyFontOptions: { id: BodyFontOption; name: string; style: string; sample: string }[] = [
+    { id: "inter", name: "Inter (Padrão)", style: "Ultra Legível & Moderno", sample: "O treinamento consistente forja resultados duradouros." },
+    { id: "lora", name: "Lora", style: "Serifada Clássica de Revistas e Livros", sample: "A consistência diária nos detalhes invisíveis constrói o sucesso." },
+    { id: "merriweather", name: "Merriweather", style: "Editorial Robusto com Excelente Leitura", sample: "Ciência aplicada e disciplina na alta performance." },
+    { id: "roboto", name: "Roboto", style: "Neutro, Direto e Técnico", sample: "Instruções claras e biomecânica precisa em cada movimento." },
+    { id: "space", name: "Space Grotesk", style: "Mono Técnico & Moderno", sample: "Protocolos estruturados para resultados mensuráveis." },
+  ];
+
+  const activeHeadlineClass = getHeadlineFontClass(fontConfig.headlineFont);
+  const activeBodyClass = getBodyFontClass(fontConfig.bodyFont);
+
   return (
     <div className="space-y-6 font-sans">
       {/* Header Bar */}
@@ -128,10 +178,10 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
             </span>
           </div>
           <h2 className="text-lg font-black uppercase tracking-tight">
-            Estrutura de Páginas, Temas & Conexão IA
+            Estrutura de Páginas, Tipografia & Temas da Revista
           </h2>
           <p className="text-xs opacity-75 mt-0.5">
-            Ligue ou desligue páginas do projeto, gerencie o tema visual e conecte sua IA do Google.
+            Ligue ou desligue páginas, ajuste as fontes dos títulos e textos, defina a paleta de cores e conecte sua IA.
           </p>
         </div>
       </div>
@@ -248,15 +298,181 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* 1. APP UI THEME & ERGONOMICS */}
+      {/* 1. SELETOR DE FONTES & TIPOGRAFIA DA REVISTA */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-5 shadow-sm">
+        <div className="flex items-center justify-between border-b pb-3">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+              <Type className="w-4 h-4 text-amber-500" />
+              <span>1. Seletor de Fontes & Tipografia da Revista</span>
+            </h3>
+            <p className="text-xs opacity-75 mt-0.5">
+              Escolha as famílias tipográficas oficiais que estilizam as manchetes, títulos e parágrafos de todo o PDF.
+            </p>
+          </div>
+          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
+            FONTE & DESIGN
+          </span>
+        </div>
+
+        {/* Headline Fonts Selector */}
+        <div className="space-y-2">
+          <Label className="text-xs font-bold uppercase block">
+            A) Fonte dos Títulos, Manchetes e Capa (Headlines / H1 / H2):
+          </Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            {headlineFontOptions.map((font) => {
+              const isSelected = fontConfig.headlineFont === font.id;
+              const fClass = getHeadlineFontClass(font.id);
+              return (
+                <div
+                  key={font.id}
+                  onClick={() => updateHeadlineFont(font.id)}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                    isSelected
+                      ? "bg-amber-400 text-black border-black shadow-md ring-2 ring-amber-400"
+                      : "theme-app-card-subtle border-slate-300 hover:border-black"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-black text-xs">{font.name}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-black" />}
+                    </div>
+                    <span className="text-[10px] opacity-75 block mb-2">{font.style}</span>
+                  </div>
+                  <div className={`text-base font-black uppercase truncate border-t pt-1.5 ${fClass}`}>
+                    {font.sample}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Body Fonts Selector */}
+        <div className="space-y-2 pt-2 border-t border-slate-200">
+          <Label className="text-xs font-bold uppercase block">
+            B) Fonte do Texto Corrido & Parágrafos (Body Text):
+          </Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            {bodyFontOptions.map((font) => {
+              const isSelected = fontConfig.bodyFont === font.id;
+              const bClass = getBodyFontClass(font.id);
+              return (
+                <div
+                  key={font.id}
+                  onClick={() => updateBodyFont(font.id)}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                    isSelected
+                      ? "bg-amber-400 text-black border-black shadow-md ring-2 ring-amber-400"
+                      : "theme-app-card-subtle border-slate-300 hover:border-black"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-black text-xs">{font.name}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-black" />}
+                    </div>
+                    <span className="text-[10px] opacity-75 block mb-2">{font.style}</span>
+                  </div>
+                  <div className={`text-xs truncate border-t pt-1.5 leading-snug ${bClass}`}>
+                    {font.sample}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Live Typography Pairing Preview Card */}
+        <div className="p-4 rounded-xl border-2 border-black bg-slate-950 text-white space-y-2 shadow-md">
+          <span className="font-mono text-[9px] font-bold text-amber-400 uppercase tracking-widest block">
+            PREVIEW EM TEMPO REAL DA COMBINAÇÃO TIPOGRÁFICA
+          </span>
+          <h3 className={`text-xl sm:text-2xl font-black uppercase text-amber-400 tracking-tight leading-tight ${activeHeadlineClass}`}>
+            O CÓDIGO DA ALTA PERFORMANCE & FORÇA NÃO-CONVENCIONAL
+          </h3>
+          <p className={`text-xs text-slate-300 leading-relaxed text-justify ${activeBodyClass}`}>
+            Este parágrafo de exemplo demonstra como os seus artigos e matérias serão renderizados tanto no leitor digital quanto na impressão final do PDF, combinando autoridade visual e conforto de leitura.
+          </p>
+        </div>
+      </div>
+
+      {/* 2. THEME SELECTION FOR THE MAGAZINE PUBLICATION (CORES REALISTAS DAS PÁGINAS INTERNAS) */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <Palette className="w-4 h-4 text-amber-500" />
+            <span>2. Tema Visual da Revista (Paleta de Cores Real das Páginas)</span>
+          </h3>
+          <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded border border-current">
+            PRODUÇÃO A4
+          </span>
+        </div>
+        <p className="text-xs opacity-75 leading-relaxed">
+          Define a identidade visual e o contraste de todas as páginas da revista (capa, editorial, sumário, matérias e contracapa).
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+          {MAGAZINE_THEMES.map((theme) => {
+            const isSelected = project.themeId === theme.id;
+            return (
+              <div
+                key={theme.id}
+                onClick={() => handleSelectMagazineTheme(theme.id)}
+                className={`theme-app-card-subtle cursor-pointer p-4 rounded-xl border-2 transition-all flex flex-col justify-between ${
+                  isSelected
+                    ? "border-amber-500 ring-2 ring-amber-400 shadow-md"
+                    : "border-slate-300 hover:border-slate-700"
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-black text-xs uppercase">{theme.name}</span>
+                    {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-500" />}
+                  </div>
+                  <p className="text-[11px] opacity-75 leading-snug mb-3">{theme.description}</p>
+                </div>
+
+                {/* Color swatches with explicit color tags */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-300 text-[10px] font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className="w-4 h-4 rounded-full border border-black shadow-xs"
+                      style={{ backgroundColor: theme.primaryColor }}
+                      title={`Cor Primária: ${theme.primaryColor}`}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-black shadow-xs"
+                      style={{ backgroundColor: theme.accentColor }}
+                      title={`Destaque: ${theme.accentColor}`}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-black shadow-xs"
+                      style={{ backgroundColor: theme.id === "vogue-haute" ? theme.bgLight : theme.bgDark }}
+                      title={`Fundo: ${theme.id === "vogue-haute" ? theme.bgLight : theme.bgDark}`}
+                    />
+                  </div>
+                  <span className="font-bold uppercase text-[9px]">
+                    {theme.id === "vogue-haute" ? "Fundo Branco" : "Fundo Escuro"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. APP UI THEME & ERGONOMICS (SELETOR DE APARÊNCIA DO APP) */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
             <Eye className="w-4 h-4 text-amber-500" />
-            <span>1. Esquema de Cores do Aplicativo (Eye-Care & Ergonomia)</span>
+            <span>3. Esquema de Cores do Aplicativo (Eye-Care & Área de Trabalho)</span>
           </h3>
           <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded border border-current">
-            INTERFACE
+            WORKSPACE
           </span>
         </div>
         <p className="text-xs opacity-75 leading-relaxed">
@@ -296,71 +512,11 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* 2. THEME SELECTION FOR THE MAGAZINE PUBLICATION */}
-      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-            <Palette className="w-4 h-4 text-amber-500" />
-            <span>2. Tema Visual da Revista Impressa & PDF</span>
-          </h3>
-          <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded border border-current">
-            PRODUÇÃO A4
-          </span>
-        </div>
-        <p className="text-xs opacity-75 leading-relaxed">
-          Define a paleta de cores e a identidade gráfica das páginas internas, caixas de destaque e tipografia da revista.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
-          {MAGAZINE_THEMES.map((theme) => {
-            const isSelected = project.themeId === theme.id;
-            return (
-              <div
-                key={theme.id}
-                onClick={() => handleSelectMagazineTheme(theme.id)}
-                className={`theme-app-card-subtle cursor-pointer p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
-                  isSelected
-                    ? "border-amber-500 ring-2 ring-amber-400 shadow-md"
-                    : "border-slate-300 hover:border-slate-700"
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-black text-xs uppercase">{theme.name}</span>
-                    {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-500" />}
-                  </div>
-                  <p className="text-[11px] opacity-75 leading-snug mb-3">{theme.description}</p>
-                </div>
-
-                {/* Color swatches */}
-                <div className="flex items-center gap-1.5 pt-2 border-t border-slate-300">
-                  <div
-                    className="w-4 h-4 rounded-full border border-black shadow-xs"
-                    style={{ backgroundColor: theme.primaryColor }}
-                    title={`Cor Primária: ${theme.primaryColor}`}
-                  />
-                  <div
-                    className="w-4 h-4 rounded-full border border-black shadow-xs"
-                    style={{ backgroundColor: theme.accentColor }}
-                    title={`Cor de Destaque: ${theme.accentColor}`}
-                  />
-                  <div
-                    className="w-4 h-4 rounded-full border border-black shadow-xs"
-                    style={{ backgroundColor: theme.bgDark }}
-                    title={`Fundo Escuro: ${theme.bgDark}`}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 3. GEMINI API KEY CONFIGURATION */}
+      {/* 4. GEMINI API KEY CONFIGURATION */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
           <Key className="w-4 h-4 text-amber-500" />
-          <span>3. Chave de API do Google Gemini (IA)</span>
+          <span>4. Chave de API do Google Gemini (IA)</span>
         </h3>
         <p className="text-xs opacity-75 leading-relaxed">
           Insira sua chave de API para habilitar a redação automática de matérias completas, sugestão de títulos e geração de imagens realistas.
@@ -376,18 +532,18 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           />
           <Button
             onClick={handleSaveApiKey}
-            className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-4 border-2 border-black shrink-0 shadow-xs"
+            className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-4 border-2 border-black shrink-0 shadow-xs cursor-pointer"
           >
             {apiKeySaved ? "Chave Salva!" : "Salvar Chave"}
           </Button>
         </div>
       </div>
 
-      {/* 4. BACK COVER CONFIGURATION WITH IMAGEPICKER */}
+      {/* 5. BACK COVER CONFIGURATION WITH IMAGEPICKER */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
           <Share2 className="w-4 h-4 text-amber-500" />
-          <span>4. Contracapa & Fechamento da Edição</span>
+          <span>5. Contracapa & Fechamento da Edição</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

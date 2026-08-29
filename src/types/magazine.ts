@@ -216,6 +216,27 @@ export interface PageVisibilityConfig {
   showBackCover: boolean;       // default: true
 }
 
+export type HeadlineFontOption =
+  | "bebas"        // Bebas Neue (Industrial / Bold Impact)
+  | "montserrat"   // Montserrat Black (Modern Geometric)
+  | "playfair"     // Playfair Display (Editorial High-Fashion Serif)
+  | "cinzel"       // Cinzel (Classic Roman Prestige)
+  | "space"        // Space Grotesk (Tech / Futuristic)
+  | "oswald"       // Oswald (Condensed Athletic)
+  | "inter";       // Inter (Clean Sans)
+
+export type BodyFontOption =
+  | "inter"        // Inter (Modern Crisp Sans)
+  | "lora"         // Lora (Magazine Editorial Serif)
+  | "merriweather" // Merriweather (Dense Book Serif)
+  | "roboto"       // Roboto (Neutral Sans)
+  | "space";       // Space Grotesk (Mono Technical)
+
+export interface FontConfig {
+  headlineFont: HeadlineFontOption;
+  bodyFont: BodyFontOption;
+}
+
 export interface MagazineProject {
   id: string;
   title: string;
@@ -230,6 +251,7 @@ export interface MagazineProject {
   articles: Article[];
   backCoverConfig: BackCoverConfig;
   pageVisibility?: PageVisibilityConfig;
+  fontConfig?: FontConfig;
   geminiApiKey?: string;
   createdAt: string;
   updatedAt: string;

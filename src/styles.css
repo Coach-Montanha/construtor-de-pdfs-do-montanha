@@ -1,8 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@700;900&family=Inter:wght@400;600;800;900&family=Lora:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,900;1,400&family=Montserrat:wght@400;700;900&family=Oswald:wght@500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Space+Grotesk:wght@500;700&display=swap');
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* Global Editorial Typography Helpers */
+.font-headline-bebas { font-family: 'Bebas Neue', Impact, sans-serif !important; }
+.font-headline-montserrat { font-family: 'Montserrat', sans-serif !important; }
+.font-headline-playfair { font-family: 'Playfair Display', Georgia, serif !important; }
+.font-headline-cinzel { font-family: 'Cinzel', serif !important; }
+.font-headline-space { font-family: 'Space Grotesk', monospace !important; }
+.font-headline-oswald { font-family: 'Oswald', sans-serif !important; }
+.font-headline-inter { font-family: 'Inter', sans-serif !important; }
+
+.font-body-inter { font-family: 'Inter', sans-serif !important; }
+.font-body-lora { font-family: 'Lora', Georgia, serif !important; }
+.font-body-merriweather { font-family: 'Merriweather', serif !important; }
+.font-body-roboto { font-family: 'Roboto', sans-serif !important; }
+.font-body-space { font-family: 'Space Grotesk', monospace !important; }
+
 
 /*
  * Design system definition.
