@@ -637,7 +637,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         className="relative z-10 border-t pt-1.5 flex items-center justify-between text-[9px] font-mono font-bold uppercase shrink-0"
         style={{ borderColor: `${primaryColor}40`, color: textMutedColor }}
       >
-        <span>{project.title} • {coverConfig.editionNumber ? `ED. #${coverConfig.editionNumber}` : "ED. #01"}</span>
+        <span>{project.title} • {project.coverConfig?.editionNumber || project.editionNumber ? `ED. #${project.coverConfig?.editionNumber || project.editionNumber}` : "ED. #01"}</span>
         <span
           className="px-2 py-0.5 rounded border"
           style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
