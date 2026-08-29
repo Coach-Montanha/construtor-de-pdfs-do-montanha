@@ -5,6 +5,7 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
+import { ImagePicker } from "../ui/image-picker";
 import {
   Sparkles,
   Plus,
@@ -97,16 +98,6 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
       url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1600&q=85",
     },
   ];
-
-  const handleAiCoverPhoto = () => {
-    const prompt =
-      coverConfig.coverStyleVariant === "peak-performance"
-        ? "Athletic fitness champion in high-key white studio lighting, sharp physique, clean athletic apparel, commercial magazine cover photography 8k"
-        : "Athletic warrior performing unconventional heavy kettlebell swing in gritty industrial dark gym, chalk dust in air, rim directional lighting, high contrast, cinematic photography 8k";
-
-    const aiUrl = generateAiImageUrl(prompt);
-    updateField("backgroundImage", aiUrl);
-  };
 
   const coverStyles: { id: CoverStyleVariant; name: string; desc: string }[] = [
     {
@@ -447,27 +438,21 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
         </div>
       </div>
 
-      {/* 6. Photography & Subject Presets */}
+      {/* 6. Photography with ImagePicker (Upload / AI Prompt / Web Presets) */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-            <ImageIcon className="w-4 h-4 text-amber-500" />
-            <span>Fotografia Atlética & Fundo</span>
-          </h3>
-          <Button
-            size="sm"
-            onClick={handleAiCoverPhoto}
-            className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center gap-1 shadow-sm border border-black"
-          >
-            <Sparkles className="w-3 h-3" />
-            Gerar Foto por IA
-          </Button>
-        </div>
+        <ImagePicker
+          label="Fotografia de Fundo da Capa"
+          value={coverConfig.backgroundImage}
+          onChange={(url) => updateField("backgroundImage", url)}
+          aspectRatio="portrait"
+          placeholderPrompt="Guerreiro atleta executando balística pesada com kettlebell em estúdio de alta luz..."
+          helperText="Faça upload do PC, gere com IA ou use presets"
+        />
 
         {/* Quick Presets */}
-        <div>
+        <div className="pt-2 border-t border-slate-200">
           <Label className="text-[11px] font-bold uppercase mb-2 block opacity-80">
-            Presets Rápidos de Imagens:
+            Ou escolha um dos Presets Rápidos de Força:
           </Label>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {strengthPhotoPresets.map((preset, idx) => (
@@ -475,7 +460,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                 key={idx}
                 type="button"
                 onClick={() => updateField("backgroundImage", preset.url)}
-                className="group relative rounded-lg overflow-hidden border-2 border-slate-300 hover:border-black transition-all text-left aspect-[4/3] shadow-xs"
+                className="group relative rounded-lg overflow-hidden border-2 border-slate-300 hover:border-black transition-all text-left aspect-[4/3] shadow-xs cursor-pointer"
               >
                 <img
                   src={preset.url}
@@ -492,18 +477,8 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           </div>
         </div>
 
-        <div>
-          <Label className="text-xs font-bold">URL DA IMAGEM ATUAL</Label>
-          <Input
-            value={coverConfig.backgroundImage}
-            onChange={(e) => updateField("backgroundImage", e.target.value)}
-            placeholder="URL da imagem (JPG / PNG)"
-            className="theme-app-input text-xs mt-1 border-2"
-          />
-        </div>
-
         {/* Overlay Dark Slider */}
-        <div className="space-y-2 pt-1">
+        <div className="space-y-2 pt-2 border-t border-slate-200">
           <div className="flex justify-between text-xs font-bold">
             <span>Escurecimento / Opacidade da Foto</span>
             <span className="font-mono text-amber-500 font-black">{coverConfig.backgroundOverlayOpacity}%</span>
@@ -514,7 +489,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
             min={10}
             max={90}
             step={5}
-            className="py-1"
+            className="py-1 cursor-pointer"
           />
         </div>
       </div>

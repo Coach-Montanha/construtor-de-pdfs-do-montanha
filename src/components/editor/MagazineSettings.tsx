@@ -11,6 +11,7 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
+import { ImagePicker } from "../ui/image-picker";
 import {
   Palette,
   Key,
@@ -247,7 +248,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* 1. APP UI THEME & ERGONOMICS (SELETOR DE APARÊNCIA DO APP COM ALTO CONTRASTE) */}
+      {/* 1. APP UI THEME & ERGONOMICS */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
@@ -382,7 +383,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* 4. BACK COVER CONFIGURATION */}
+      {/* 4. BACK COVER CONFIGURATION WITH IMAGEPICKER */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
           <Share2 className="w-4 h-4 text-amber-500" />
@@ -408,6 +409,15 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
             />
           </div>
         </div>
+
+        <ImagePicker
+          label="Fotografia de Fundo da Contracapa"
+          value={project.backCoverConfig.backgroundImage}
+          onChange={(url) => updateBackCover("backgroundImage", url)}
+          aspectRatio="portrait"
+          placeholderPrompt="Atleta em silhueta segurando kettlebell pesado ao pôr do sol, cinematográfico..."
+          helperText="Upload do PC, IA ou URL"
+        />
 
         <div>
           <Label className="text-xs font-bold">MENSAGEM INSTITUCIONAL DE FECHAMENTO</Label>

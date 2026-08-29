@@ -9,6 +9,7 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
+import { ImagePicker } from "../ui/image-picker";
 import {
   Feather,
   Plus,
@@ -16,10 +17,8 @@ import {
   Users,
   ShieldAlert,
   Award,
-  Eye,
   EyeOff,
   CheckCircle2,
-  AlertCircle,
 } from "lucide-react";
 
 interface EditorialSettingsProps {
@@ -131,7 +130,7 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
             Carta do Editor & Painel de Colaboradores
           </h2>
           <p className="text-xs opacity-75 mt-0.5">
-            Gerencie o manifesto do Editor-Chefe, aviso legal e ative ou desative as páginas conforme a sua necessidade.
+            Gerencie fotos com upload ou IA, textos do manifesto e ative ou desative as páginas conforme a sua necessidade.
           </p>
         </div>
       </div>
@@ -167,17 +166,6 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
               </div>
 
               <div>
-                <Label className="text-xs font-bold">FOTO DE PERFIL DO EDITOR (URL)</Label>
-                <Input
-                  value={project.editorialInfo.editorPhoto}
-                  onChange={(e) => updateEditorial("editorPhoto", e.target.value)}
-                  className="theme-app-input text-xs mt-1 border-2"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
                 <Label className="text-xs font-bold">TÍTULO DO MANIFESTO / CARTA</Label>
                 <Input
                   value={project.editorialInfo.editorLetterTitle}
@@ -185,15 +173,27 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
                   className="theme-app-input text-xs mt-1 font-bold border-2"
                 />
               </div>
+            </div>
 
-              <div>
-                <Label className="text-xs font-bold">FOTO DE AÇÃO DO EDITOR (INSET URL)</Label>
-                <Input
-                  value={project.editorialInfo.editorActionPhoto || ""}
-                  onChange={(e) => updateEditorial("editorActionPhoto", e.target.value)}
-                  className="theme-app-input text-xs mt-1 border-2"
-                />
-              </div>
+            {/* Photos with Universal ImagePicker (Upload / AI Prompt / URL) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <ImagePicker
+                label="Foto de Perfil do Editor (Card 1/3)"
+                value={project.editorialInfo.editorPhoto}
+                onChange={(url) => updateEditorial("editorPhoto", url)}
+                aspectRatio="portrait"
+                placeholderPrompt="Retrato profissional de Coach de força imponente, estúdio dramático preto e branco..."
+                helperText="Upload local, IA ou URL"
+              />
+
+              <ImagePicker
+                label="Foto de Ação do Editor (Inset 2/3)"
+                value={project.editorialInfo.editorActionPhoto || ""}
+                onChange={(url) => updateEditorial("editorActionPhoto", url)}
+                aspectRatio="landscape"
+                placeholderPrompt="Coach realizando levantamento pesado de kettlebell em academia de ferro industrial..."
+                helperText="Upload local, IA ou URL"
+              />
             </div>
 
             <div>
@@ -365,15 +365,25 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-[10px] font-bold">FOTO DO COLABORADOR (URL)</Label>
+                    <Label className="text-[10px] font-bold">CONTATO / INSTAGRAM</Label>
                     <Input
-                      value={con.photo}
-                      onChange={(e) => handleUpdateContributor(con.id, "photo", e.target.value)}
-                      placeholder="URL da foto (B&W portrait)"
-                      className="theme-app-input text-xs h-7 mt-1 border"
+                      value={con.handle}
+                      onChange={(e) => handleUpdateContributor(con.id, "handle", e.target.value)}
+                      placeholder="Ex: @coachmontanha"
+                      className="theme-app-input text-xs h-7 mt-1 font-mono border"
                     />
                   </div>
                 </div>
+
+                {/* Contributor Photo with ImagePicker */}
+                <ImagePicker
+                  label="Foto do Colaborador"
+                  value={con.photo}
+                  onChange={(url) => handleUpdateContributor(con.id, "photo", url)}
+                  aspectRatio="square"
+                  placeholderPrompt="Retrato de treinador de elite, foto em preto e branco de alta qualidade..."
+                  helperText="Upload ou IA"
+                />
 
                 <div>
                   <Label className="text-[10px] font-bold">MINI-BIO (3 A 5 LINHAS)</Label>
@@ -385,25 +395,14 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-[10px] font-bold">CONTATO / INSTAGRAM</Label>
-                    <Input
-                      value={con.handle}
-                      onChange={(e) => handleUpdateContributor(con.id, "handle", e.target.value)}
-                      placeholder="Ex: @coachmontanha"
-                      className="theme-app-input text-xs h-7 mt-1 font-mono border"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-[10px] font-bold">CENTRO DE TREINAMENTO / FACILITY</Label>
-                    <Input
-                      value={con.facility || ""}
-                      onChange={(e) => handleUpdateContributor(con.id, "facility", e.target.value)}
-                      placeholder="Ex: MONTANHA IRON LAB // SP"
-                      className="theme-app-input text-xs h-7 mt-1 font-mono border"
-                    />
-                  </div>
+                <div>
+                  <Label className="text-[10px] font-bold">CENTRO DE TREINAMENTO / FACILITY</Label>
+                  <Input
+                    value={con.facility || ""}
+                    onChange={(e) => handleUpdateContributor(con.id, "facility", e.target.value)}
+                    placeholder="Ex: MONTANHA IRON LAB // SP"
+                    className="theme-app-input text-xs h-7 mt-1 font-mono border"
+                  />
                 </div>
               </div>
             ))}

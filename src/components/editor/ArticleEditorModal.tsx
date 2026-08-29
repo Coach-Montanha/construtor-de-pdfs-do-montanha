@@ -1,19 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Article,
   LayoutTemplate,
-  WorkoutExercise,
   WorkoutProtocol,
+  WorkoutExercise,
   ProductPromotion,
   FacilitySpotlight,
 } from "../../types/magazine";
-import {
-  polishEditorialText,
-  generateEditorialHeadlines,
-  extractPullQuotes,
-  generateAiImageUrl,
-  getEditorialCuratedImage,
-} from "../../lib/ai-service";
 import {
   Dialog,
   DialogContent,
@@ -21,29 +14,40 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
+import { Button } from "../ui/button";
+import { ImagePicker } from "../ui/image-picker";
 import {
   Sparkles,
-  Wand2,
-  Quote,
-  Image as ImageIcon,
-  Layout,
   Plus,
   Trash2,
-  Loader2,
-  Dumbbell,
+  Wand2,
+  Image as ImageIcon,
+  Quote,
+  CheckCircle2,
+  Clock,
+  Layout,
   Tag,
+  Dumbbell,
   Building,
+  Loader2,
+  Check,
 } from "lucide-react";
+import {
+  polishEditorialText,
+  generateEditorialHeadlines,
+  extractPullQuotes,
+  getEditorialCuratedImage,
+  generateAiImageUrl,
+} from "../../lib/ai-service";
 
 interface ArticleEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   article: Article | null;
-  onSave: (updated: Article) => void;
+  onSave: (article: Article) => void;
   apiKey?: string;
 }
 
@@ -54,259 +58,270 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   onSave,
   apiKey,
 }) => {
-  const [formData, setFormData] = useState<Article>(
-    article || {
-      id: "art-" + Date.now(),
-      title: "",
-      subtitle: "",
-      category: "MONTANHA METHOD",
-      author: "Coach Montanha",
-      authorBio: "Master Kettlebell Instructor // CSCS",
-      authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
-      heroImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=85",
-      heroImageCaption: "",
-      heroImagePrompt: "",
-      content: "",
-      pullQuotes: [],
-      calloutBox: {
-        title: "DESTAQUE DA REDAÇÃO",
-        content: "",
-      },
-      keyTakeaways: [],
-      layoutTemplate: "editorial-lead",
-      tags: [],
-      estimatedReadTime: 4,
-      featuredOnCover: true,
-    }
-  );
+  const [formData, setFormData] = useState<Article>({
+    id: "art-" + Date.now(),
+    title: "",
+    subtitle: "",
+    category: "MONTANHA METHOD",
+    author: "Coach Montanha",
+    authorBio: "Master Coach & Fundador",
+    authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
+    heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+    heroImageCaption: "",
+    content: "",
+    pullQuotes: [],
+    keyTakeaways: [],
+    layoutTemplate: "editorial-lead",
+    tags: ["Força", "Alta Performance"],
+    estimatedReadTime: 4,
+    featuredOnCover: false,
+    enabled: true,
+  });
 
+  const [newQuoteInput, setNewQuoteInput] = useState<string>("");
+  const [newTakeawayInput, setNewTakeawayInput] = useState<string>("");
+  const [newTagInput, setNewTagInput] = useState<string>("");
   const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
   const [aiStatusMsg, setAiStatusMsg] = useState<string>("");
-  const [newQuoteInput, setNewQuoteInput] = useState<string>("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (article) {
-      setFormData(article);
+      setFormData({
+        ...article,
+        enabled: article.enabled !== false,
+      });
+    } else {
+      setFormData({
+        id: "art-" + Date.now(),
+        title: "",
+        subtitle: "",
+        category: "MONTANHA METHOD",
+        author: "Coach Montanha",
+        authorBio: "Master Coach & Fundador",
+        authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
+        heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+        heroImageCaption: "",
+        content: "",
+        pullQuotes: [],
+        keyTakeaways: [],
+        layoutTemplate: "editorial-lead",
+        tags: ["Força", "Alta Performance"],
+        estimatedReadTime: 4,
+        featuredOnCover: false,
+        enabled: true,
+      });
     }
   }, [article, isOpen]);
 
-  // AI Actions
-  const handlePolishText = async () => {
-    if (!formData.content) return;
-    try {
-      setIsAiLoading(true);
-      setAiStatusMsg("Polindo e refinando texto com IA...");
-      const polished = await polishEditorialText(formData.content, "journalistic", apiKey);
-      setFormData((prev) => ({
-        ...prev,
-        content: polished,
-        estimatedReadTime: Math.max(2, Math.round(polished.split(/\s+/).length / 150)),
-      }));
-    } catch (err: any) {
-      alert("Erro ao polir texto: " + err.message);
-    } finally {
-      setIsAiLoading(false);
-      setAiStatusMsg("");
-    }
-  };
-
-  const handleSuggestHeadlines = async () => {
-    try {
-      setIsAiLoading(true);
-      setAiStatusMsg("Gerando manchetes de impacto...");
-      const suggestions = await generateEditorialHeadlines(
-        formData.title,
-        formData.content,
-        apiKey
-      );
-      if (suggestions.length > 0) {
-        const top = suggestions[0];
-        setFormData((prev) => ({
-          ...prev,
-          title: top.title,
-          subtitle: top.subtitle,
-          category: top.category || prev.category,
-        }));
-      }
-    } catch (err: any) {
-      alert("Erro: " + err.message);
-    } finally {
-      setIsAiLoading(false);
-      setAiStatusMsg("");
-    }
-  };
-
-  const handleExtractQuotes = async () => {
-    if (!formData.content) return;
-    try {
-      setIsAiLoading(true);
-      setAiStatusMsg("Extraindo citações de destaque...");
-      const quotes = await extractPullQuotes(formData.content, apiKey);
-      setFormData((prev) => ({
-        ...prev,
-        pullQuotes: quotes,
-      }));
-    } catch (err: any) {
-      alert("Erro: " + err.message);
-    } finally {
-      setIsAiLoading(false);
-      setAiStatusMsg("");
-    }
-  };
-
-  const handleGenerateAiImage = () => {
-    const prompt = formData.heroImagePrompt || `${formData.title} ${formData.category} fitness editorial`;
-    const aiUrl = generateAiImageUrl(prompt);
-    setFormData((prev) => ({
-      ...prev,
-      heroImage: aiUrl,
-      heroImageCaption: `Ilustração gerada para: ${formData.title}`,
-    }));
-  };
-
-  const handleCuratedImage = () => {
-    const curated = getEditorialCuratedImage(formData.category, Math.floor(Math.random() * 5));
-    setFormData((prev) => ({
-      ...prev,
-      heroImage: curated,
-      heroImageCaption: "Fotografia Editorial de Alta Resolução",
-    }));
-  };
-
-  const handleAddQuote = () => {
-    if (newQuoteInput.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        pullQuotes: [...prev.pullQuotes, newQuoteInput.trim()],
-      }));
-      setNewQuoteInput("");
-    }
-  };
-
-  const handleRemoveQuote = (idx: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      pullQuotes: prev.pullQuotes.filter((_, i) => i !== idx),
-    }));
-  };
-
-  // Workout Protocol Management
-  const updateWorkoutProtocol = (field: keyof WorkoutProtocol, value: any) => {
-    const defaultProto: WorkoutProtocol = {
-      workoutTitle: formData.title || "WORKOUT PROTOCOL",
-      warmupPrep: "MOBILITY PREP (5 MIN): Thoracic spine bridges, Halos com kettlebell leve (3x10 cada lado).",
-      exercises: [
-        {
-          code: "A1",
-          name: "EXERCÍCIO PRINCIPAL",
-          setsReps: "5 SÉRIES × 5 REPETIÇÕES",
-          tempoRest: "TEMPO: 20X1 // DESCANSO: 90s",
-          keyPoints: "Trave o core e execute com máxima potência.",
-        },
-      ],
-      finisher: "FINISHER: Heavy Carry ou Snatch protocol.",
-      videoQrUrl: "https://coachmontanha.com.br",
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      workoutProtocol: {
-        ...(prev.workoutProtocol || defaultProto),
-        [field]: value,
-      },
-    }));
-  };
-
-  const handleAddWorkoutExercise = () => {
-    const currentExercises = formData.workoutProtocol?.exercises || [];
-    const nextCode = currentExercises.length === 0 ? "A1" : currentExercises.length === 1 ? "A2" : currentExercises.length === 2 ? "B1" : currentExercises.length === 3 ? "B2" : "FINISHER";
-    const newEx: WorkoutExercise = {
-      code: nextCode,
-      name: "NOVO EXERCÍCIO NÃO-CONVENCIONAL",
-      setsReps: "4 SÉRIES × 8 REPETIÇÕES",
-      tempoRest: "TEMPO: 2011 // DESCANSO: 60s",
-      keyPoints: "Postura impecável e alinhamento biomecânico.",
-    };
-    updateWorkoutProtocol("exercises", [...currentExercises, newEx]);
-  };
-
-  const handleUpdateExercise = (idx: number, field: keyof WorkoutExercise, value: string) => {
-    const currentExercises = [...(formData.workoutProtocol?.exercises || [])];
-    if (currentExercises[idx]) {
-      currentExercises[idx] = { ...currentExercises[idx], [field]: value };
-      updateWorkoutProtocol("exercises", currentExercises);
-    }
-  };
-
-  const handleRemoveExercise = (idx: number) => {
-    const currentExercises = (formData.workoutProtocol?.exercises || []).filter((_, i) => i !== idx);
-    updateWorkoutProtocol("exercises", currentExercises);
-  };
-
-  // Product Promotion Management
-  const updateProductPromotion = (field: keyof ProductPromotion, value: any) => {
-    const defaultPromo: ProductPromotion = {
-      slogan: "FORGED IN IRON // BUILT FOR WAR",
-      productName: formData.title || "MONTANHA COMPETITION GEAR",
-      productSubtitle: formData.subtitle || "Equipamento forjado para suportar o treino mais brutal do planeta.",
-      productImage: formData.heroImage,
-      promoBadgeText: "SPECIAL LAUNCH OFFER // 15% OFF",
-      couponCode: "MONTANHA15",
-      ctaUrl: "WWW.MONTANHAIRON.COM.BR",
-      specBadges: [
-        { title: "GRAVITY CAST", subtitle: "Single pour ductile iron" },
-        { title: "POWDER COAT", subtitle: "Matte textured grip" },
-        { title: "CALIBRATED", subtitle: "+/- 0.5% precision" },
-        { title: "LIFETIME SPEC", subtitle: "Indestructible warranty" },
-      ],
-      features: ["Fundição maciça", "Acabamento antiferrugem"],
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      productPromotion: {
-        ...(prev.productPromotion || defaultPromo),
-        [field]: value,
-      },
-    }));
-  };
-
-  // Facility Spotlight Management
-  const updateFacilitySpotlight = (field: keyof FacilitySpotlight, value: any) => {
-    const defaultFac: FacilitySpotlight = {
-      facilityName: formData.title || "MONTANHA PERFORMANCE LAB",
-      headCoach: formData.author || "COACH MONTANHA",
-      location: "SÃO PAULO // SP - BRASIL",
-      website: "WWW.MONTANHALAB.COM.BR",
-      methodsUsed: ["KETTLEBELLS", "STEEL MACES", "CLUBBELLS", "CALISTHENICS", "MOBILITY"],
-      specialties: ["Condicionamento Tático", "Força Não-Convencional"],
-      galleryPhotos: [
-        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80",
-        "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80",
-      ],
-      overviewText: formData.content || "Santuário dedicado ao treinamento de força não-convencional e biomecânica avançada.",
-      missionText: "Forjar corpos indestrutíveis e mentes espartanas preparadas para qualquer desafio.",
-      philosophyText: "Sem máquinas guiadas. Sem desculpas. Apenas você contra a gravidade e o ferro.",
-      anchoredQuote: "O ambiente certo não apenas inspira o esforço; ele torna a mediocridade insuportável.",
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      facilitySpotlight: {
-        ...(prev.facilitySpotlight || defaultFac),
-        [field]: value,
-      },
-    }));
-  };
-
   const handleSave = () => {
-    if (!formData.title) {
+    if (!formData.title.trim()) {
       alert("Por favor, preencha o título do artigo.");
       return;
     }
     onSave(formData);
     onClose();
+  };
+
+  const handleAddQuote = () => {
+    if (!newQuoteInput.trim()) return;
+    setFormData({
+      ...formData,
+      pullQuotes: [...formData.pullQuotes, newQuoteInput.trim()],
+    });
+    setNewQuoteInput("");
+  };
+
+  const handleRemoveQuote = (idx: number) => {
+    setFormData({
+      ...formData,
+      pullQuotes: formData.pullQuotes.filter((_, i) => i !== idx),
+    });
+  };
+
+  const handleAddTakeaway = () => {
+    if (!newTakeawayInput.trim()) return;
+    setFormData({
+      ...formData,
+      keyTakeaways: [...(formData.keyTakeaways || []), newTakeawayInput.trim()],
+    });
+    setNewTakeawayInput("");
+  };
+
+  const handleRemoveTakeaway = (idx: number) => {
+    setFormData({
+      ...formData,
+      keyTakeaways: (formData.keyTakeaways || []).filter((_, i) => i !== idx),
+    });
+  };
+
+  const handleAddTag = () => {
+    if (!newTagInput.trim()) return;
+    setFormData({
+      ...formData,
+      tags: [...formData.tags, newTagInput.trim()],
+    });
+    setNewTagInput("");
+  };
+
+  const handleRemoveTag = (idx: number) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter((_, i) => i !== idx),
+    });
+  };
+
+  // AI Actions
+  const handlePolishText = async (tone: "motivational" | "journalistic" | "scientific" = "journalistic") => {
+    if (!formData.content) return;
+    setIsAiLoading(true);
+    setAiStatusMsg("Polindo texto com linguagem editorial de revista...");
+    try {
+      const polished = await polishEditorialText(formData.content, tone, apiKey);
+      setFormData((prev) => ({ ...prev, content: polished }));
+    } catch (err: any) {
+      alert("Erro na IA: " + err.message);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleSuggestHeadlines = async () => {
+    if (!formData.content && !formData.title) return;
+    setIsAiLoading(true);
+    setAiStatusMsg("Criando sugestões de manchetes impactantes...");
+    try {
+      const suggestions = await generateEditorialHeadlines(formData.title, formData.content, apiKey);
+      if (suggestions.length > 0) {
+        const pick = suggestions[0];
+        setFormData((prev) => ({
+          ...prev,
+          title: pick.title,
+          subtitle: pick.subtitle,
+          category: pick.category || prev.category,
+        }));
+      }
+    } catch (err: any) {
+      alert("Erro na IA: " + err.message);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleExtractQuotes = async () => {
+    if (!formData.content) return;
+    setIsAiLoading(true);
+    setAiStatusMsg("Extraindo citações de destaque tipográfico...");
+    try {
+      const quotes = await extractPullQuotes(formData.content, apiKey);
+      setFormData((prev) => ({ ...prev, pullQuotes: quotes }));
+    } catch (err: any) {
+      alert("Erro na IA: " + err.message);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  // Workout Protocol helpers
+  const updateWorkoutProtocol = <K extends keyof WorkoutProtocol>(
+    field: K,
+    value: WorkoutProtocol[K]
+  ) => {
+    setFormData({
+      ...formData,
+      workoutProtocol: {
+        workoutTitle: formData.workoutProtocol?.workoutTitle || formData.title,
+        warmupPrep: formData.workoutProtocol?.warmupPrep || "",
+        exercises: formData.workoutProtocol?.exercises || [],
+        finisher: formData.workoutProtocol?.finisher || "",
+        videoQrUrl: formData.workoutProtocol?.videoQrUrl || "",
+        ...formData.workoutProtocol,
+        [field]: value,
+      },
+    });
+  };
+
+  const handleAddWorkoutExercise = () => {
+    const nextCode = `A${(formData.workoutProtocol?.exercises.length || 0) + 1}`;
+    const newEx: WorkoutExercise = {
+      code: nextCode,
+      name: "NOVO EXERCÍCIO NÃO-CONVENCIONAL",
+      setsReps: "4 SÉRIES × 6 REPS",
+      tempoRest: "TEMPO: 20X1 // REST: 90s",
+      keyPoints: "Trave o core, mantenha postura neutra e execute com máxima potência.",
+    };
+    const currentExercises = formData.workoutProtocol?.exercises || [];
+    updateWorkoutProtocol("exercises", [...currentExercises, newEx]);
+  };
+
+  const handleUpdateExercise = (idx: number, field: keyof WorkoutExercise, val: string) => {
+    const current = formData.workoutProtocol?.exercises || [];
+    const updated = current.map((ex, i) => (i === idx ? { ...ex, [field]: val } : ex));
+    updateWorkoutProtocol("exercises", updated);
+  };
+
+  const handleRemoveExercise = (idx: number) => {
+    const current = formData.workoutProtocol?.exercises || [];
+    updateWorkoutProtocol(
+      "exercises",
+      current.filter((_, i) => i !== idx)
+    );
+  };
+
+  // Product Promotion helpers
+  const updateProductPromotion = <K extends keyof ProductPromotion>(
+    field: K,
+    value: ProductPromotion[K]
+  ) => {
+    setFormData({
+      ...formData,
+      productPromotion: {
+        slogan: formData.productPromotion?.slogan || "FORGED IN IRON // BUILT FOR WAR",
+        productName: formData.productPromotion?.productName || formData.title,
+        productSubtitle: formData.productPromotion?.productSubtitle || formData.subtitle,
+        productImage: formData.productPromotion?.productImage || formData.heroImage,
+        promoBadgeText: formData.productPromotion?.promoBadgeText || "SPECIAL OFFER // 15% OFF",
+        couponCode: formData.productPromotion?.couponCode || "MONTANHA15",
+        ctaUrl: formData.productPromotion?.ctaUrl || "WWW.MONTANHAIRON.COM.BR",
+        specBadges: formData.productPromotion?.specBadges || [
+          { title: "GRAVITY CAST", subtitle: "Single pour iron" },
+          { title: "POWDER COAT", subtitle: "Matte grip" },
+          { title: "CALIBRATED", subtitle: "+/- 0.5% weight" },
+          { title: "LIFETIME SPEC", subtitle: "Indestructible" },
+        ],
+        features: formData.productPromotion?.features || [],
+        ...formData.productPromotion,
+        [field]: value,
+      },
+    });
+  };
+
+  // Facility Spotlight helpers
+  const updateFacilitySpotlight = <K extends keyof FacilitySpotlight>(
+    field: K,
+    value: FacilitySpotlight[K]
+  ) => {
+    setFormData({
+      ...formData,
+      facilitySpotlight: {
+        facilityName: formData.facilitySpotlight?.facilityName || "MONTANHA PERFORMANCE LAB",
+        headCoach: formData.facilitySpotlight?.headCoach || "COACH MONTANHA",
+        location: formData.facilitySpotlight?.location || "SÃO PAULO // SP",
+        website: formData.facilitySpotlight?.website || "WWW.MONTANHALAB.COM.BR",
+        methodsUsed: formData.facilitySpotlight?.methodsUsed || ["KETTLEBELLS", "STEEL MACES", "CLUBBELLS"],
+        specialties: formData.facilitySpotlight?.specialties || ["Força", "Condicionamento"],
+        galleryPhotos: formData.facilitySpotlight?.galleryPhotos || [
+          "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
+          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80",
+          "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80",
+        ],
+        overviewText: formData.facilitySpotlight?.overviewText || "",
+        missionText: formData.facilitySpotlight?.missionText || "",
+        philosophyText: formData.facilitySpotlight?.philosophyText || "",
+        anchoredQuote: formData.facilitySpotlight?.anchoredQuote || "",
+        ...formData.facilitySpotlight,
+        [field]: value,
+      },
+    });
   };
 
   return (
@@ -347,7 +362,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                   type="button"
                   onClick={handleSuggestHeadlines}
                   disabled={isAiLoading}
-                  className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1 bg-amber-400/20 px-2 py-0.5 rounded border border-amber-500"
+                  className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3" />
                   Sugerir Títulos com IA
@@ -355,9 +370,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </div>
               <Input
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value.toUpperCase() })}
                 placeholder="Título impactante em caixa alta"
-                className="theme-app-input font-black text-base border-2"
+                className="theme-app-input font-black text-sm border-2"
               />
             </div>
 
@@ -366,15 +381,15 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               <Textarea
                 value={formData.subtitle}
                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                placeholder="1 a 2 frases resumindo a ideia central da matéria"
-                className="theme-app-input text-xs h-16 border-2"
+                placeholder="Resumo de 1 a 2 frases que sintetiza o takeaway da matéria..."
+                className="theme-app-input text-xs h-16 border"
               />
             </div>
 
-            {/* Author Info */}
-            <div className="grid grid-cols-2 gap-3 theme-app-card-subtle p-3 rounded-lg border-2">
+            {/* Author Details & Photo */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-[11px] font-bold">Autor</Label>
+                <Label className="text-[11px] font-bold">Autor da Matéria</Label>
                 <Input
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
@@ -416,52 +431,26 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Hero Image & Quotes */}
+          {/* Right Column: Hero Image with ImagePicker & Quotes */}
           <div className="space-y-4">
-            {/* Hero Image Controls */}
-            <div className="theme-app-card-subtle p-3.5 rounded-lg border-2 space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
-                  <span>FOTO HERO DO ARTIGO</span>
-                </Label>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={handleCuratedImage}
-                    className="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-white font-bold"
-                    title="Buscar foto curada"
-                  >
-                    Foto Curada
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleGenerateAiImage}
-                    className="text-[10px] bg-amber-500 hover:bg-amber-600 px-2 py-1 rounded text-slate-950 font-black flex items-center gap-1 border border-black"
-                    title="Gerar foto por IA"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    Gerar por IA
-                  </button>
-                </div>
-              </div>
+            {/* Universal Hero ImagePicker (Upload / AI / URL) */}
+            <ImagePicker
+              label="Foto Hero do Artigo"
+              value={formData.heroImage}
+              onChange={(url) => setFormData({ ...formData, heroImage: url })}
+              aspectRatio="landscape"
+              placeholderPrompt="Fotografia editorial em 8k de atleta em treino intenso..."
+              helperText="Upload do PC, IA ou URL"
+            />
 
+            <div>
+              <Label className="text-[10px] font-bold">LEGENDA DA FOTO HERO (CRÉDITOS)</Label>
               <Input
-                value={formData.heroImage}
-                onChange={(e) => setFormData({ ...formData, heroImage: e.target.value })}
-                placeholder="URL da imagem"
-                className="theme-app-input text-xs border"
+                value={formData.heroImageCaption || ""}
+                onChange={(e) => setFormData({ ...formData, heroImageCaption: e.target.value })}
+                placeholder="Ex: Movimento balístico capturado no Montanha Lab."
+                className="theme-app-input text-xs mt-1 border"
               />
-
-              {formData.heroImage && (
-                <div className="relative h-28 w-full rounded-md overflow-hidden border-2 border-black">
-                  <img
-                    src={formData.heroImage}
-                    alt="Preview"
-                    className="w-full h-full object-cover filter contrast-125"
-                  />
-                </div>
-              )}
             </div>
 
             {/* Pull Quotes Manager */}
@@ -475,7 +464,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                   type="button"
                   onClick={handleExtractQuotes}
                   disabled={isAiLoading || !formData.content}
-                  className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1"
+                  className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3" />
                   Extrair com IA
@@ -492,7 +481,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveQuote(idx)}
-                      className="text-red-500 hover:text-red-400 p-1"
+                      className="text-red-500 hover:text-red-400 p-1 cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -517,7 +506,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                   size="sm"
                   type="button"
                   onClick={handleAddQuote}
-                  className="h-8 bg-amber-500 text-black font-bold border border-black"
+                  className="h-8 bg-amber-500 text-black font-bold border border-black cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </Button>
@@ -539,7 +528,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               <Button
                 size="sm"
                 onClick={handleAddWorkoutExercise}
-                className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center gap-1 border border-black"
+                className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center gap-1 border border-black cursor-pointer"
               >
                 <Plus className="w-3 h-3" />
                 Adicionar Exercício
@@ -577,7 +566,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveExercise(idx)}
-                      className="text-red-500 hover:text-red-400 p-1"
+                      className="text-red-500 hover:text-red-400 p-1 cursor-pointer"
                       title="Remover exercício"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -666,6 +655,15 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </div>
             </div>
 
+            <ImagePicker
+              label="Foto Central do Produto / Equipamento"
+              value={formData.productPromotion?.productImage || formData.heroImage}
+              onChange={(url) => updateProductPromotion("productImage", url)}
+              aspectRatio="landscape"
+              placeholderPrompt="Equipamento de ferro fundido kettlebell em estúdio escuro com iluminação dramática..."
+              helperText="Upload ou IA"
+            />
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-bold uppercase">CÓDIGO DO CUPOM</Label>
@@ -678,11 +676,11 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </div>
 
               <div>
-                <Label className="text-xs font-bold uppercase">URL DO PRODUTO / LOJA</Label>
+                <Label className="text-xs font-bold uppercase">URL DE COMPRA (QR CODE)</Label>
                 <Input
                   value={formData.productPromotion?.ctaUrl || ""}
-                  onChange={(e) => updateProductPromotion("ctaUrl", e.target.value.toUpperCase())}
-                  placeholder="Ex: WWW.MONTANHAIRON.COM.BR"
+                  onChange={(e) => updateProductPromotion("ctaUrl", e.target.value)}
+                  placeholder="WWW.MONTANHAIRON.COM.BR"
                   className="theme-app-input font-mono text-xs mt-1 border"
                 />
               </div>
@@ -696,91 +694,114 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             <div className="flex items-center gap-2 border-b pb-2">
               <Building className="w-4 h-4 text-amber-500" />
               <h3 className="font-black text-sm uppercase tracking-tight">
-                Configuração do Studio & Facility Spotlight
+                Configuração do Spotlight de Estúdio / Centro de Treinamento
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <Label className="text-xs font-bold uppercase">NOME DO ESPAÇO / ESTÚDIO</Label>
+                <Label className="text-[11px] font-bold uppercase">NOME DO ESPAÇO</Label>
                 <Input
                   value={formData.facilitySpotlight?.facilityName || ""}
                   onChange={(e) => updateFacilitySpotlight("facilityName", e.target.value.toUpperCase())}
-                  placeholder="Ex: MONTANHA PERFORMANCE LAB"
-                  className="theme-app-input font-black text-xs mt-1 border"
+                  placeholder="Ex: MONTANHA LAB // SP"
+                  className="theme-app-input font-bold text-xs mt-1 border"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-bold uppercase">HEAD COACH / DIRETOR</Label>
+                <Label className="text-[11px] font-bold uppercase">HEAD COACH / DIRETOR</Label>
                 <Input
                   value={formData.facilitySpotlight?.headCoach || ""}
                   onChange={(e) => updateFacilitySpotlight("headCoach", e.target.value.toUpperCase())}
                   placeholder="Ex: COACH MONTANHA"
-                  className="theme-app-input font-bold text-xs mt-1 border text-amber-600"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs font-bold uppercase">LOCALIZAÇÃO / CIDADE</Label>
-                <Input
-                  value={formData.facilitySpotlight?.location || ""}
-                  onChange={(e) => updateFacilitySpotlight("location", e.target.value.toUpperCase())}
-                  placeholder="Ex: SÃO PAULO // SP"
                   className="theme-app-input text-xs mt-1 border"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-bold uppercase">WEBSITE / CONTATO</Label>
+                <Label className="text-[11px] font-bold uppercase">LOCALIZAÇÃO</Label>
                 <Input
-                  value={formData.facilitySpotlight?.website || ""}
-                  onChange={(e) => updateFacilitySpotlight("website", e.target.value.toUpperCase())}
-                  placeholder="Ex: WWW.MONTANHALAB.COM.BR"
-                  className="theme-app-input text-xs mt-1 font-mono border"
+                  value={formData.facilitySpotlight?.location || ""}
+                  onChange={(e) => updateFacilitySpotlight("location", e.target.value)}
+                  placeholder="Ex: SÃO PAULO // SP"
+                  className="theme-app-input text-xs mt-1 border"
                 />
               </div>
+            </div>
+
+            <div>
+              <Label className="text-[11px] font-bold uppercase">MANIFESTO ANCORADO (PULL QUOTE DO ESTÚDIO)</Label>
+              <Input
+                value={formData.facilitySpotlight?.anchoredQuote || ""}
+                onChange={(e) => updateFacilitySpotlight("anchoredQuote", e.target.value)}
+                placeholder="Ex: O ambiente certo torna a mediocridade insuportável."
+                className="theme-app-input text-xs mt-1 border text-amber-600 font-semibold"
+              />
             </div>
           </div>
         )}
 
-        {/* Full Article Content Editor */}
-        <div className="space-y-2 mt-2">
+        {/* Article Body Content */}
+        <div className="space-y-2 pt-2 border-t">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-bold">
-              CORPO DO ARTIGO / TEXTO EDITORIAL (PARÁGRAFOS)
-            </Label>
-            <Button
-              size="sm"
-              type="button"
-              onClick={handlePolishText}
-              disabled={isAiLoading || !formData.content}
-              className="h-7 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 border border-black"
-            >
-              <Wand2 className="w-3 h-3" />
-              <span>Polir Texto com IA</span>
-            </Button>
+            <Label className="text-xs font-bold">CORPO DO TEXTO (PARÁGRAFOS)</Label>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold opacity-75 mr-1">Polir com IA:</span>
+              <button
+                type="button"
+                onClick={() => handlePolishText("journalistic")}
+                disabled={isAiLoading || !formData.content}
+                className="text-[10px] font-bold bg-amber-400 text-black px-2 py-0.5 rounded border border-black hover:bg-amber-500 cursor-pointer"
+              >
+                Jornalístico
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePolishText("motivational")}
+                disabled={isAiLoading || !formData.content}
+                className="text-[10px] font-bold bg-amber-400 text-black px-2 py-0.5 rounded border border-black hover:bg-amber-500 cursor-pointer"
+              >
+                Motivacional
+              </button>
+            </div>
           </div>
+
           <Textarea
             value={formData.content}
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            placeholder="Escreva ou cole seu artigo aqui. Separe parágrafos com quebra de linha dupla."
-            className="theme-app-input text-xs font-mono min-h-[180px] leading-relaxed border-2"
+            placeholder="Escreva os parágrafos da matéria aqui. Separe os parágrafos com uma linha em branco para criar a diagramação de revista..."
+            className="theme-app-input text-xs h-44 leading-relaxed font-sans border-2"
           />
         </div>
 
-        <DialogFooter className="border-t-2 border-current pt-4 mt-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={onClose} className="font-bold">
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSave}
-            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-6 border-2 border-black"
-          >
-            Salvar Artigo na Revista
-          </Button>
+        {/* Footer Actions */}
+        <DialogFooter className="border-t pt-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Label className="text-xs font-bold">Tempo estimado de leitura:</Label>
+            <Input
+              type="number"
+              value={formData.estimatedReadTime}
+              onChange={(e) =>
+                setFormData({ ...formData, estimatedReadTime: parseInt(e.target.value) || 3 })
+              }
+              className="theme-app-input text-xs h-8 w-16 text-center border"
+            />
+            <span className="text-xs opacity-75">minutos</span>
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} className="h-9 font-bold text-xs border-2">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="h-9 bg-amber-500 hover:bg-amber-600 text-black font-black text-xs px-5 border-2 border-black shadow-md cursor-pointer flex items-center gap-1.5"
+            >
+              <Check className="w-4 h-4" />
+              <span>Salvar Matéria</span>
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
