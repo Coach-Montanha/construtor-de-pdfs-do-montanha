@@ -177,6 +177,11 @@ Aqui, não acreditamos em atalhos mágicos ou promessas vazias. Acreditamos no p
 
 Cada página que você ler nesta edição foi cuidadosamente diagramada para entregar não apenas informação, mas um chamado à ação. Que estas linhas sirvam de combustível para que você conquiste a sua melhor versão dentro e fora dos treinos.`,
     editorialNote: "A força não é um acidente genético; é uma decisão diária forjada no ferro.",
+    isbn: "978-65-00-98765-4",
+    issn: "2675-9829",
+    publisherInfo: "MONTANHA EDITORIAL & PUBLICATONS LTDA. // CNPJ: 00.000.000/0001-00 // SÃO PAULO - BRASIL",
+    catalogingData: "Dados Internacionais de Catalogação na Publicação (CIP)\nRevista Montanha : alta performance, força não-convencional e ciência aplicada / Editor-Chefe: Coach Montanha. -- Ed. 01 (Set. 2026) -- São Paulo : Montanha Editorial, 2026. Mensal. ISSN 2675-9829. ISBN 978-65-00-98765-4. 1. Educação física. 2. Musculação e Condicionamento. 3. Treinamento Físico. I. Montanha, Coach. CDD 613.71",
+    legalText: "TODOS OS DIREITOS RESERVADOS. É rigorosamente proibida a reprodução total ou parcial desta obra por quaisquer meios eletrônicos, mecânicos, fotográficos ou gravação sem a prévia autorização expressa dos editores. As opiniões emitidas em artigos assinados são de inteira responsabilidade de seus respectivos autores.",
     disclaimerText:
       "AVISO LEGAL & MÉDICO: O conteúdo editorial desta publicação destina-se exclusivamente a fins informativos e educacionais. A prática de exercícios físicos intensos e alterações na dieta exigem avaliação médica prévia e orientação de profissionais de Educação Física e Nutrição registrados nos respectivos conselhos de classe. © 2026 Montanha Media.",
     credits: [

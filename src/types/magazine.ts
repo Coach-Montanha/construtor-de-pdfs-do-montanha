@@ -107,6 +107,7 @@ export interface EditorialInfo {
   editorName: string;
   editorRole: string;
   editorPhoto: string;
+  editorPhotoSize?: "compact" | "medium" | "hidden";
   editorActionPhoto?: string;
   editorLetterTitle: string;
   editorLetter: string;
@@ -114,6 +115,11 @@ export interface EditorialInfo {
   credits: EditorialCredit[];
   editorialNote?: string;
   disclaimerText?: string;
+  isbn?: string;
+  issn?: string;
+  legalText?: string;
+  catalogingData?: string;
+  publisherInfo?: string;
   contributors: Contributor[];
 }
 

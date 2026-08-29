@@ -19,6 +19,8 @@ import {
   Award,
   EyeOff,
   CheckCircle2,
+  Scale,
+  FileText,
 } from "lucide-react";
 
 interface EditorialSettingsProps {
@@ -120,27 +122,97 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="bg-amber-400 text-black font-black text-[9px] font-mono px-2 py-0.5 rounded uppercase">
-              SEÇÃO EDITORIAL
+              SEÇÃO EDITORIAL & LEGAL
             </span>
             <span className="text-xs font-mono font-bold text-amber-500 uppercase">
-              ESTRUTURA DE ABERTURA
+              ESTRUTURA DE ABERTURA & REGISTRO
             </span>
           </div>
           <h2 className="text-lg font-black uppercase tracking-tight">
-            Carta do Editor & Painel de Colaboradores
+            Documentação Legal, ISBN, Carta do Editor & Colaboradores
           </h2>
           <p className="text-xs opacity-75 mt-0.5">
-            Gerencie fotos com upload ou IA, textos do manifesto e ative ou desative as páginas conforme a sua necessidade.
+            Configure o registro editorial oficial (ISBN/ISSN/CIP), gerencie o manifesto e a foto do Editor, e controle páginas ativas.
           </p>
         </div>
       </div>
 
-      {/* Page 2: Letter from Editor & Staff */}
+      {/* 1. DOCUMENTAÇÃO LEGAL, ISBN, ISSN E FICHA CATALOGRÁFICA (CIP) */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
+        <div className="flex items-center justify-between border-b pb-3">
+          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <Scale className="w-4 h-4 text-amber-500" />
+            <span>1. Informações Legais, ISBN & Ficha Catalográfica (CIP)</span>
+          </h3>
+          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
+            REGISTRO OFICIAL
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs font-bold">CÓDIGO ISBN</Label>
+            <Input
+              value={project.editorialInfo.isbn || ""}
+              onChange={(e) => updateEditorial("isbn", e.target.value)}
+              placeholder="Ex: 978-65-00-98765-4"
+              className="theme-app-input font-mono text-xs mt-1 border-2 font-bold text-amber-600"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">CÓDIGO ISSN</Label>
+            <Input
+              value={project.editorialInfo.issn || ""}
+              onChange={(e) => updateEditorial("issn", e.target.value)}
+              placeholder="Ex: 2675-9829"
+              className="theme-app-input font-mono text-xs mt-1 border-2 font-bold text-amber-600"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">EDITORA / RAZÃO SOCIAL</Label>
+            <Input
+              value={project.editorialInfo.publisherInfo || ""}
+              onChange={(e) => updateEditorial("publisherInfo", e.target.value)}
+              placeholder="Ex: MONTANHA EDITORIAL LTDA. // SP"
+              className="theme-app-input text-xs mt-1 border-2 font-medium"
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label className="text-xs font-bold flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-amber-500" />
+            <span>DADOS INTERNACIONAIS DE CATALOGAÇÃO NA PUBLICAÇÃO (CIP)</span>
+          </Label>
+          <Textarea
+            value={project.editorialInfo.catalogingData || ""}
+            onChange={(e) => updateEditorial("catalogingData", e.target.value)}
+            placeholder="Ficha catalográfica completa..."
+            className="theme-app-input text-xs mt-1 h-20 leading-tight font-mono text-[11px] border-2"
+          />
+        </div>
+
+        <div>
+          <Label className="text-xs font-bold flex items-center gap-1.5">
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+            <span>AVISO LEGAL & MÉDICO (DISCLAIMER MICRO-TYPOGRAPHY)</span>
+          </Label>
+          <Textarea
+            value={project.editorialInfo.disclaimerText || ""}
+            onChange={(e) => updateEditorial("disclaimerText", e.target.value)}
+            className="theme-app-input text-xs mt-1 h-16 leading-tight font-mono text-[11px] border-2"
+          />
+        </div>
+      </div>
+
+      {/* 2. Page 2: Letter from Editor & Manifesto */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b pb-3">
           <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
             <Feather className="w-4 h-4 text-amber-500" />
-            <span>Carta do Editor & Manifesto de Abertura</span>
+            <span>2. Carta do Editor & Manifesto de Abertura</span>
           </h3>
           <div className="flex items-center gap-2">
             <Switch
@@ -175,26 +247,15 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
               </div>
             </div>
 
-            {/* Photos with Universal ImagePicker (Upload / AI Prompt / URL) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ImagePicker
-                label="Foto de Perfil do Editor (Card 1/3)"
-                value={project.editorialInfo.editorPhoto}
-                onChange={(url) => updateEditorial("editorPhoto", url)}
-                aspectRatio="portrait"
-                placeholderPrompt="Retrato profissional de Coach de força imponente, estúdio dramático preto e branco..."
-                helperText="Upload local, IA ou URL"
-              />
-
-              <ImagePicker
-                label="Foto de Ação do Editor (Inset 2/3)"
-                value={project.editorialInfo.editorActionPhoto || ""}
-                onChange={(url) => updateEditorial("editorActionPhoto", url)}
-                aspectRatio="landscape"
-                placeholderPrompt="Coach realizando levantamento pesado de kettlebell em academia de ferro industrial..."
-                helperText="Upload local, IA ou URL"
-              />
-            </div>
+            {/* Photo with Universal ImagePicker (Upload / AI Prompt / URL) */}
+            <ImagePicker
+              label="Foto do Editor (Retrato Compacto)"
+              value={project.editorialInfo.editorPhoto}
+              onChange={(url) => updateEditorial("editorPhoto", url)}
+              aspectRatio="square"
+              placeholderPrompt="Retrato profissional de Coach de força imponente, estúdio dramático preto e branco..."
+              helperText="Upload do PC, IA ou URL"
+            />
 
             <div>
               <Label className="text-xs font-bold">CORPO DA CARTA DO EDITOR (PARÁGRAFOS)</Label>
@@ -212,18 +273,6 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
                 onChange={(e) => updateEditorial("editorialNote", e.target.value)}
                 placeholder="Ex: A consistência diária nos detalhes invisíveis forja a grandeza."
                 className="theme-app-input text-xs mt-1 font-semibold border-2 text-amber-600"
-              />
-            </div>
-
-            <div>
-              <Label className="text-xs font-bold flex items-center gap-1">
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
-                <span>AVISO LEGAL & MÉDICO (DISCLAIMER MICRO-TYPOGRAPHY)</span>
-              </Label>
-              <Textarea
-                value={project.editorialInfo.disclaimerText || ""}
-                onChange={(e) => updateEditorial("disclaimerText", e.target.value)}
-                className="theme-app-input text-xs mt-1 h-16 leading-tight font-mono text-[11px] border-2"
               />
             </div>
 
@@ -282,13 +331,13 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
         )}
       </div>
 
-      {/* Page 3: Contributors Grid Settings with ON/OFF Toggle */}
+      {/* 3. Page 3: Contributors Grid Settings with ON/OFF Toggle */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b pb-3">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
               <Users className="w-4 h-4 text-amber-500" />
-              <span>Painel de Colaboradores & Autores Convidados</span>
+              <span>3. Painel de Colaboradores & Autores Convidados</span>
             </h3>
             <p className="text-xs opacity-75 mt-0.5">
               Ligue ou desligue a página de colaboradores conforme a disponibilidade da sua equipe.
@@ -316,7 +365,7 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
               <span>Página de Colaboradores Desativada com Sucesso</span>
             </div>
             <p className="text-xs opacity-90 leading-relaxed font-medium">
-              Esta página <strong>NÃO será impressa nem fará parte do seu PDF final</strong>. O sumário e a paginação das matérias já foram reorganizados automaticamente. Você pode reativá-la a qualquer momento acionando o botão acima quando tiver colaboradores cadastrados.
+              Esta página <strong>NÃO será impressa nem fará parte do seu PDF final</strong>. O sumário e a paginação das matérias já foram reorganizados automaticamente.
             </p>
           </div>
         ) : (
