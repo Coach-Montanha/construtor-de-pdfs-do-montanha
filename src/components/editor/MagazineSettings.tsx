@@ -151,10 +151,17 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
           {/* Cover Toggle */}
-          <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 flex items-center justify-between">
+          <div className={`p-3.5 rounded-xl border-2 transition-all flex items-center justify-between ${
+            visibility.showCover ? "theme-app-card border-amber-400 shadow-sm" : "theme-app-card-subtle border-slate-300 opacity-60"
+          }`}>
             <div>
               <span className="text-xs font-black uppercase block">1. Capa Principal</span>
-              <span className="text-[10px] opacity-75">Capa e chamada principal</span>
+              <span className="text-[10px] opacity-75 block">Capa e manchete</span>
+              <span className={`inline-block font-mono text-[9px] font-black px-1.5 py-0.5 rounded border mt-1 ${
+                visibility.showCover ? "bg-amber-400 text-black border-black" : "bg-slate-200 text-slate-700 border-slate-400"
+              }`}>
+                {visibility.showCover ? "✓ ATIVA (NO PDF)" : "✗ DESLIGADA"}
+              </span>
             </div>
             <Switch
               checked={visibility.showCover}
@@ -163,10 +170,17 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           </div>
 
           {/* Editor Letter Toggle */}
-          <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 flex items-center justify-between">
+          <div className={`p-3.5 rounded-xl border-2 transition-all flex items-center justify-between ${
+            visibility.showEditorLetter ? "theme-app-card border-amber-400 shadow-sm" : "theme-app-card-subtle border-slate-300 opacity-60"
+          }`}>
             <div>
               <span className="text-xs font-black uppercase block">2. Carta do Editor</span>
-              <span className="text-[10px] opacity-75">Manifesto e expediente</span>
+              <span className="text-[10px] opacity-75 block">Manifesto e equipe</span>
+              <span className={`inline-block font-mono text-[9px] font-black px-1.5 py-0.5 rounded border mt-1 ${
+                visibility.showEditorLetter ? "bg-amber-400 text-black border-black" : "bg-slate-200 text-slate-700 border-slate-400"
+              }`}>
+                {visibility.showEditorLetter ? "✓ ATIVA (NO PDF)" : "✗ DESLIGADA"}
+              </span>
             </div>
             <Switch
               checked={visibility.showEditorLetter}
@@ -175,10 +189,17 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           </div>
 
           {/* Contributors Toggle */}
-          <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 flex items-center justify-between">
+          <div className={`p-3.5 rounded-xl border-2 transition-all flex items-center justify-between ${
+            visibility.showContributors ? "theme-app-card border-amber-400 shadow-sm" : "theme-app-card-subtle border-slate-300 opacity-60"
+          }`}>
             <div>
               <span className="text-xs font-black uppercase block">3. Colaboradores</span>
-              <span className="text-[10px] opacity-75">Grade de especialistas</span>
+              <span className="text-[10px] opacity-75 block">Grade de autores</span>
+              <span className={`inline-block font-mono text-[9px] font-black px-1.5 py-0.5 rounded border mt-1 ${
+                visibility.showContributors ? "bg-amber-400 text-black border-black" : "bg-slate-200 text-slate-700 border-slate-400"
+              }`}>
+                {visibility.showContributors ? "✓ ATIVA (NO PDF)" : "✗ DESLIGADA"}
+              </span>
             </div>
             <Switch
               checked={visibility.showContributors}
@@ -187,10 +208,17 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           </div>
 
           {/* Table of Contents Toggle */}
-          <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 flex items-center justify-between">
+          <div className={`p-3.5 rounded-xl border-2 transition-all flex items-center justify-between ${
+            visibility.showTableOfContents ? "theme-app-card border-amber-400 shadow-sm" : "theme-app-card-subtle border-slate-300 opacity-60"
+          }`}>
             <div>
               <span className="text-xs font-black uppercase block">4. Sumário / Índice</span>
-              <span className="text-[10px] opacity-75">Lista de matérias</span>
+              <span className="text-[10px] opacity-75 block">Lista de matérias</span>
+              <span className={`inline-block font-mono text-[9px] font-black px-1.5 py-0.5 rounded border mt-1 ${
+                visibility.showTableOfContents ? "bg-amber-400 text-black border-black" : "bg-slate-200 text-slate-700 border-slate-400"
+              }`}>
+                {visibility.showTableOfContents ? "✓ ATIVA (NO PDF)" : "✗ DESLIGADA"}
+              </span>
             </div>
             <Switch
               checked={visibility.showTableOfContents}
@@ -199,10 +227,17 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           </div>
 
           {/* Back Cover Toggle */}
-          <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 flex items-center justify-between">
+          <div className={`p-3.5 rounded-xl border-2 transition-all flex items-center justify-between ${
+            visibility.showBackCover ? "theme-app-card border-amber-400 shadow-sm" : "theme-app-card-subtle border-slate-300 opacity-60"
+          }`}>
             <div>
               <span className="text-xs font-black uppercase block">5. Contracapa</span>
-              <span className="text-[10px] opacity-75">Fechamento e contatos</span>
+              <span className="text-[10px] opacity-75 block">Fechamento e contatos</span>
+              <span className={`inline-block font-mono text-[9px] font-black px-1.5 py-0.5 rounded border mt-1 ${
+                visibility.showBackCover ? "bg-amber-400 text-black border-black" : "bg-slate-200 text-slate-700 border-slate-400"
+              }`}>
+                {visibility.showBackCover ? "✓ ATIVA (NO PDF)" : "✗ DESLIGADA"}
+              </span>
             </div>
             <Switch
               checked={visibility.showBackCover}
