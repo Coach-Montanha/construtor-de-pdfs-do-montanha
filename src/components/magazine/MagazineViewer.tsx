@@ -33,7 +33,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
   onOpenArticleEditor,
 }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
-  const [viewMode, setViewMode] = useState<PageViewMode>("spread");
+  const [viewMode, setViewMode] = useState<PageViewMode>("single");
   const [zoomLevel, setZoomLevel] = useState<number>(100);
 
   // Total pages: Cover (1) + EditorLetter (1) + Contributors (1) + TOC (1) + Articles (N) + BackCover (1)
@@ -150,10 +150,22 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
           {/* Mode Switchers */}
           <div className="flex items-center theme-app-card-subtle p-0.5 rounded-lg border">
             <button
+              onClick={() => setViewMode("single")}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-md transition-all ${
+                viewMode === "single"
+                  ? "bg-amber-400 text-black border border-black shadow-sm"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+              title="Modo Página Individual (Visualização Exata A4)"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Página Única (100% WYSIWYG)</span>
+            </button>
+            <button
               onClick={() => setViewMode("spread")}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-md transition-all ${
                 viewMode === "spread"
-                  ? "bg-amber-500 text-slate-950 shadow-sm"
+                  ? "bg-amber-400 text-black border border-black shadow-sm"
                   : "opacity-70 hover:opacity-100"
               }`}
               title="Modo Revista Aberta (Spread 2 Páginas)"
@@ -162,22 +174,10 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
               <span className="hidden md:inline">Revista Aberta</span>
             </button>
             <button
-              onClick={() => setViewMode("single")}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
-                viewMode === "single"
-                  ? "bg-amber-500 text-slate-950 shadow-sm"
-                  : "opacity-70 hover:opacity-100"
-              }`}
-              title="Modo Página Individual"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Página Única</span>
-            </button>
-            <button
               onClick={() => setViewMode("grid")}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-md transition-all ${
                 viewMode === "grid"
-                  ? "bg-amber-500 text-slate-950 shadow-sm"
+                  ? "bg-amber-400 text-black border border-black shadow-sm"
                   : "opacity-70 hover:opacity-100"
               }`}
               title="Ver Todas as Páginas"
@@ -200,7 +200,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-xs font-mono font-black px-2.5 py-1 border-2 border-current rounded shadow-xs bg-amber-400 text-black">
+            <span className="text-xs font-mono font-black px-2.5 py-1 border-2 border-black rounded shadow-xs bg-amber-400 text-black">
               {viewMode === "spread" && currentPageIndex > 0 && currentPageIndex < totalPages - 1
                 ? `PÁG ${currentPageIndex + 1} - ${Math.min(currentPageIndex + 2, totalPages)} DE ${totalPages}`
                 : `PÁG ${currentPageIndex + 1} DE ${totalPages}`}
@@ -222,7 +222,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
           {/* Zoom controls */}
           <div className="hidden sm:flex items-center gap-1 theme-app-card-subtle px-2 py-0.5 rounded border text-xs">
             <button
-              onClick={() => setZoomLevel((z) => Math.max(60, z - 10))}
+              onClick={() => setZoomLevel((z) => Math.max(70, z - 10))}
               className="p-1 opacity-70 hover:opacity-100"
               title="Reduzir Zoom"
             >
@@ -232,7 +232,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
               {zoomLevel}%
             </span>
             <button
-              onClick={() => setZoomLevel((z) => Math.min(150, z + 10))}
+              onClick={() => setZoomLevel((z) => Math.min(140, z + 10))}
               className="p-1 opacity-70 hover:opacity-100"
               title="Aumentar Zoom"
             >
@@ -243,7 +243,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
           <Button
             size="sm"
             onClick={onOpenExportModal}
-            className="h-8 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-md flex items-center gap-1.5 border border-black"
+            className="h-8 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-md flex items-center gap-1.5 border-2 border-black"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Exportar PDF</span>
@@ -251,11 +251,11 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
         </div>
       </div>
 
-      {/* Main Canvas Viewport */}
-      <div className="theme-app-viewer-canvas flex-1 overflow-auto p-4 md:p-8 flex items-center justify-center custom-scrollbar transition-colors">
+      {/* Main Canvas Viewport (Studio Desk Backdrop with Exact A4 Framing) */}
+      <div className="theme-app-viewer-canvas flex-1 overflow-auto p-4 md:p-6 flex items-center justify-center custom-scrollbar transition-colors">
         {viewMode === "grid" ? (
           /* Grid Mode: Thumbnails of all pages */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-5xl mx-auto py-4">
             {Array.from({ length: totalPages }).map((_, idx) => (
               <div
                 key={idx}
@@ -265,14 +265,14 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
                 }}
                 className={`group cursor-pointer rounded-lg overflow-hidden border-2 transition-all transform hover:scale-105 ${
                   currentPageIndex === idx
-                    ? "border-amber-500 shadow-xl ring-2 ring-amber-400"
-                    : "border-slate-400 hover:border-slate-800"
+                    ? "border-amber-400 shadow-2xl ring-4 ring-amber-400"
+                    : "border-slate-700 hover:border-white"
                 }`}
               >
                 <div className="relative aspect-[210/297] pointer-events-none transform scale-100 origin-top bg-white">
                   {renderPageByIndex(idx)}
                 </div>
-                <div className="theme-app-card p-2 text-center text-xs font-bold border-t">
+                <div className="bg-slate-900 text-white p-2 text-center text-xs font-bold border-t border-slate-700">
                   {idx === 0
                     ? "1. Capa Principal"
                     : idx === 1
@@ -291,27 +291,27 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
         ) : viewMode === "spread" ? (
           /* Spread Mode: 2 Pages side-by-side like a real magazine */
           <div
-            className="flex items-center justify-center gap-2 max-w-full transition-transform duration-200"
+            className="flex items-center justify-center transition-transform duration-200"
             style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "center center" }}
           >
             {currentPageIndex === 0 ? (
               /* Cover is displayed alone */
-              <div className="w-[380px] sm:w-[480px] md:w-[560px] lg:w-[620px] shrink-0 shadow-2xl">
+              <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 shadow-[0_25px_60px_rgba(0,0,0,0.8)] rounded-xs overflow-hidden border border-black/40">
                 {renderPageByIndex(0)}
               </div>
             ) : currentPageIndex === totalPages - 1 ? (
               /* Back Cover is displayed alone */
-              <div className="w-[380px] sm:w-[480px] md:w-[560px] lg:w-[620px] shrink-0 shadow-2xl">
+              <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 shadow-[0_25px_60px_rgba(0,0,0,0.8)] rounded-xs overflow-hidden border border-black/40">
                 {renderPageByIndex(totalPages - 1)}
               </div>
             ) : (
               /* 2 Pages Spread */
-              <div className="flex flex-col md:flex-row items-center gap-1 shadow-2xl">
-                <div className="w-[320px] sm:w-[400px] md:w-[460px] lg:w-[520px] shrink-0 border-r border-slate-300">
+              <div className="flex items-center justify-center shadow-[0_25px_60px_rgba(0,0,0,0.8)] rounded-xs overflow-hidden border border-black/40">
+                <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 border-r border-black/50">
                   {renderPageByIndex(currentPageIndex)}
                 </div>
                 {currentPageIndex + 1 < totalPages && (
-                  <div className="w-[320px] sm:w-[400px] md:w-[460px] lg:w-[520px] shrink-0 border-l border-slate-300">
+                  <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 border-l border-black/50">
                     {renderPageByIndex(currentPageIndex + 1)}
                   </div>
                 )}
@@ -319,12 +319,14 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
             )}
           </div>
         ) : (
-          /* Single Page Mode */
+          /* Single Page Mode (Exact WYSIWYG A4 Canvas Matching Print Preview) */
           <div
-            className="w-[380px] sm:w-[480px] md:w-[560px] lg:w-[640px] shrink-0 transition-transform duration-200 shadow-2xl"
+            className="flex items-center justify-center transition-transform duration-200"
             style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "center center" }}
           >
-            {renderPageByIndex(currentPageIndex)}
+            <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 shadow-[0_25px_60px_rgba(0,0,0,0.8)] rounded-xs overflow-hidden border border-black/40">
+              {renderPageByIndex(currentPageIndex)}
+            </div>
           </div>
         )}
       </div>
@@ -333,9 +335,9 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       <div className="theme-app-viewer-toolbar px-4 py-2 text-[11px] border-t-2 flex items-center justify-between transition-colors">
         <div className="flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span className="font-medium">Use as setas do teclado (← / →) para folhear a revista.</span>
+          <span className="font-bold">Simulação 100% Fiel (WYSIWYG) da Impressão & Exportação PDF A4</span>
         </div>
-        <span className="font-mono text-[10px] opacity-75 font-bold">
+        <span className="font-mono text-[10px] font-bold">
           Proporção Exata A4 (210mm x 297mm)
         </span>
       </div>
