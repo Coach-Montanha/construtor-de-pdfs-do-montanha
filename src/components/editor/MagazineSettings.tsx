@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import {
   MagazineProject,
   MagazineThemeId,
-  EditorialCredit,
-  Contributor,
+  BackCoverConfig,
 } from "../../types/magazine";
 import { MAGAZINE_THEMES } from "../../lib/sample-data";
 import { Input } from "../ui/input";
@@ -12,14 +11,15 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import {
   Palette,
-  Feather,
   Key,
-  Plus,
-  Trash2,
   CheckCircle2,
-  Users,
-  ShieldAlert,
-  Sparkles,
+  Sliders,
+  Share2,
+  BookOpen,
+  Globe,
+  Instagram,
+  Youtube,
+  Mail,
 } from "lucide-react";
 
 interface MagazineSettingsProps {
@@ -55,77 +55,59 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     });
   };
 
-  const updateEditorial = <K extends keyof typeof project.editorialInfo>(
+  const updateBackCover = <K extends keyof BackCoverConfig>(
     field: K,
-    value: (typeof project.editorialInfo)[K]
+    value: BackCoverConfig[K]
   ) => {
     onChange({
       ...project,
-      editorialInfo: {
-        ...project.editorialInfo,
+      backCoverConfig: {
+        ...project.backCoverConfig,
         [field]: value,
       },
     });
   };
 
-  const handleAddCredit = () => {
-    const newCredit: EditorialCredit = {
-      id: "c-" + Date.now(),
-      role: "Cargo / Função",
-      name: "Nome do Integrante",
-    };
-    updateEditorial("credits", [...project.editorialInfo.credits, newCredit]);
-  };
-
-  const handleUpdateCredit = (id: string, field: "role" | "name", value: string) => {
-    const updated = project.editorialInfo.credits.map((c) =>
-      c.id === id ? { ...c, [field]: value } : c
-    );
-    updateEditorial("credits", updated);
-  };
-
-  const handleRemoveCredit = (id: string) => {
-    updateEditorial(
-      "credits",
-      project.editorialInfo.credits.filter((c) => c.id !== id)
-    );
-  };
-
-  // Contributors Management
-  const handleAddContributor = () => {
-    const newCon: Contributor = {
-      id: "con-" + Date.now(),
-      name: "NOVO COACH / AUTOR",
-      title: "SPECIALIST // CSCS",
-      bio: "Especialista em preparação física e metodologia de treinamento não-convencional.",
-      photo: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=400&q=80",
-      handle: "@treinador",
-      facility: "TACTICAL PERFORMANCE LAB",
-    };
-    updateEditorial("contributors", [...(project.editorialInfo.contributors || []), newCon]);
-  };
-
-  const handleUpdateContributor = (id: string, field: keyof Contributor, value: string) => {
-    const updated = (project.editorialInfo.contributors || []).map((c) =>
-      c.id === id ? { ...c, [field]: value } : c
-    );
-    updateEditorial("contributors", updated);
-  };
-
-  const handleRemoveContributor = (id: string) => {
-    updateEditorial(
-      "contributors",
-      (project.editorialInfo.contributors || []).filter((c) => c.id !== id)
-    );
+  const updateSocialHandles = (network: "instagram" | "youtube" | "email", value: string) => {
+    onChange({
+      ...project,
+      backCoverConfig: {
+        ...project.backCoverConfig,
+        socialHandles: {
+          ...project.backCoverConfig.socialHandles,
+          [network]: value,
+        },
+      },
+    });
   };
 
   return (
     <div className="space-y-6 text-slate-100 font-sans">
-      {/* Theme & Palette Selector */}
+      {/* Header Bar */}
+      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="bg-amber-400 text-black font-black text-[9px] font-mono px-2 py-0.5 rounded uppercase">
+              STUDIO SETTINGS
+            </span>
+            <span className="text-xs font-mono font-bold text-amber-400 uppercase">
+              CONFIGURAÇÕES GERAIS DA REVISTA
+            </span>
+          </div>
+          <h2 className="text-lg font-black text-white uppercase tracking-tight">
+            Temas Visuais, Chaves de IA, Metadados & Contracapa
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Ajuste a identidade visual, conexão com Gemini AI, número da edição e dados de contato institucionais.
+          </p>
+        </div>
+      </div>
+
+      {/* 1. Theme & Palette Selector */}
       <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
           <Palette className="w-4 h-4" />
-          <span>Tema Visual & Estilo Editorial</span>
+          <span>Tema Visual & Identidade de Cores</span>
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -182,7 +164,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* AI Key Settings */}
+      {/* 2. AI Key Settings */}
       <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
           <Key className="w-4 h-4" />
@@ -190,7 +172,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </h3>
 
         <p className="text-xs text-slate-300 leading-relaxed">
-          O criador já inclui um modelo inteligente embutido que funciona offline. Para usar o modelo de última geração <strong>Gemini 3.7 Flash</strong> para criar matérias completas e reescrever artigos sem limites, insira sua chave gratuita da Google AI Studio.
+          O criador já inclui um modelo inteligente embutido que funciona offline. Para usar o modelo de última geração <strong>Gemini 3.7 Flash</strong> para criar matérias completas e polir textos sem limites, insira sua chave gratuita da Google AI Studio.
         </p>
 
         <div className="flex gap-2">
@@ -210,209 +192,148 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* Page 1: Letter from Editor Settings */}
+      {/* 3. General Magazine Metadata */}
       <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
-          <Feather className="w-4 h-4" />
-          <span>Página 1: Carta do Editor & Manifesto</span>
+          <Sliders className="w-4 h-4" />
+          <span>Metadados Gerais da Publicação</span>
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <Label className="text-xs font-semibold text-slate-300">NOME DO EDITOR-CHEFE</Label>
+            <Label className="text-xs font-semibold text-slate-300">TÍTULO DA REVISTA</Label>
             <Input
-              value={project.editorialInfo.editorName}
-              onChange={(e) => updateEditorial("editorName", e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+              value={project.title}
+              onChange={(e) => onChange({ ...project, title: e.target.value.toUpperCase() })}
+              className="bg-slate-800 border-slate-700 text-white text-xs mt-1 font-bold"
             />
           </div>
 
           <div>
-            <Label className="text-xs font-semibold text-slate-300">FOTO DE PERFIL DO EDITOR (URL)</Label>
+            <Label className="text-xs font-semibold text-slate-300">VOLUME // EDIÇÃO</Label>
             <Input
-              value={project.editorialInfo.editorPhoto}
-              onChange={(e) => updateEditorial("editorPhoto", e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs font-semibold text-slate-300">TÍTULO DO MANIFESTO / CARTA</Label>
-            <Input
-              value={project.editorialInfo.editorLetterTitle}
-              onChange={(e) => updateEditorial("editorLetterTitle", e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+              value={project.volume}
+              onChange={(e) => onChange({ ...project, volume: e.target.value.toUpperCase() })}
+              placeholder="Ex: VOL. 01"
+              className="bg-slate-800 border-slate-700 text-white text-xs mt-1 font-mono"
             />
           </div>
 
           <div>
-            <Label className="text-xs font-semibold text-slate-300">FOTO DE AÇÃO DO EDITOR (INSET URL)</Label>
+            <Label className="text-xs font-semibold text-slate-300">DATA DE PUBLICAÇÃO</Label>
             <Input
-              value={project.editorialInfo.editorActionPhoto || ""}
-              onChange={(e) => updateEditorial("editorActionPhoto", e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+              value={project.date}
+              onChange={(e) => onChange({ ...project, date: e.target.value.toUpperCase() })}
+              placeholder="Ex: SETEMBRO 2026"
+              className="bg-slate-800 border-slate-700 text-white text-xs mt-1 font-mono"
             />
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs font-semibold text-slate-300">TEXTO DA CARTA DO EDITOR (CORPO DO MANIFESTO)</Label>
-          <Textarea
-            value={project.editorialInfo.editorLetter}
-            onChange={(e) => updateEditorial("editorLetter", e.target.value)}
-            className="bg-slate-800 border-slate-700 text-white text-xs mt-1 h-32 leading-relaxed font-sans"
-          />
-        </div>
-
-        <div>
-          <Label className="text-xs font-semibold text-slate-300">AVISO LEGAL & MÉDICO (DISCLAIMER MICRO-TYPOGRAPHY)</Label>
-          <Textarea
-            value={project.editorialInfo.disclaimerText || ""}
-            onChange={(e) => updateEditorial("disclaimerText", e.target.value)}
-            className="bg-slate-800 border-slate-700 text-white text-xs mt-1 h-16 leading-tight font-mono text-[11px]"
-          />
-        </div>
-
-        {/* Expediente Credits */}
-        <div className="pt-3 border-t border-slate-800 space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs font-bold text-slate-300">CRÉDITOS DO EXPEDIENTE & STAFF</Label>
-            <Button
-              size="sm"
-              onClick={handleAddCredit}
-              className="h-7 text-xs bg-slate-800 hover:bg-slate-700 text-white flex items-center gap-1"
-            >
-              <Plus className="w-3 h-3" />
-              Adicionar Cargo
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {project.editorialInfo.credits.map((c) => (
-              <div
-                key={c.id}
-                className="bg-slate-800/70 p-2 rounded flex items-center gap-2 border border-slate-700"
-              >
-                <Input
-                  value={c.role}
-                  onChange={(e) => handleUpdateCredit(c.id, "role", e.target.value)}
-                  placeholder="Cargo"
-                  className="bg-slate-900 border-slate-700 text-amber-400 font-semibold text-xs h-7 w-32"
-                />
-                <Input
-                  value={c.name}
-                  onChange={(e) => handleUpdateCredit(c.id, "name", e.target.value)}
-                  placeholder="Nome"
-                  className="bg-slate-900 border-slate-700 text-white text-xs h-7 flex-1"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveCredit(c.id)}
-                  className="text-red-400 hover:text-red-300 p-1"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* Page 2: Contributors Grid Settings */}
+      {/* 4. Back Cover Settings */}
       <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            <span>Página 2: Painel de Colaboradores (Contributors Grid)</span>
-          </h3>
-          <Button
-            size="sm"
-            onClick={handleAddContributor}
-            className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold flex items-center gap-1"
-          >
-            <Plus className="w-3 h-3" />
-            Adicionar Colaborador
-          </Button>
+        <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
+          <BookOpen className="w-4 h-4" />
+          <span>Contracapa da Revista (Última Página)</span>
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs font-semibold text-slate-300">MANCHETE DA CONTRACAPA</Label>
+            <Input
+              value={project.backCoverConfig.headline}
+              onChange={(e) => updateBackCover("headline", e.target.value.toUpperCase())}
+              className="bg-slate-800 border-slate-700 text-white text-xs mt-1 font-bold"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold text-slate-300">SUB-MANCHETE</Label>
+            <Input
+              value={project.backCoverConfig.subheadline}
+              onChange={(e) => updateBackCover("subheadline", e.target.value)}
+              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+            />
+          </div>
         </div>
 
-        <div className="space-y-4">
-          {(project.editorialInfo.contributors || []).map((con) => (
-            <div
-              key={con.id}
-              className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <Input
-                  value={con.name}
-                  onChange={(e) => handleUpdateContributor(con.id, "name", e.target.value.toUpperCase())}
-                  placeholder="NOME DO COLABORADOR (ALL CAPS)"
-                  className="bg-slate-900 border-slate-700 text-white font-black text-sm h-8"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveContributor(con.id)}
-                  className="text-red-400 hover:text-red-300 p-1"
-                  title="Remover colaborador"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+        <div>
+          <Label className="text-xs font-semibold text-slate-300">MENSAGEM DE ENCERRAMENTO</Label>
+          <Textarea
+            value={project.backCoverConfig.message}
+            onChange={(e) => updateBackCover("message", e.target.value)}
+            className="bg-slate-800 border-slate-700 text-white text-xs mt-1 h-20 leading-relaxed"
+          />
+        </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-[10px] font-bold text-slate-400">TÍTULO / CERTIFICAÇÃO</Label>
-                  <Input
-                    value={con.title}
-                    onChange={(e) => handleUpdateContributor(con.id, "title", e.target.value.toUpperCase())}
-                    placeholder="Ex: MASTER KETTLEBELL COACH // CSCS"
-                    className="bg-slate-900 border-slate-700 text-amber-400 font-mono text-xs h-7 mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] font-bold text-slate-400">FOTO DO COLABORADOR (URL)</Label>
-                  <Input
-                    value={con.photo}
-                    onChange={(e) => handleUpdateContributor(con.id, "photo", e.target.value)}
-                    placeholder="URL da foto (B&W portrait)"
-                    className="bg-slate-900 border-slate-700 text-white text-xs h-7 mt-1"
-                  />
-                </div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs font-semibold text-slate-300">TEXTO DO BOTÃO DE AÇÃO (CTA)</Label>
+            <Input
+              value={project.backCoverConfig.ctaText}
+              onChange={(e) => updateBackCover("ctaText", e.target.value.toUpperCase())}
+              className="bg-slate-800 border-slate-700 text-amber-400 font-bold text-xs mt-1"
+            />
+          </div>
 
-              <div>
-                <Label className="text-[10px] font-bold text-slate-400">MINI-BIO (3 A 5 LINHAS)</Label>
-                <Textarea
-                  value={con.bio}
-                  onChange={(e) => handleUpdateContributor(con.id, "bio", e.target.value)}
-                  placeholder="Resumo da metodologia e histórico do coach..."
-                  className="bg-slate-900 border-slate-700 text-white text-xs mt-1 h-16 leading-relaxed"
-                />
-              </div>
+          <div>
+            <Label className="text-xs font-semibold text-slate-300">URL DO SITE INSTITUCIONAL</Label>
+            <Input
+              value={project.backCoverConfig.websiteUrl}
+              onChange={(e) => updateBackCover("websiteUrl", e.target.value)}
+              className="bg-slate-800 border-slate-700 text-white font-mono text-xs mt-1"
+            />
+          </div>
+        </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-[10px] font-bold text-slate-400">CONTATO / INSTAGRAM</Label>
-                  <Input
-                    value={con.handle}
-                    onChange={(e) => handleUpdateContributor(con.id, "handle", e.target.value)}
-                    placeholder="Ex: @coachmontanha"
-                    className="bg-slate-900 border-slate-700 text-slate-300 text-xs h-7 mt-1 font-mono"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] font-bold text-slate-400">CENTRO DE TREINAMENTO / FACILITY</Label>
-                  <Input
-                    value={con.facility || ""}
-                    onChange={(e) => handleUpdateContributor(con.id, "facility", e.target.value)}
-                    placeholder="Ex: MONTANHA IRON LAB // SP"
-                    className="bg-slate-900 border-slate-700 text-slate-300 text-xs h-7 mt-1 font-mono"
-                  />
-                </div>
-              </div>
+        {/* Social Handles */}
+        <div className="pt-3 border-t border-slate-800 space-y-3">
+          <Label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <Share2 className="w-3.5 h-3.5 text-amber-400" />
+            <span>REDES SOCIAIS & CONTATO</span>
+          </Label>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <Label className="text-[10px] text-slate-400 flex items-center gap-1">
+                <Instagram className="w-3 h-3 text-amber-400" />
+                <span>Instagram</span>
+              </Label>
+              <Input
+                value={project.backCoverConfig.socialHandles?.instagram || ""}
+                onChange={(e) => updateSocialHandles("instagram", e.target.value)}
+                placeholder="@coachmontanha"
+                className="bg-slate-800 border-slate-700 text-white text-xs mt-1 font-mono"
+              />
             </div>
-          ))}
+
+            <div>
+              <Label className="text-[10px] text-slate-400 flex items-center gap-1">
+                <Youtube className="w-3 h-3 text-red-400" />
+                <span>YouTube</span>
+              </Label>
+              <Input
+                value={project.backCoverConfig.socialHandles?.youtube || ""}
+                onChange={(e) => updateSocialHandles("youtube", e.target.value)}
+                placeholder="Canal Oficial"
+                className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+              />
+            </div>
+
+            <div>
+              <Label className="text-[10px] text-slate-400 flex items-center gap-1">
+                <Mail className="w-3 h-3 text-amber-400" />
+                <span>E-mail</span>
+              </Label>
+              <Input
+                value={project.backCoverConfig.socialHandles?.email || ""}
+                onChange={(e) => updateSocialHandles("email", e.target.value)}
+                placeholder="contato@..."
+                className="bg-slate-800 border-slate-700 text-white text-xs mt-1 font-mono"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

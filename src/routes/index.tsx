@@ -5,6 +5,7 @@ import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../lib/sample-data";
 import { MagazineViewer } from "../components/magazine/MagazineViewer";
 import { CoverCustomizer } from "../components/editor/CoverCustomizer";
 import { ArticleEditorModal } from "../components/editor/ArticleEditorModal";
+import { EditorialSettings } from "../components/editor/EditorialSettings";
 import { MagazineSettings } from "../components/editor/MagazineSettings";
 import { AiStudioDialog } from "../components/editor/AiStudioDialog";
 import { PdfExportModal } from "../components/export/PdfExportModal";
@@ -29,8 +30,7 @@ import {
   MoveUp,
   MoveDown,
   Clock,
-  Layers,
-  Save,
+  Settings,
   CheckCircle2,
   Users,
 } from "lucide-react";
@@ -250,8 +250,8 @@ function Index() {
                 : "text-slate-400 hover:text-white hover:bg-slate-800/60"
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Temas & Configurações IA</span>
+            <Settings className="w-3.5 h-3.5" />
+            <span>Configurações</span>
           </button>
         </div>
 
@@ -425,17 +425,17 @@ function Index() {
           </div>
         )}
 
-        {/* Tab 4: Editorial & Contributors */}
+        {/* Tab 4: Editorial & Contributors (Dedicated Editorial Panel) */}
         {activeTab === "editorial" && (
           <div className="max-w-4xl mx-auto">
-            <MagazineSettings
+            <EditorialSettings
               project={project}
               onChange={(updatedProject) => setProject(updatedProject)}
             />
           </div>
         )}
 
-        {/* Tab 5: Settings & AI Key */}
+        {/* Tab 5: Settings (Visual Themes, AI Key, Metadata, Back Cover) */}
         {activeTab === "settings" && (
           <div className="max-w-4xl mx-auto">
             <MagazineSettings
