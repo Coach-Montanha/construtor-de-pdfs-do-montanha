@@ -1,6 +1,6 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
-import { Bookmark, Award, Feather, ArrowRight } from "lucide-react";
+import { Bookmark, Award, Feather, ArrowRight, Zap, Users, Building, ShieldCheck } from "lucide-react";
 
 interface EditorialPageProps {
   project: MagazineProject;
@@ -17,9 +17,12 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
 }) => {
   const { editorialInfo, articles, coverConfig } = project;
 
+  // Filter articles with images for the Visual Feature Column (right)
+  const visualArticles = articles.filter((a) => a.heroImage).slice(0, 3);
+
   return (
     <div
-      className={`magazine-page relative w-full h-full bg-slate-50 text-slate-900 overflow-hidden flex flex-col justify-between p-8 select-none ${
+      className={`magazine-page relative w-full h-full bg-[#0B0F19] text-white overflow-hidden flex flex-col justify-between p-6 sm:p-8 select-none ${
         isPrintMode ? "print-page" : "shadow-2xl rounded-sm"
       }`}
       style={{
@@ -27,98 +30,86 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
         fontFamily: theme.fontSerif ? "Georgia, serif" : "inherit",
       }}
     >
-      {/* Top Header Bar */}
-      <div className="border-b-2 pb-2 flex items-center justify-between" style={{ borderColor: theme.primaryColor }}>
-        <div className="flex items-center gap-2">
-          <span className="font-extrabold tracking-widest text-xs uppercase" style={{ color: theme.primaryColor }}>
-            {coverConfig.mastheadText}
-          </span>
-          <span className="text-slate-300">•</span>
-          <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-            EDITORIAL & SUMÁRIO
-          </span>
+      {/* Background Subtle Industrial Texture */}
+      <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
+      {/* Top Header Block: CONTENTS + ISSUE METADATA */}
+      <div className="relative z-10 border-b-2 border-amber-400 pb-3 flex items-end justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="bg-amber-400 text-black font-black text-[9px] font-mono tracking-widest uppercase px-2 py-0.5 rounded-xs">
+              {project.volume} // {coverConfig.editionNumber || "ISSUE #01"}
+            </span>
+            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase">
+              {project.title}
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter uppercase text-white leading-none">
+            CONTENTS <span className="text-amber-400 font-mono text-2xl sm:text-3xl">// SUMÁRIO</span>
+          </h1>
         </div>
-        <div className="text-[10px] font-bold text-slate-400 uppercase">
-          {project.date} • {project.editionNumber}
+
+        <div className="text-right hidden sm:block font-mono text-[10px] text-slate-400">
+          <p className="font-bold text-amber-400">{coverConfig.issueDate}</p>
+          <p className="tracking-widest">UNCONVENTIONAL DOSSIER</p>
         </div>
       </div>
 
-      {/* Main Grid: Left Column (Editor's Letter) & Right Column (Table of Contents & Credits) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 my-4 flex-1 overflow-hidden">
-        {/* Left Column: Letter from Editor (5 cols) */}
-        <div className="md:col-span-6 flex flex-col justify-between border-r border-slate-200 pr-4">
-          <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 mb-1">
-              <Feather className="w-3.5 h-3.5" />
-              <span>CARTA DO EDITOR</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight mb-3">
-              {editorialInfo.editorLetterTitle}
-            </h2>
-
-            <div className="flex items-center gap-3 mb-3 p-2 bg-slate-100 rounded-lg border border-slate-200">
-              <img
-                src={editorialInfo.editorPhoto}
-                alt={editorialInfo.editorName}
-                className="w-12 h-12 rounded-full object-cover border-2 border-amber-500 shadow-sm"
-              />
-              <div>
-                <h4 className="font-bold text-sm text-slate-900">{editorialInfo.editorName}</h4>
-                <p className="text-[11px] text-slate-500 font-medium">{editorialInfo.editorRole}</p>
-              </div>
-            </div>
-
-            <div className="text-xs text-slate-700 leading-relaxed space-y-2.5 text-justify">
-              {editorialInfo.editorLetter.split("\n\n").map((para, idx) => (
-                <p key={idx} className={idx === 0 ? "first-letter:text-3xl first-letter:font-bold first-letter:text-amber-600 first-letter:float-left first-letter:mr-2" : ""}>
-                  {para}
-                </p>
-              ))}
-            </div>
-          </div>
-
-          {/* Editor Note Bottom */}
-          <div className="pt-3 border-t border-slate-200 mt-2">
-            <p className="text-[10px] text-slate-400 italic">
-              "{editorialInfo.editorialNote}"
-            </p>
-          </div>
-        </div>
-
-        {/* Right Column: Table of Contents & Masthead Credits (6 cols) */}
-        <div className="md:col-span-6 flex flex-col justify-between pl-2">
-          {/* Table of Contents (Sumário) */}
-          <div>
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 mb-2 border-b border-amber-500/30 pb-1">
-              <Bookmark className="w-3.5 h-3.5" />
-              <span>SUMÁRIO DESTA EDIÇÃO</span>
+      {/* Main Two-Column Split Architecture: Content List (Left) + Visual Feature Column (Right) */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 my-4 flex-1 overflow-hidden">
+        {/* Left Column: Structured Content List & Recurring Segments (7 cols) */}
+        <div className="md:col-span-7 flex flex-col justify-between pr-0 md:pr-2 border-b md:border-b-0 md:border-r border-slate-800 pb-3 md:pb-0">
+          {/* Main Articles List (Chronological by Page Number) */}
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-1.5 text-[10px] font-mono font-black tracking-widest text-amber-400 uppercase pb-1 border-b border-slate-800">
+              <Zap className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <span>FEATURED PROTOCOLS & ARTICLES</span>
             </div>
 
             <div className="space-y-3">
               {articles.map((art, idx) => {
-                const articlePage = idx + 3; // Pages start at 3
+                const articlePage = idx + 3; // Chronological page indexing starting at 3
+                const paddedPage = articlePage < 10 ? `0${articlePage}` : `${articlePage}`;
+
                 return (
                   <div
                     key={art.id}
-                    className="group p-2 rounded-md hover:bg-slate-100 transition-colors border-b border-dashed border-slate-200 pb-2"
+                    className="group flex items-start gap-3 p-1.5 rounded transition-all hover:bg-slate-900/60 border-l-2 border-transparent hover:border-amber-400"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">
-                          {art.category}
+                    {/* 1. Page Number: Bold tabular numerals */}
+                    <div className="shrink-0">
+                      <span className="inline-flex items-center justify-center font-mono font-black text-sm sm:text-base text-amber-400 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded shadow-sm w-11 text-center">
+                        {paddedPage}
+                      </span>
+                    </div>
+
+                    {/* Content Details: Category Tag, Title, Author Credit */}
+                    <div className="flex-1 space-y-0.5">
+                      {/* 2. Category Tag / Prefix */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-mono font-black text-amber-400 uppercase tracking-wider">
+                          // {art.category}
                         </span>
-                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug group-hover:text-amber-600 transition-colors">
-                          {art.title}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
-                          {art.subtitle}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <span className="inline-block bg-slate-900 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
-                          PÁG {articlePage}
+                        <span className="text-slate-600 text-[8px]">•</span>
+                        <span className="text-slate-400 font-mono text-[8px]">
+                          {art.estimatedReadTime} MIN READ
                         </span>
                       </div>
+
+                      {/* 3. Article Title: Heavy sans-serif, ALL CAPS */}
+                      <h3 className="text-xs sm:text-sm font-black text-white uppercase leading-tight tracking-tight group-hover:text-amber-300 transition-colors">
+                        {art.title}
+                      </h3>
+
+                      {/* 4. Author Credit: Clean secondary sans-serif */}
+                      <p className="text-[10px] text-slate-400 font-mono font-semibold uppercase tracking-tight">
+                        BY <span className="text-slate-200">{art.author.toUpperCase()}</span>
+                        {art.authorBio && (
+                          <span className="text-slate-500 font-normal text-[9px] ml-1">
+                            — {art.authorBio}
+                          </span>
+                        )}
+                      </p>
                     </div>
                   </div>
                 );
@@ -126,28 +117,109 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
             </div>
           </div>
 
-          {/* Expediente / Ficha Técnica */}
-          <div className="bg-slate-900 text-slate-200 p-3.5 rounded-lg border border-slate-800 mt-4">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-400 uppercase mb-2">
-              <Award className="w-3 h-3" />
-              <span>EXPEDIENTE & CRÉDITOS</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              {editorialInfo.credits.map((c) => (
-                <div key={c.id}>
-                  <p className="text-slate-400 text-[9px] uppercase font-semibold">{c.role}</p>
-                  <p className="text-white font-medium">{c.name}</p>
+          {/* Secondary Section / "Other Content" Sub-block (Recurring Segments) */}
+          <div className="mt-3 pt-3 border-t-2 border-slate-800 space-y-2">
+            <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-widest block">
+              RECURRING SECTIONS & METADATA:
+            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-mono">
+              {/* Editorial Manifesto */}
+              <div className="bg-slate-900/80 p-2 rounded border border-slate-800">
+                <div className="flex items-center gap-1.5 text-amber-400 font-bold mb-0.5">
+                  <Feather className="w-3 h-3" />
+                  <span>PG. 02 • EDITORIAL LETTER</span>
                 </div>
-              ))}
+                <p className="text-slate-300 text-[9px] leading-tight line-clamp-2">
+                  "{editorialInfo.editorLetterTitle}" por {editorialInfo.editorName}.
+                </p>
+              </div>
+
+              {/* Contributors & Credits */}
+              <div className="bg-slate-900/80 p-2 rounded border border-slate-800">
+                <div className="flex items-center gap-1.5 text-amber-400 font-bold mb-0.5">
+                  <Users className="w-3 h-3" />
+                  <span>CONTRIBUTORS & LAB</span>
+                </div>
+                <p className="text-slate-400 text-[9px] leading-tight line-clamp-2">
+                  {editorialInfo.credits.map((c) => c.name).join(", ")}.
+                </p>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Right Column: Visual Feature Panel (High-contrast photographic teaser thumbnails) (5 cols) */}
+        <div className="md:col-span-5 flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+            <span className="text-[10px] font-mono font-black tracking-widest text-amber-400 uppercase">
+              VISUAL DOSSIER // TEASERS
+            </span>
+            <span className="text-[9px] font-mono text-slate-500">HIGH-CONTRAST SPEC</span>
+          </div>
+
+          {/* Visual Thumbnails Grid */}
+          <div className="space-y-2.5 flex-1 flex flex-col justify-between">
+            {visualArticles.map((art, idx) => {
+              const pageNumberTarget = idx + 3;
+              const paddedNum = pageNumberTarget < 10 ? `0${pageNumberTarget}` : `${pageNumberTarget}`;
+
+              return (
+                <div
+                  key={art.id}
+                  className="relative group rounded-md overflow-hidden border border-slate-800 hover:border-amber-400 transition-all flex-1 min-h-[85px] sm:min-h-[95px]"
+                >
+                  {/* Photo */}
+                  <img
+                    src={art.heroImage}
+                    alt={art.title}
+                    className="w-full h-full object-cover object-center filter contrast-125 brightness-90 group-hover:scale-105 transition-transform duration-300"
+                  />
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+                  {/* Overlaid Large Stylized Page Number (Top-Left Badge) */}
+                  <div className="absolute top-2 left-2 z-10 bg-black/85 backdrop-blur-md border border-amber-400/80 px-2 py-0.5 rounded shadow-lg flex items-center gap-1">
+                    <span className="text-[8px] font-mono font-bold text-amber-400 uppercase">PG</span>
+                    <span className="font-mono font-black text-sm text-white leading-none">
+                      {paddedNum}
+                    </span>
+                  </div>
+
+                  {/* Bottom Image Headline Tag */}
+                  <div className="absolute bottom-1.5 inset-x-2 z-10">
+                    <span className="text-[8px] font-mono font-bold text-amber-300 uppercase tracking-wide block">
+                      {art.category}
+                    </span>
+                    <h4 className="text-[11px] sm:text-xs font-black text-white uppercase leading-tight line-clamp-1 drop-shadow-md">
+                      {art.title}
+                    </h4>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Technical Spec Footer Badge */}
+          <div className="bg-slate-900 border border-slate-800 p-2 rounded flex items-center justify-between text-[8px] font-mono text-slate-400">
+            <span className="text-amber-400 font-bold uppercase">MONTANHA MEDIA LAB</span>
+            <span>SPEC: 300 DPI // CMYK READY</span>
           </div>
         </div>
       </div>
 
-      {/* Bottom Footer & Page Number */}
-      <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-[10px] text-slate-400 font-semibold uppercase">
-        <span>{project.title} • {project.volume}</span>
-        <span className="text-slate-900 font-bold bg-slate-200 px-2 py-0.5 rounded">PÁGINA {pageNumber}</span>
+      {/* Bottom Footer Bar & Page Numbering */}
+      <div className="relative z-10 border-t border-slate-800 pt-2 flex items-center justify-between text-[10px] font-mono text-slate-400 font-bold uppercase">
+        <div className="flex items-center gap-2">
+          <span className="text-amber-400">{project.title}</span>
+          <span>/</span>
+          <span>{project.subtitle}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="bg-slate-900 text-amber-400 border border-slate-700 px-2 py-0.5 rounded">
+            PAGE {pageNumber < 10 ? `0${pageNumber}` : pageNumber}
+          </span>
+        </div>
       </div>
     </div>
   );
