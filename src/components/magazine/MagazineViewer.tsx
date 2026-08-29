@@ -36,67 +36,103 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
   const [viewMode, setViewMode] = useState<PageViewMode>("single");
   const [zoomLevel, setZoomLevel] = useState<number>(100);
 
-  // Total pages: Cover (1) + EditorLetter (1) + Contributors (1) + TOC (1) + Articles (N) + BackCover (1)
-  const totalPages = 4 + project.articles.length;
+  // Dynamic active page visibility
+  const visibility = {
+    showCover: true,
+    showEditorLetter: true,
+    showContributors: false, // Default false
+    showTableOfContents: true,
+    showBackCover: true,
+    ...project.pageVisibility,
+  };
 
-  // Build the array of pages
+  interface PageItem {
+    id: string;
+    title: string;
+    render: (pageNumber: number, isPrint?: boolean) => React.ReactNode;
+  }
+
+  const activePages: PageItem[] = [];
+
+  if (visibility.showCover) {
+    activePages.push({
+      id: "cover",
+      title: "Capa Principal",
+      render: (_, isPrint) => <CoverPage project={project} theme={theme} isPrintMode={isPrint} />,
+    });
+  }
+
+  if (visibility.showEditorLetter) {
+    activePages.push({
+      id: "editor-letter",
+      title: "Carta do Editor",
+      render: (pNum, isPrint) => (
+        <EditorLetterPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint} />
+      ),
+    });
+  }
+
+  if (visibility.showContributors) {
+    activePages.push({
+      id: "contributors",
+      title: "Colaboradores",
+      render: (pNum, isPrint) => (
+        <ContributorsPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint} />
+      ),
+    });
+  }
+
+  if (visibility.showTableOfContents) {
+    activePages.push({
+      id: "toc",
+      title: "Sumário / Índice",
+      render: (pNum, isPrint) => (
+        <EditorialPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint} />
+      ),
+    });
+  }
+
+  project.articles
+    .filter((art) => art.enabled !== false)
+    .forEach((art) => {
+      activePages.push({
+        id: art.id,
+        title: art.title,
+        render: (pNum, isPrint) => (
+          <ArticleSpread
+            key={art.id}
+            article={art}
+            project={project}
+            theme={theme}
+            pageNumber={pNum}
+            isPrintMode={isPrint}
+          />
+        ),
+      });
+    });
+
+  if (visibility.showBackCover) {
+    activePages.push({
+      id: "back-cover",
+      title: "Contracapa",
+      render: (pNum, isPrint) => (
+        <BackCoverPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint} />
+      ),
+    });
+  }
+
+  const totalPages = Math.max(1, activePages.length);
+
+  // Safety clamp if page list shrunk
+  useEffect(() => {
+    if (currentPageIndex >= totalPages) {
+      setCurrentPageIndex(Math.max(0, totalPages - 1));
+    }
+  }, [totalPages, currentPageIndex]);
+
   const renderPageByIndex = (index: number, isPrint = false) => {
-    if (index === 0) {
-      return <CoverPage project={project} theme={theme} isPrintMode={isPrint} />;
-    }
-    if (index === 1) {
-      return (
-        <EditorLetterPage
-          project={project}
-          theme={theme}
-          pageNumber={2}
-          isPrintMode={isPrint}
-        />
-      );
-    }
-    if (index === 2) {
-      return (
-        <ContributorsPage
-          project={project}
-          theme={theme}
-          pageNumber={3}
-          isPrintMode={isPrint}
-        />
-      );
-    }
-    if (index === 3) {
-      return (
-        <EditorialPage
-          project={project}
-          theme={theme}
-          pageNumber={4}
-          isPrintMode={isPrint}
-        />
-      );
-    }
-    if (index >= 4 && index < totalPages - 1) {
-      const articleIdx = index - 4;
-      const article = project.articles[articleIdx];
-      return (
-        <ArticleSpread
-          key={article?.id || index}
-          article={article}
-          project={project}
-          theme={theme}
-          pageNumber={index + 1}
-          isPrintMode={isPrint}
-        />
-      );
-    }
-    // Back Cover
-    return (
-      <BackCoverPage
-        project={project}
-        theme={theme}
-        pageNumber={totalPages}
-        isPrintMode={isPrint}
-      />
-    );
+    if (!activePages[index]) return null;
+    return activePages[index].render(index + 1, isPrint);
   };
 
   // Keyboard navigation
@@ -254,11 +290,11 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       {/* Main Canvas Viewport (Studio Desk Backdrop with Exact A4 Framing) */}
       <div className="theme-app-viewer-canvas flex-1 overflow-auto p-4 md:p-6 flex items-center justify-center custom-scrollbar transition-colors">
         {viewMode === "grid" ? (
-          /* Grid Mode: Thumbnails of all pages */
+          /* Grid Mode: Thumbnails of all active pages */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-5xl mx-auto py-4">
-            {Array.from({ length: totalPages }).map((_, idx) => (
+            {activePages.map((p, idx) => (
               <div
-                key={idx}
+                key={p.id}
                 onClick={() => {
                   setCurrentPageIndex(idx);
                   setViewMode("single");
@@ -273,17 +309,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
                   {renderPageByIndex(idx)}
                 </div>
                 <div className="bg-slate-900 text-white p-2 text-center text-xs font-bold border-t border-slate-700">
-                  {idx === 0
-                    ? "1. Capa Principal"
-                    : idx === 1
-                    ? "2. Carta do Editor"
-                    : idx === 2
-                    ? "3. Colaboradores"
-                    : idx === 3
-                    ? "4. Sumário / Índice"
-                    : idx === totalPages - 1
-                    ? `${totalPages}. Contracapa`
-                    : `${idx + 1}. Artigo ${idx - 3}`}
+                  {`${idx + 1}. ${p.title}`}
                 </div>
               </div>
             ))}
@@ -335,7 +361,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       <div className="theme-app-viewer-toolbar px-4 py-2 text-[11px] border-t-2 flex items-center justify-between transition-colors">
         <div className="flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span className="font-bold">Simulação 100% Fiel (WYSIWYG) da Impressão & Exportação PDF A4</span>
+          <span className="font-bold">Total de Páginas Ativas na Edição: {totalPages} páginas</span>
         </div>
         <span className="font-mono text-[10px] font-bold">
           Proporção Exata A4 (210mm x 297mm)

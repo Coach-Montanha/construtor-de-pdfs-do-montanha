@@ -50,7 +50,15 @@ function Index() {
       const saved = localStorage.getItem("montanha_magazine_project");
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          return {
+            ...INITIAL_MAGAZINE_PROJECT,
+            ...parsed,
+            pageVisibility: {
+              ...INITIAL_MAGAZINE_PROJECT.pageVisibility,
+              ...(parsed.pageVisibility || {}),
+            },
+          };
         } catch (e) {
           console.error("Erro ao carregar projeto do localStorage:", e);
         }
@@ -167,8 +175,92 @@ function Index() {
     setIsArticleModalOpen(true);
   };
 
-  // Total pages: Cover (1) + EditorLetter (1) + Contributors (1) + TOC (1) + Articles (N) + BackCover (1)
-  const totalPages = 4 + project.articles.length;
+  // Dynamic active page visibility calculation
+  const visibility = {
+    showCover: true,
+    showEditorLetter: true,
+    showContributors: false, // Default false
+    showTableOfContents: true,
+    showBackCover: true,
+    ...project.pageVisibility,
+  };
+
+  interface PageItem {
+    id: string;
+    title: string;
+    render: (pageNumber: number, isPrint?: boolean) => React.ReactNode;
+  }
+
+  const activePages: PageItem[] = [];
+
+  if (visibility.showCover) {
+    activePages.push({
+      id: "cover",
+      title: "Capa Principal",
+      render: (_, isPrint) => <CoverPage project={project} theme={currentPublicationTheme} isPrintMode={isPrint} />,
+    });
+  }
+
+  if (visibility.showEditorLetter) {
+    activePages.push({
+      id: "editor-letter",
+      title: "Carta do Editor",
+      render: (pNum, isPrint) => (
+        <EditorLetterPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint} />
+      ),
+    });
+  }
+
+  if (visibility.showContributors) {
+    activePages.push({
+      id: "contributors",
+      title: "Colaboradores",
+      render: (pNum, isPrint) => (
+        <ContributorsPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint} />
+      ),
+    });
+  }
+
+  if (visibility.showTableOfContents) {
+    activePages.push({
+      id: "toc",
+      title: "Sumário / Índice",
+      render: (pNum, isPrint) => (
+        <EditorialPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint} />
+      ),
+    });
+  }
+
+  project.articles
+    .filter((art) => art.enabled !== false)
+    .forEach((art) => {
+      activePages.push({
+        id: art.id,
+        title: art.title,
+        render: (pNum, isPrint) => (
+          <ArticleSpread
+            key={art.id}
+            article={art}
+            project={project}
+            theme={currentPublicationTheme}
+            pageNumber={pNum}
+            isPrintMode={isPrint}
+          />
+        ),
+      });
+    });
+
+  if (visibility.showBackCover) {
+    activePages.push({
+      id: "back-cover",
+      title: "Contracapa",
+      render: (pNum, isPrint) => (
+        <BackCoverPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint} />
+      ),
+    });
+  }
+
+  const totalPages = Math.max(1, activePages.length);
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 theme-app-shell ${activeUiTheme.className}`}>
@@ -295,7 +387,7 @@ function Index() {
             }`}
           >
             <Feather className="w-3.5 h-3.5" />
-            <span>Editorial & Colaboradores</span>
+            <span>Editorial & Páginas</span>
           </button>
 
           <button
@@ -315,7 +407,7 @@ function Index() {
         <div className="hidden lg:flex items-center gap-3 text-xs opacity-80">
           <span className="flex items-center gap-1 font-bold text-emerald-600">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Auto-salvo
+            Auto-salvo ({totalPages} págs ativas)
           </span>
           <button
             onClick={handleResetToSample}
@@ -379,7 +471,8 @@ function Index() {
             {/* Articles List */}
             <div className="space-y-3">
               {project.articles.map((art, idx) => {
-                const pageNum = idx + 5;
+                const calculatedPageNum = activePages.findIndex((p) => p.id === art.id) + 1;
+                const pageNum = calculatedPageNum > 0 ? calculatedPageNum : idx + 4;
                 return (
                   <div
                     key={art.id}
@@ -527,65 +620,13 @@ function Index() {
         theme={currentPublicationTheme}
       />
 
-      {/* Print-Only Container */}
+      {/* Print-Only Container (Render ONLY active pages without blank sheets) */}
       <div className="print-only-container">
-        {/* Page 1: Cover */}
-        <div className="magazine-print-page">
-          <CoverPage project={project} theme={currentPublicationTheme} isPrintMode={true} />
-        </div>
-
-        {/* Page 2: Letter from the Editor */}
-        <div className="magazine-print-page">
-          <EditorLetterPage
-            project={project}
-            theme={currentPublicationTheme}
-            pageNumber={2}
-            isPrintMode={true}
-          />
-        </div>
-
-        {/* Page 3: Contributors Grid */}
-        <div className="magazine-print-page">
-          <ContributorsPage
-            project={project}
-            theme={currentPublicationTheme}
-            pageNumber={3}
-            isPrintMode={true}
-          />
-        </div>
-
-        {/* Page 4: Table of Contents */}
-        <div className="magazine-print-page">
-          <EditorialPage
-            project={project}
-            theme={currentPublicationTheme}
-            pageNumber={4}
-            isPrintMode={true}
-          />
-        </div>
-
-        {/* Pages 5 to N: Articles */}
-        {project.articles.map((art, idx) => (
-          <div key={art.id} className="magazine-print-page">
-            <ArticleSpread
-              article={art}
-              project={project}
-              theme={currentPublicationTheme}
-              pageNumber={idx + 5}
-              isPrintMode={true}
-            />
+        {activePages.map((page, idx) => (
+          <div key={page.id} className="magazine-print-page">
+            {page.render(idx + 1, true)}
           </div>
         ))}
-
-        {/* Last Page: Back Cover */}
-        <div className="magazine-print-page">
-          <BackCoverPage
-            project={project}
-            theme={currentPublicationTheme}
-            pageNumber={totalPages}
-            isPrintMode={true}
-          />
-        </div>
       </div>
     </div>
   );

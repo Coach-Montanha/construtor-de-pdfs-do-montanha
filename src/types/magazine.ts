@@ -185,6 +185,7 @@ export interface Article {
   tags: string[];
   estimatedReadTime: number; // minutes
   featuredOnCover: boolean;
+  enabled?: boolean; // toggle article page on/off
 }
 
 export interface BackCoverConfig {
@@ -201,6 +202,14 @@ export interface BackCoverConfig {
   };
 }
 
+export interface PageVisibilityConfig {
+  showCover: boolean;           // default: true
+  showEditorLetter: boolean;    // default: true
+  showContributors: boolean;    // default: false (can be toggled on/off)
+  showTableOfContents: boolean; // default: true
+  showBackCover: boolean;       // default: true
+}
+
 export interface MagazineProject {
   id: string;
   title: string;
@@ -214,6 +223,7 @@ export interface MagazineProject {
   editorialInfo: EditorialInfo;
   articles: Article[];
   backCoverConfig: BackCoverConfig;
+  pageVisibility?: PageVisibilityConfig;
   geminiApiKey?: string;
   createdAt: string;
   updatedAt: string;
