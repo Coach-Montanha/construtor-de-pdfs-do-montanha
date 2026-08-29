@@ -6,12 +6,6 @@
 
 /*
  * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
  */
 
 @theme inline {
@@ -41,102 +35,180 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+/* ==========================================================================
+   APP UI THEME SYSTEM: DYNAMIC COLOR SCHEMES FOR EYE-CARE & HIGH CONTRAST
+   ========================================================================== */
+
+/* 1. BRANCO PURO & ALTO CONTRASTE (Fundo 100% Branco, Fonte Preta, Bordas Pretas) */
+.app-theme-contrast-white {
+  --app-bg: #FFFFFF;
+  --app-header: #FFFFFF;
+  --app-subnav: #F4F4F5;
+  --app-surface: #FFFFFF;
+  --app-surface-hover: #F4F4F5;
+  --app-surface-subtle: #FAFAFA;
+  --app-border: #000000;
+  --app-border-subtle: #D4D4D8;
+  --app-text: #000000;
+  --app-text-heading: #000000;
+  --app-text-muted: #27272A;
+  --app-input-bg: #FFFFFF;
+  --app-input-border: #000000;
+  --app-input-text: #000000;
+  --app-accent-bg: #FACC15;
+  --app-accent-text: #000000;
+  --app-viewer-bg: #E4E4E7;
+  --app-viewer-toolbar: #FFFFFF;
 }
 
-@layer base {
-  * {
-    border-color: var(--color-border);
-  }
+/* 2. MODO CLARO EDITORIAL SUAVE */
+.app-theme-light-clean {
+  --app-bg: #F1F5F9;
+  --app-header: #FFFFFF;
+  --app-subnav: #F8FAFC;
+  --app-surface: #FFFFFF;
+  --app-surface-hover: #F8FAFC;
+  --app-surface-subtle: #F1F5F9;
+  --app-border: #94A3B8;
+  --app-border-subtle: #CBD5E1;
+  --app-text: #0F172A;
+  --app-text-heading: #0F172A;
+  --app-text-muted: #475569;
+  --app-input-bg: #FFFFFF;
+  --app-input-border: #94A3B8;
+  --app-input-text: #0F172A;
+  --app-accent-bg: #F59E0B;
+  --app-accent-text: #000000;
+  --app-viewer-bg: #CBD5E1;
+  --app-viewer-toolbar: #FFFFFF;
+}
 
-  body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-  }
+/* 3. MODO ESCURO ERGONÔMICO (SLATE & ÂMBAR) */
+.app-theme-dark-ergonomic {
+  --app-bg: #0B0F19;
+  --app-header: #0F172A;
+  --app-subnav: #111827;
+  --app-surface: #111827;
+  --app-surface-hover: #1F2937;
+  --app-surface-subtle: #1E293B;
+  --app-border: #374151;
+  --app-border-subtle: #1F2937;
+  --app-text: #F8FAFC;
+  --app-text-heading: #FFFFFF;
+  --app-text-muted: #94A3B8;
+  --app-input-bg: #1F2937;
+  --app-input-border: #4B5563;
+  --app-input-text: #FFFFFF;
+  --app-accent-bg: #F59E0B;
+  --app-accent-text: #000000;
+  --app-viewer-bg: #020617;
+  --app-viewer-toolbar: #0F172A;
+}
+
+/* 4. MODO PAPEL & LEITURA SÉPIADO (EYE-CARE) */
+.app-theme-sepia-paper {
+  --app-bg: #F4EFE6;
+  --app-header: #FFFDF9;
+  --app-subnav: #EFE7D8;
+  --app-surface: #FFFDF9;
+  --app-surface-hover: #F8F3E9;
+  --app-surface-subtle: #EFE7D8;
+  --app-border: #4A3E33;
+  --app-border-subtle: #DDD2BE;
+  --app-text: #2C241D;
+  --app-text-heading: #2C241D;
+  --app-text-muted: #5C4E43;
+  --app-input-bg: #FFFDF9;
+  --app-input-border: #4A3E33;
+  --app-input-text: #2C241D;
+  --app-accent-bg: #D97706;
+  --app-accent-text: #FFFFFF;
+  --app-viewer-bg: #DDD2BE;
+  --app-viewer-toolbar: #FFFDF9;
+}
+
+/* 5. MODO MIDNIGHT OLED */
+.app-theme-midnight-oled {
+  --app-bg: #000000;
+  --app-header: #000000;
+  --app-subnav: #0A0A0A;
+  --app-surface: #121212;
+  --app-surface-hover: #1C1C1C;
+  --app-surface-subtle: #181818;
+  --app-border: #2E2E2E;
+  --app-border-subtle: #1C1C1C;
+  --app-text: #FFFFFF;
+  --app-text-heading: #FFFFFF;
+  --app-text-muted: #A1A1AA;
+  --app-input-bg: #000000;
+  --app-input-border: #3F3F46;
+  --app-input-text: #FFFFFF;
+  --app-accent-bg: #FACC15;
+  --app-accent-text: #000000;
+  --app-viewer-bg: #000000;
+  --app-viewer-toolbar: #121212;
+}
+
+/* THEME APPLICATION HELPERS */
+.theme-app-shell {
+  background-color: var(--app-bg) !important;
+  color: var(--app-text) !important;
+}
+
+.theme-app-header {
+  background-color: var(--app-header) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
+}
+
+.theme-app-subnav {
+  background-color: var(--app-subnav) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
+}
+
+.theme-app-card {
+  background-color: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
+}
+
+.theme-app-card-subtle {
+  background-color: var(--app-surface-subtle) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border-subtle) !important;
+}
+
+.theme-app-input {
+  background-color: var(--app-input-bg) !important;
+  color: var(--app-input-text) !important;
+  border-color: var(--app-input-border) !important;
+}
+
+.theme-app-text-muted {
+  color: var(--app-text-muted) !important;
+}
+
+.theme-app-viewer {
+  background-color: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
+}
+
+.theme-app-viewer-canvas {
+  background-color: var(--app-viewer-bg) !important;
+}
+
+.theme-app-viewer-toolbar {
+  background-color: var(--app-viewer-toolbar) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
 }
 
 /* Custom Scrollbar */
@@ -145,14 +217,11 @@
   height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(0, 0, 0, 0.1);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(245, 158, 11, 0.4);
+  background: var(--app-border);
   border-radius: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(245, 158, 11, 0.7);
 }
 
 /* Print Styles & High-Fidelity Magazine Pagination */
@@ -166,7 +235,6 @@
 }
 
 @media print {
-  /* Complete isolation of UI and modals during printing */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
@@ -177,7 +245,6 @@
     overflow: visible !important;
   }
 
-  /* Aggressively hide all UI elements, overlays, dialogs, backdrops, and portals */
   .no-print,
   [role="dialog"],
   [role="region"],
@@ -196,7 +263,6 @@
     z-index: -9999 !important;
   }
 
-  /* Show only the magazine print pages */
   .print-only-container {
     display: block !important;
     position: static !important;

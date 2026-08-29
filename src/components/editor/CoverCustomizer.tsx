@@ -62,7 +62,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
     );
   };
 
-  // Unconventional strength photo presets (My Mad Methods & High-Key Studio)
+  // Unconventional strength photo presets
   const strengthPhotoPresets = [
     {
       label: "Heavy Kettlebell",
@@ -120,11 +120,11 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
   ];
 
   return (
-    <div className="space-y-6 text-slate-100 font-sans">
+    <div className="space-y-6 font-sans">
       {/* Cover Style Variant Switcher */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
-          <Layout className="w-4 h-4" />
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
+        <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+          <Layout className="w-4 h-4 text-amber-500" />
           <span>Estilo & Arquitetura da Capa Digital</span>
         </h3>
 
@@ -135,18 +135,18 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
               <div
                 key={cs.id}
                 onClick={() => updateField("coverStyleVariant", cs.id)}
-                className={`cursor-pointer p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
+                className={`theme-app-card-subtle cursor-pointer p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
                   isSelected
-                    ? "border-amber-400 bg-slate-800/90 shadow-lg shadow-amber-500/10"
-                    : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
+                    ? "border-amber-500 ring-2 ring-amber-400 shadow-md"
+                    : "border-slate-300 hover:border-slate-600"
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-black text-xs text-white uppercase">{cs.name}</span>
-                    {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-400" />}
+                    <span className="font-black text-xs uppercase">{cs.name}</span>
+                    {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-500" />}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-snug">{cs.desc}</p>
+                  <p className="text-[11px] opacity-75 leading-snug">{cs.desc}</p>
                 </div>
               </div>
             );
@@ -155,30 +155,30 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
       </div>
 
       {/* Visual Identity & Masthead Section */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
-          <Wand2 className="w-4 h-4" />
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
+        <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+          <Wand2 className="w-4 h-4 text-amber-500" />
           <span>1. Identidade Visual & Masthead</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label className="text-xs font-bold text-slate-300">MASTHEAD / TÍTULO DA REVISTA</Label>
+            <Label className="text-xs font-bold">MASTHEAD / TÍTULO DA REVISTA</Label>
             <Input
               value={coverConfig.mastheadText}
               onChange={(e) => updateField("mastheadText", e.target.value)}
               placeholder="Ex: MONTANHA ou montanha"
-              className="bg-slate-800 border-slate-700 text-amber-400 font-black text-lg mt-1 tracking-tight"
+              className="theme-app-input font-black text-lg mt-1 tracking-tight border-2 text-amber-600"
             />
           </div>
 
           <div>
-            <Label className="text-xs font-bold text-slate-300">SLOGAN / SUBTÍTULO INTEGRADO</Label>
+            <Label className="text-xs font-bold">SLOGAN / SUBTÍTULO INTEGRADO</Label>
             <Input
               value={coverConfig.sloganText || ""}
               onChange={(e) => updateField("sloganText", e.target.value.toUpperCase())}
               placeholder="Ex: UNCONVENTIONAL STRENGTH & PERFORMANCE"
-              className="bg-slate-800 border-slate-700 text-white font-mono text-xs mt-1"
+              className="theme-app-input font-mono text-xs mt-1 border-2"
             />
           </div>
         </div>
@@ -186,41 +186,41 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
         {/* Technical Badging & Metadata */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           <div>
-            <Label className="text-[11px] font-bold text-slate-400">BADGE VERTICAL / TÁTICO</Label>
+            <Label className="text-[11px] font-bold">BADGE VERTICAL / TÁTICO</Label>
             <Input
               value={coverConfig.issueBadge}
               onChange={(e) => updateField("issueBadge", e.target.value.toUpperCase())}
               placeholder="Ex: PRO EDITION ou ISSUE #01"
-              className="bg-slate-800 border-slate-700 text-amber-400 font-mono text-xs mt-1"
+              className="theme-app-input font-mono text-xs mt-1 border-2 text-amber-600 font-bold"
             />
           </div>
           <div>
-            <Label className="text-[11px] font-bold text-slate-400">DATA / MÊS DA EDIÇÃO</Label>
+            <Label className="text-[11px] font-bold">DATA / MÊS DA EDIÇÃO</Label>
             <Input
               value={coverConfig.issueDate}
               onChange={(e) => updateField("issueDate", e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+              className="theme-app-input text-xs mt-1 border-2"
             />
           </div>
           <div>
-            <Label className="text-[11px] font-bold text-slate-400">ESPECIFICAÇÃO / PREÇO</Label>
+            <Label className="text-[11px] font-bold">ESPECIFICAÇÃO / PREÇO</Label>
             <Input
               value={coverConfig.priceBadge}
               onChange={(e) => updateField("priceBadge", e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+              className="theme-app-input text-xs mt-1 border-2"
             />
           </div>
         </div>
 
         {/* Toggles for Industrial Effects */}
         {coverConfig.coverStyleVariant !== "peak-performance" && (
-          <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-slate-800 text-xs">
+          <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-slate-300 text-xs">
             <div className="flex items-center gap-2">
               <Switch
                 checked={coverConfig.showHazardStripe}
                 onCheckedChange={(val) => updateField("showHazardStripe", val)}
               />
-              <span className="text-slate-300 font-semibold">Faixa de Advertência Industrial (Hazard Stripe)</span>
+              <span className="font-bold">Faixa de Advertência Industrial (Hazard Stripe)</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -228,61 +228,61 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                 checked={coverConfig.showTechHud}
                 onCheckedChange={(val) => updateField("showTechHud", val)}
               />
-              <span className="text-slate-300 font-semibold">HUD Tático & Grid Técnico</span>
+              <span className="font-bold">HUD Tático & Grid Técnico</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Main Cover Story Headline */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
-          <Zap className="w-4 h-4" />
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
+        <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+          <Zap className="w-4 h-4 text-amber-500" />
           <span>2. Destaque Principal & Manchetes</span>
         </h3>
 
         <div>
-          <Label className="text-xs font-bold text-slate-300">TAG DE CATEGORIA SUPERIOR</Label>
+          <Label className="text-xs font-bold">TAG DE CATEGORIA SUPERIOR</Label>
           <Input
             value={coverConfig.categoryTag}
             onChange={(e) => updateField("categoryTag", e.target.value.toUpperCase())}
             placeholder="Ex: SHARPEN UP ou COVER STORY"
-            className="bg-slate-800 border-slate-700 text-amber-400 font-mono text-xs mt-1"
+            className="theme-app-input font-mono text-xs mt-1 border-2 text-amber-600 font-bold"
           />
         </div>
 
         <div>
-          <Label className="text-xs font-bold text-slate-300">MANCHETE PRINCIPAL (ALL CAPS)</Label>
+          <Label className="text-xs font-bold">MANCHETE PRINCIPAL (ALL CAPS)</Label>
           <Input
             value={coverConfig.mainHeadline}
             onChange={(e) => updateField("mainHeadline", e.target.value.toUpperCase())}
             placeholder="Ex: SHOULDER WORKOUT ou UNCONVENTIONAL STRENGTH"
-            className="bg-slate-800 border-slate-700 text-white font-black text-base mt-1"
+            className="theme-app-input font-black text-base mt-1 border-2"
           />
         </div>
 
         <div>
-          <Label className="text-xs font-bold text-slate-300">SUBTÍTULO DA MATÉRIA PRINCIPAL</Label>
+          <Label className="text-xs font-bold">SUBTÍTULO DA MATÉRIA PRINCIPAL</Label>
           <Input
             value={coverConfig.subHeadline}
             onChange={(e) => updateField("subHeadline", e.target.value.toUpperCase())}
             placeholder="Ex: BACK TO BASICS FOR SERIOUS DELT DEMOLITION"
-            className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+            className="theme-app-input text-xs mt-1 border-2"
           />
         </div>
       </div>
 
       {/* Photography & Subject Presets */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
-            <ImageIcon className="w-4 h-4" />
+          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <ImageIcon className="w-4 h-4 text-amber-500" />
             <span>3. Fotografia Atlética & Fundo</span>
           </h3>
           <Button
             size="sm"
             onClick={handleAiCoverPhoto}
-            className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center gap-1 shadow"
+            className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center gap-1 shadow-sm border border-black"
           >
             <Sparkles className="w-3 h-3" />
             Gerar Foto por IA
@@ -291,7 +291,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
 
         {/* Quick Presets */}
         <div>
-          <Label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block">
+          <Label className="text-[11px] font-bold uppercase mb-2 block opacity-80">
             Presets Rápidos de Imagens:
           </Label>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -300,7 +300,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                 key={idx}
                 type="button"
                 onClick={() => updateField("backgroundImage", preset.url)}
-                className="group relative rounded-lg overflow-hidden border border-slate-700 hover:border-amber-400 transition-all text-left aspect-[4/3]"
+                className="group relative rounded-lg overflow-hidden border-2 border-slate-300 hover:border-black transition-all text-left aspect-[4/3] shadow-xs"
               >
                 <img
                   src={preset.url}
@@ -318,20 +318,20 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
         </div>
 
         <div>
-          <Label className="text-xs font-bold text-slate-300">URL DA IMAGEM ATUAL</Label>
+          <Label className="text-xs font-bold">URL DA IMAGEM ATUAL</Label>
           <Input
             value={coverConfig.backgroundImage}
             onChange={(e) => updateField("backgroundImage", e.target.value)}
             placeholder="URL da imagem (JPG / PNG)"
-            className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+            className="theme-app-input text-xs mt-1 border-2"
           />
         </div>
 
         {/* Overlay Dark Slider */}
         <div className="space-y-2 pt-1">
-          <div className="flex justify-between text-xs text-slate-400 font-bold">
+          <div className="flex justify-between text-xs font-bold">
             <span>Escurecimento / Opacidade da Foto</span>
-            <span className="font-mono text-amber-400">{coverConfig.backgroundOverlayOpacity}%</span>
+            <span className="font-mono text-amber-500 font-black">{coverConfig.backgroundOverlayOpacity}%</span>
           </div>
           <Slider
             value={[coverConfig.backgroundOverlayOpacity]}

@@ -3,7 +3,6 @@ import { Article } from "../../types/magazine";
 import {
   generateFullArticleByTopic,
   generateAiImageUrl,
-  getEditorialCuratedImage,
 } from "../../lib/ai-service";
 import {
   Dialog,
@@ -21,7 +20,6 @@ import {
   BookOpen,
   CheckCircle2,
   Loader2,
-  Flame,
   Zap,
 } from "lucide-react";
 
@@ -91,7 +89,6 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
   const handleApplyToMagazine = () => {
     if (!generatedResult) return;
 
-    // Pick a curated image or generate AI image
     const heroImage = generateAiImageUrl(
       generatedResult.suggestedImagePrompt || `${generatedResult.title} dark fitness gym 8k`
     );
@@ -128,23 +125,23 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto bg-slate-900 border-slate-800 text-slate-100 p-6 custom-scrollbar">
-        <DialogHeader className="border-b border-slate-800 pb-3">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2 text-white">
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            <span>Gerador Inteligente de Matérias de Revista com IA</span>
+      <DialogContent className="theme-app-card max-w-3xl max-h-[85vh] overflow-y-auto p-6 custom-scrollbar font-sans border-2 shadow-2xl">
+        <DialogHeader className="border-b-2 border-current pb-3">
+          <DialogTitle className="text-xl font-black flex items-center gap-2 uppercase">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+            <span>Gerador Inteligente de Matérias com IA</span>
           </DialogTitle>
         </DialogHeader>
 
         {!generatedResult ? (
           <div className="space-y-5 my-4">
-            <p className="text-xs text-slate-300">
+            <p className="text-xs opacity-80 leading-relaxed font-medium">
               Digite qualquer tópico ou ideia que você gostaria de incluir na revista. A IA irá redigir a matéria completa já dividida em subtítulos editoriais, com citações de destaque, resumo e sugestões de imagem.
             </p>
 
             {/* Quick Presets */}
             <div>
-              <Label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block">
+              <Label className="text-[11px] font-bold uppercase mb-2 block opacity-80">
                 Sugestões de Pautas Rápidas:
               </Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -156,14 +153,14 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
                       setTopic(p.topic);
                       setCategory(p.cat);
                     }}
-                    className="text-left p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-amber-500/50 transition-all text-xs text-slate-200 flex items-start gap-2 group"
+                    className="theme-app-card-subtle text-left p-2.5 rounded-lg border-2 hover:border-black transition-all text-xs flex items-start gap-2 group shadow-xs"
                   >
-                    <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5 group-hover:scale-110" />
+                    <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5 group-hover:scale-110" />
                     <div>
-                      <span className="text-[9px] font-bold text-amber-400 block uppercase">
+                      <span className="text-[9px] font-bold text-amber-600 block uppercase">
                         {p.cat}
                       </span>
-                      <span className="font-semibold">{p.topic}</span>
+                      <span className="font-bold leading-tight">{p.topic}</span>
                     </div>
                   </button>
                 ))}
@@ -171,32 +168,32 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-slate-300 mb-1 block">TEMA OU ASSUNTO DA MATÉRIA</Label>
+              <Label className="text-xs font-bold mb-1 block">TEMA OU ASSUNTO DA MATÉRIA</Label>
               <Input
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="Ex: Como acelerar o ganho de massa muscular após os 30 anos"
-                className="bg-slate-800 border-slate-700 text-white font-semibold text-sm"
+                className="theme-app-input font-bold text-sm border-2"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs font-bold text-slate-300 mb-1 block">CATEGORIA</Label>
+                <Label className="text-xs font-bold mb-1 block">CATEGORIA</Label>
                 <Input
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="EX: TREINAMENTO, NUTRIÇÃO"
-                  className="bg-slate-800 border-slate-700 text-white text-xs"
+                  className="theme-app-input text-xs border-2"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-slate-300 mb-1 block">TOM EDITORIAL</Label>
+                <Label className="text-xs font-bold mb-1 block">TOM EDITORIAL</Label>
                 <select
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="theme-app-input w-full rounded-md px-3 py-2 text-xs font-bold border-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
                   <option value="motivational">Inspirador & Alta Performance (Estilo Montanha)</option>
                   <option value="journalistic">Jornalístico & Elegante (Estilo Time / Vogue)</option>
@@ -209,7 +206,7 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
             <Button
               onClick={handleGenerate}
               disabled={isLoading || !topic.trim()}
-              className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+              className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow-md border-2 border-black flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -227,8 +224,8 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
         ) : (
           /* Generated Preview View */
           <div className="space-y-4 my-4">
-            <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-lg flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+            <div className="bg-amber-400 text-black border-2 border-black p-3 rounded-lg flex items-center justify-between shadow-xs">
+              <span className="text-xs font-black flex items-center gap-1.5 uppercase">
                 <CheckCircle2 className="w-4 h-4" />
                 Matéria Redigida com Sucesso!
               </span>
@@ -236,34 +233,34 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setGeneratedResult(null)}
-                className="h-7 text-xs text-slate-400 hover:text-white"
+                className="h-7 text-xs font-bold"
               >
                 Gerar Outra
               </Button>
             </div>
 
-            <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-3">
-              <div className="border-b border-slate-700 pb-2">
-                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+            <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-3 shadow-xs">
+              <div className="border-b-2 pb-2">
+                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">
                   {category}
                 </span>
-                <h3 className="text-lg font-black text-white uppercase mt-0.5">
+                <h3 className="text-lg font-black uppercase mt-0.5">
                   {generatedResult.title}
                 </h3>
-                <p className="text-xs text-slate-300 font-medium mt-1">
+                <p className="text-xs font-medium mt-1 opacity-80">
                   {generatedResult.subtitle}
                 </p>
               </div>
 
               {/* Pull quotes preview */}
               {generatedResult.pullQuotes && generatedResult.pullQuotes.length > 0 && (
-                <div className="bg-slate-900 p-2.5 rounded border-l-4 border-amber-500 text-xs italic text-slate-300">
+                <div className="theme-app-card p-2.5 rounded border-l-4 border-amber-500 text-xs italic font-medium">
                   "{generatedResult.pullQuotes[0]}"
                 </div>
               )}
 
               {/* Content snippet */}
-              <div className="text-xs text-slate-300 leading-relaxed font-mono max-h-48 overflow-y-auto p-2 bg-slate-900 rounded border border-slate-800">
+              <div className="theme-app-card text-xs leading-relaxed font-mono max-h-48 overflow-y-auto p-2 rounded border">
                 {generatedResult.content}
               </div>
             </div>
@@ -272,13 +269,13 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
               <Button
                 variant="outline"
                 onClick={() => setGeneratedResult(null)}
-                className="border-slate-700 bg-slate-800 text-slate-300"
+                className="border-2 font-bold"
               >
                 Refazer
               </Button>
               <Button
                 onClick={handleApplyToMagazine}
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 flex items-center gap-2"
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-6 flex items-center gap-2 border-2 border-black"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Inserir Matéria na Revista</span>

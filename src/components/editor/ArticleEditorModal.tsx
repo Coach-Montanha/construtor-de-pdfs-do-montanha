@@ -37,7 +37,6 @@ import {
   Dumbbell,
   Tag,
   Building,
-  MapPin,
 } from "lucide-react";
 
 interface ArticleEditorModalProps {
@@ -312,19 +311,19 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-800 text-slate-100 p-6 custom-scrollbar font-sans">
-        <DialogHeader className="border-b border-slate-800 pb-3">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2 text-white">
-            <Wand2 className="w-5 h-5 text-amber-400" />
+      <DialogContent className="theme-app-card max-w-4xl max-h-[90vh] overflow-y-auto p-6 custom-scrollbar font-sans border-2 shadow-2xl">
+        <DialogHeader className="border-b-2 border-current pb-3">
+          <DialogTitle className="text-xl font-black flex items-center gap-2 uppercase">
+            <Wand2 className="w-5 h-5 text-amber-500" />
             <span>Editor Editorial de Artigos, Treinos & Anúncios</span>
           </DialogTitle>
         </DialogHeader>
 
         {/* AI Loading Banner */}
         {isAiLoading && (
-          <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-lg flex items-center gap-3 text-amber-400 animate-pulse">
+          <div className="bg-amber-400 text-black border-2 border-black p-3 rounded-lg flex items-center gap-3 font-bold animate-pulse">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="text-sm font-semibold">{aiStatusMsg}</span>
+            <span className="text-sm font-black">{aiStatusMsg}</span>
           </div>
         )}
 
@@ -332,25 +331,23 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           {/* Left Column: Basic Details & Titles */}
           <div className="space-y-4">
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <Label className="text-xs font-bold text-slate-300">CATEGORIA DA MATÉRIA</Label>
-              </div>
+              <Label className="text-xs font-bold mb-1 block">CATEGORIA DA MATÉRIA</Label>
               <Input
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value.toUpperCase() })}
                 placeholder="EX: MONTANHA METHOD, GEAR & PROMO, STUDIO SPOTLIGHT"
-                className="bg-slate-800 border-slate-700 text-white font-bold"
+                className="theme-app-input font-bold border-2"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <Label className="text-xs font-bold text-slate-300">MANCHETE / TÍTULO PRINCIPAL (H1)</Label>
+                <Label className="text-xs font-bold">MANCHETE / TÍTULO PRINCIPAL (H1)</Label>
                 <button
                   type="button"
                   onClick={handleSuggestHeadlines}
                   disabled={isAiLoading}
-                  className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20"
+                  className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1 bg-amber-400/20 px-2 py-0.5 rounded border border-amber-500"
                 >
                   <Sparkles className="w-3 h-3" />
                   Sugerir Títulos com IA
@@ -360,46 +357,46 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Título impactante em caixa alta"
-                className="bg-slate-800 border-slate-700 text-white font-black text-base"
+                className="theme-app-input font-black text-base border-2"
               />
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-slate-300 mb-1 block">SUBTÍTULO / DECK EDITORIAL</Label>
+              <Label className="text-xs font-bold mb-1 block">SUBTÍTULO / DECK EDITORIAL</Label>
               <Textarea
                 value={formData.subtitle}
                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                 placeholder="1 a 2 frases resumindo a ideia central da matéria"
-                className="bg-slate-800 border-slate-700 text-white text-xs h-16"
+                className="theme-app-input text-xs h-16 border-2"
               />
             </div>
 
             {/* Author Info */}
-            <div className="grid grid-cols-2 gap-3 bg-slate-800/60 p-3 rounded-lg border border-slate-700">
+            <div className="grid grid-cols-2 gap-3 theme-app-card-subtle p-3 rounded-lg border-2">
               <div>
-                <Label className="text-[11px] font-semibold text-slate-400">Autor</Label>
+                <Label className="text-[11px] font-bold">Autor</Label>
                 <Input
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   placeholder="Nome do Autor"
-                  className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+                  className="theme-app-input text-xs mt-1 border"
                 />
               </div>
               <div>
-                <Label className="text-[11px] font-semibold text-slate-400">Bio Curta</Label>
+                <Label className="text-[11px] font-bold">Bio Curta</Label>
                 <Input
                   value={formData.authorBio || ""}
                   onChange={(e) => setFormData({ ...formData, authorBio: e.target.value })}
                   placeholder="Credenciais / Cargo"
-                  className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+                  className="theme-app-input text-xs mt-1 border"
                 />
               </div>
             </div>
 
             {/* Template Selection */}
             <div>
-              <Label className="text-xs font-bold text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <Layout className="w-3.5 h-3.5 text-amber-400" />
+              <Label className="text-xs font-bold mb-1.5 flex items-center gap-1.5">
+                <Layout className="w-3.5 h-3.5 text-amber-500" />
                 <span>TEMPLATE DE DIAGRAMAÇÃO</span>
               </Label>
               <select
@@ -407,7 +404,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, layoutTemplate: e.target.value as LayoutTemplate })
                 }
-                className="w-full bg-slate-800 border border-slate-700 text-amber-400 rounded-md px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="theme-app-input w-full rounded-md px-3 py-2 text-xs font-bold border-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 <option value="editorial-lead">Standard Feature / Artigo Técnico (3 Colunas + Drop Cap + Hero Banner)</option>
                 <option value="workout-protocol">Workout Protocol & Exercise Breakdowns (Clusters A1/A2, QR Code, Warmup)</option>
@@ -422,25 +419,25 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           {/* Right Column: Hero Image & Quotes */}
           <div className="space-y-4">
             {/* Hero Image Controls */}
-            <div className="bg-slate-800/60 p-3.5 rounded-lg border border-slate-700 space-y-3">
+            <div className="theme-app-card-subtle p-3.5 rounded-lg border-2 space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
+                <Label className="text-xs font-bold flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
                   <span>FOTO HERO DO ARTIGO</span>
                 </Label>
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={handleCuratedImage}
-                    className="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-white font-medium"
-                    title="Buscar foto curada de alta resolução"
+                    className="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-white font-bold"
+                    title="Buscar foto curada"
                   >
                     Foto Curada
                   </button>
                   <button
                     type="button"
                     onClick={handleGenerateAiImage}
-                    className="text-[10px] bg-amber-500 hover:bg-amber-600 px-2 py-1 rounded text-slate-950 font-bold flex items-center gap-1"
+                    className="text-[10px] bg-amber-500 hover:bg-amber-600 px-2 py-1 rounded text-slate-950 font-black flex items-center gap-1 border border-black"
                     title="Gerar foto por IA"
                   >
                     <Sparkles className="w-3 h-3" />
@@ -452,12 +449,12 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               <Input
                 value={formData.heroImage}
                 onChange={(e) => setFormData({ ...formData, heroImage: e.target.value })}
-                placeholder="URL da imagem (Unsplash, IA ou link direto)"
-                className="bg-slate-800 border-slate-700 text-white text-xs"
+                placeholder="URL da imagem"
+                className="theme-app-input text-xs border"
               />
 
               {formData.heroImage && (
-                <div className="relative h-28 w-full rounded-md overflow-hidden border border-slate-600">
+                <div className="relative h-28 w-full rounded-md overflow-hidden border-2 border-black">
                   <img
                     src={formData.heroImage}
                     alt="Preview"
@@ -468,17 +465,17 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             </div>
 
             {/* Pull Quotes Manager */}
-            <div className="bg-slate-800/60 p-3.5 rounded-lg border border-slate-700 space-y-2">
+            <div className="theme-app-card-subtle p-3.5 rounded-lg border-2 space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <Quote className="w-3.5 h-3.5 text-amber-400" />
+                <Label className="text-xs font-bold flex items-center gap-1.5">
+                  <Quote className="w-3.5 h-3.5 text-amber-500" />
                   <span>CITAÇÕES DE DESTAQUE (PULL QUOTES)</span>
                 </Label>
                 <button
                   type="button"
                   onClick={handleExtractQuotes}
                   disabled={isAiLoading || !formData.content}
-                  className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1"
+                  className="text-[11px] font-bold text-amber-600 hover:underline flex items-center gap-1"
                 >
                   <Sparkles className="w-3 h-3" />
                   Extrair com IA
@@ -489,13 +486,13 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 {formData.pullQuotes.map((q, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between gap-2 bg-slate-900 px-2.5 py-1.5 rounded text-xs border border-slate-700"
+                    className="flex items-center justify-between gap-2 theme-app-card px-2.5 py-1.5 rounded text-xs border"
                   >
-                    <span className="italic text-slate-300 line-clamp-1">"{q}"</span>
+                    <span className="italic line-clamp-1 font-medium">"{q}"</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveQuote(idx)}
-                      className="text-red-400 hover:text-red-300 p-1"
+                      className="text-red-500 hover:text-red-400 p-1"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -508,7 +505,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                   value={newQuoteInput}
                   onChange={(e) => setNewQuoteInput(e.target.value)}
                   placeholder="Nova citação de impacto..."
-                  className="bg-slate-800 border-slate-700 text-white text-xs h-8"
+                  className="theme-app-input text-xs h-8 border"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -520,7 +517,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                   size="sm"
                   type="button"
                   onClick={handleAddQuote}
-                  className="h-8 bg-slate-700 hover:bg-slate-600 text-white"
+                  className="h-8 bg-amber-500 text-black font-bold border border-black"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </Button>
@@ -531,18 +528,18 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
 
         {/* ---------------- 1. WORKOUT PROTOCOL BUILDER ---------------- */}
         {formData.layoutTemplate === "workout-protocol" && (
-          <div className="bg-slate-800/80 p-4 rounded-xl border-2 border-amber-400/60 space-y-4 my-2">
-            <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+          <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-4 my-2 shadow-xs">
+            <div className="flex items-center justify-between border-b-2 pb-2">
               <div className="flex items-center gap-2">
-                <Dumbbell className="w-4 h-4 text-amber-400" />
-                <h3 className="font-black text-sm text-white uppercase tracking-tight">
+                <Dumbbell className="w-4 h-4 text-amber-500" />
+                <h3 className="font-black text-sm uppercase tracking-tight">
                   Configuração do Protocolo de Treino (Clusters A1/A2 e QR Code)
                 </h3>
               </div>
               <Button
                 size="sm"
                 onClick={handleAddWorkoutExercise}
-                className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center gap-1"
+                className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center gap-1 border border-black"
               >
                 <Plus className="w-3 h-3" />
                 Adicionar Exercício
@@ -551,36 +548,36 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
 
             {/* Warm-Up / Mobility Box */}
             <div>
-              <Label className="text-xs font-bold text-amber-400 uppercase">FASE 0: MOBILIDADE & AQUECIMENTO</Label>
+              <Label className="text-xs font-bold uppercase">FASE 0: MOBILIDADE & AQUECIMENTO</Label>
               <Input
                 value={formData.workoutProtocol?.warmupPrep || ""}
                 onChange={(e) => updateWorkoutProtocol("warmupPrep", e.target.value)}
                 placeholder="Ex: MOBILITY & ACTIVATION (5 MIN): T-spine bridges, halos..."
-                className="bg-slate-900 border-slate-700 text-white text-xs mt-1"
+                className="theme-app-input text-xs mt-1 border"
               />
             </div>
 
             {/* Exercises List */}
             <div className="space-y-3">
               {(formData.workoutProtocol?.exercises || []).map((ex, idx) => (
-                <div key={idx} className="bg-slate-900/90 p-3 rounded-lg border border-slate-700 space-y-2">
+                <div key={idx} className="theme-app-card p-3 rounded-lg border-2 space-y-2">
                   <div className="flex items-center gap-2">
                     <Input
                       value={ex.code}
                       onChange={(e) => handleUpdateExercise(idx, "code", e.target.value.toUpperCase())}
                       placeholder="A1 / B1"
-                      className="bg-slate-800 border-slate-700 text-amber-400 font-mono font-black text-xs h-7 w-20 text-center"
+                      className="theme-app-input font-mono font-black text-xs h-7 w-20 text-center border text-amber-600"
                     />
                     <Input
                       value={ex.name}
                       onChange={(e) => handleUpdateExercise(idx, "name", e.target.value.toUpperCase())}
                       placeholder="NOME DO EXERCÍCIO"
-                      className="bg-slate-800 border-slate-700 text-white font-bold text-xs h-7 flex-1"
+                      className="theme-app-input font-bold text-xs h-7 flex-1 border"
                     />
                     <button
                       type="button"
                       onClick={() => handleRemoveExercise(idx)}
-                      className="text-red-400 hover:text-red-300 p-1"
+                      className="text-red-500 hover:text-red-400 p-1"
                       title="Remover exercício"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -591,14 +588,14 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                     <Input
                       value={ex.setsReps}
                       onChange={(e) => handleUpdateExercise(idx, "setsReps", e.target.value.toUpperCase())}
-                      placeholder="Séries e Reps (ex: 5 SÉRIES × 5 REPS)"
-                      className="bg-slate-800 border-slate-700 text-amber-400 font-mono text-xs h-7"
+                      placeholder="Séries e Reps"
+                      className="theme-app-input font-mono text-xs h-7 border text-amber-600 font-bold"
                     />
                     <Input
                       value={ex.tempoRest}
                       onChange={(e) => handleUpdateExercise(idx, "tempoRest", e.target.value.toUpperCase())}
-                      placeholder="Tempo e Descanso (ex: TEMPO: 20X1 // REST: 90s)"
-                      className="bg-slate-800 border-slate-700 text-slate-300 font-mono text-xs h-7"
+                      placeholder="Tempo e Descanso"
+                      className="theme-app-input font-mono text-xs h-7 border"
                     />
                   </div>
 
@@ -606,31 +603,31 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                     value={ex.keyPoints}
                     onChange={(e) => handleUpdateExercise(idx, "keyPoints", e.target.value)}
                     placeholder="Instruções de execução e pontos-chave biomecânicos..."
-                    className="bg-slate-800 border-slate-700 text-slate-300 text-xs h-7"
+                    className="theme-app-input text-xs h-7 border"
                   />
                 </div>
               ))}
             </div>
 
             {/* Finisher & Video URL */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-700">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">DIRETRIZES DO FINISHER</Label>
+                <Label className="text-xs font-bold uppercase">DIRETRIZES DO FINISHER</Label>
                 <Input
                   value={formData.workoutProtocol?.finisher || ""}
                   onChange={(e) => updateWorkoutProtocol("finisher", e.target.value)}
-                  placeholder="Ex: FINISHER: Heavy Sandbag Carry (3x50m)..."
-                  className="bg-slate-900 border-slate-700 text-white text-xs mt-1"
+                  placeholder="Ex: FINISHER: Heavy Sandbag Carry..."
+                  className="theme-app-input text-xs mt-1 border"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">LINK DO VÍDEO TUTORIAL (QR CODE)</Label>
+                <Label className="text-xs font-bold uppercase">LINK DO VÍDEO TUTORIAL (QR CODE)</Label>
                 <Input
                   value={formData.workoutProtocol?.videoQrUrl || ""}
                   onChange={(e) => updateWorkoutProtocol("videoQrUrl", e.target.value)}
                   placeholder="https://coachmontanha.com.br/demo-01"
-                  className="bg-slate-900 border-slate-700 text-white text-xs mt-1 font-mono"
+                  className="theme-app-input text-xs mt-1 font-mono border"
                 />
               </div>
             </div>
@@ -639,54 +636,54 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
 
         {/* ---------------- 2. PRODUCT AD BUILDER ---------------- */}
         {formData.layoutTemplate === "product-ad" && (
-          <div className="bg-slate-800/80 p-4 rounded-xl border-2 border-amber-400/60 space-y-4 my-2">
-            <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
-              <Tag className="w-4 h-4 text-amber-400" />
-              <h3 className="font-black text-sm text-white uppercase tracking-tight">
+          <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-4 my-2 shadow-xs">
+            <div className="flex items-center gap-2 border-b pb-2">
+              <Tag className="w-4 h-4 text-amber-500" />
+              <h3 className="font-black text-sm uppercase tracking-tight">
                 Configuração da Página de Anúncio / Produto & Gear
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">SLOGAN DE IMPACTO (HERO SLOGAN)</Label>
+                <Label className="text-xs font-bold uppercase">SLOGAN DE IMPACTO</Label>
                 <Input
                   value={formData.productPromotion?.slogan || ""}
                   onChange={(e) => updateProductPromotion("slogan", e.target.value.toUpperCase())}
                   placeholder="Ex: FORGED IN IRON // BUILT FOR WAR"
-                  className="bg-slate-900 border-slate-700 text-white font-black text-xs mt-1"
+                  className="theme-app-input font-black text-xs mt-1 border"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">BADGE PROMOCIONAL / DESCONTO</Label>
+                <Label className="text-xs font-bold uppercase">BADGE PROMOCIONAL / DESCONTO</Label>
                 <Input
                   value={formData.productPromotion?.promoBadgeText || ""}
                   onChange={(e) => updateProductPromotion("promoBadgeText", e.target.value.toUpperCase())}
                   placeholder="Ex: SPECIAL LAUNCH OFFER // 15% OFF"
-                  className="bg-slate-900 border-slate-700 text-amber-400 font-bold text-xs mt-1"
+                  className="theme-app-input font-bold text-xs mt-1 border text-amber-600"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">CÓDIGO DO CUPOM (COUPON CODE)</Label>
+                <Label className="text-xs font-bold uppercase">CÓDIGO DO CUPOM</Label>
                 <Input
                   value={formData.productPromotion?.couponCode || ""}
                   onChange={(e) => updateProductPromotion("couponCode", e.target.value.toUpperCase())}
                   placeholder="Ex: MONTANHA15"
-                  className="bg-slate-900 border-slate-700 text-amber-400 font-mono font-black text-xs mt-1"
+                  className="theme-app-input font-mono font-black text-xs mt-1 border text-amber-600"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">URL DO PRODUTO / LOJA</Label>
+                <Label className="text-xs font-bold uppercase">URL DO PRODUTO / LOJA</Label>
                 <Input
                   value={formData.productPromotion?.ctaUrl || ""}
                   onChange={(e) => updateProductPromotion("ctaUrl", e.target.value.toUpperCase())}
                   placeholder="Ex: WWW.MONTANHAIRON.COM.BR"
-                  className="bg-slate-900 border-slate-700 text-white font-mono text-xs mt-1"
+                  className="theme-app-input font-mono text-xs mt-1 border"
                 />
               </div>
             </div>
@@ -695,66 +692,56 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
 
         {/* ---------------- 3. FACILITY SPOTLIGHT BUILDER ---------------- */}
         {formData.layoutTemplate === "facility-spotlight" && (
-          <div className="bg-slate-800/80 p-4 rounded-xl border-2 border-amber-400/60 space-y-4 my-2">
-            <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
-              <Building className="w-4 h-4 text-amber-400" />
-              <h3 className="font-black text-sm text-white uppercase tracking-tight">
+          <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-4 my-2 shadow-xs">
+            <div className="flex items-center gap-2 border-b pb-2">
+              <Building className="w-4 h-4 text-amber-500" />
+              <h3 className="font-black text-sm uppercase tracking-tight">
                 Configuração do Studio & Facility Spotlight
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">NOME DO ESPAÇO / ESTÚDIO</Label>
+                <Label className="text-xs font-bold uppercase">NOME DO ESPAÇO / ESTÚDIO</Label>
                 <Input
                   value={formData.facilitySpotlight?.facilityName || ""}
                   onChange={(e) => updateFacilitySpotlight("facilityName", e.target.value.toUpperCase())}
-                  placeholder="Ex: MONTANHA PERFORMANCE & IRON LAB"
-                  className="bg-slate-900 border-slate-700 text-white font-black text-xs mt-1"
+                  placeholder="Ex: MONTANHA PERFORMANCE LAB"
+                  className="theme-app-input font-black text-xs mt-1 border"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">HEAD COACH / DIRETOR</Label>
+                <Label className="text-xs font-bold uppercase">HEAD COACH / DIRETOR</Label>
                 <Input
                   value={formData.facilitySpotlight?.headCoach || ""}
                   onChange={(e) => updateFacilitySpotlight("headCoach", e.target.value.toUpperCase())}
                   placeholder="Ex: COACH MONTANHA"
-                  className="bg-slate-900 border-slate-700 text-amber-400 font-bold text-xs mt-1"
+                  className="theme-app-input font-bold text-xs mt-1 border text-amber-600"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">LOCALIZAÇÃO / CIDADE</Label>
+                <Label className="text-xs font-bold uppercase">LOCALIZAÇÃO / CIDADE</Label>
                 <Input
                   value={formData.facilitySpotlight?.location || ""}
                   onChange={(e) => updateFacilitySpotlight("location", e.target.value.toUpperCase())}
-                  placeholder="Ex: SÃO PAULO // SP - BRASIL"
-                  className="bg-slate-900 border-slate-700 text-white text-xs mt-1"
+                  placeholder="Ex: SÃO PAULO // SP"
+                  className="theme-app-input text-xs mt-1 border"
                 />
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-amber-400 uppercase">WEBSITE / CONTATO</Label>
+                <Label className="text-xs font-bold uppercase">WEBSITE / CONTATO</Label>
                 <Input
                   value={formData.facilitySpotlight?.website || ""}
                   onChange={(e) => updateFacilitySpotlight("website", e.target.value.toUpperCase())}
                   placeholder="Ex: WWW.MONTANHALAB.COM.BR"
-                  className="bg-slate-900 border-slate-700 text-white text-xs mt-1 font-mono"
+                  className="theme-app-input text-xs mt-1 font-mono border"
                 />
               </div>
-            </div>
-
-            <div>
-              <Label className="text-xs font-bold text-amber-400 uppercase">CITAÇÃO DE IMPACTO ANCORADA (PULL QUOTE)</Label>
-              <Input
-                value={formData.facilitySpotlight?.anchoredQuote || ""}
-                onChange={(e) => updateFacilitySpotlight("anchoredQuote", e.target.value)}
-                placeholder="Ex: O ambiente certo não apenas inspira o esforço; ele torna a mediocridade insuportável."
-                className="bg-slate-900 border-slate-700 text-white text-xs mt-1"
-              />
             </div>
           </div>
         )}
@@ -762,7 +749,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
         {/* Full Article Content Editor */}
         <div className="space-y-2 mt-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-bold text-slate-300">
+            <Label className="text-xs font-bold">
               CORPO DO ARTIGO / TEXTO EDITORIAL (PARÁGRAFOS)
             </Label>
             <Button
@@ -770,27 +757,27 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               type="button"
               onClick={handlePolishText}
               disabled={isAiLoading || !formData.content}
-              className="h-7 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5"
+              className="h-7 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs flex items-center gap-1.5 border border-black"
             >
               <Wand2 className="w-3 h-3" />
-              <span>Polir Texto com IA Editorial</span>
+              <span>Polir Texto com IA</span>
             </Button>
           </div>
           <Textarea
             value={formData.content}
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            placeholder="Escreva ou cole seu artigo aqui. Separe parágrafos com quebra de linha dupla. Use **Subtítulo** para criar seções."
-            className="bg-slate-800 border-slate-700 text-white text-xs font-mono min-h-[180px] leading-relaxed"
+            placeholder="Escreva ou cole seu artigo aqui. Separe parágrafos com quebra de linha dupla."
+            className="theme-app-input text-xs font-mono min-h-[180px] leading-relaxed border-2"
           />
         </div>
 
-        <DialogFooter className="border-t border-slate-800 pt-4 mt-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={onClose} className="text-slate-400 hover:text-white">
+        <DialogFooter className="border-t-2 border-current pt-4 mt-4 flex items-center justify-between">
+          <Button variant="ghost" onClick={onClose} className="font-bold">
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6"
+            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-6 border-2 border-black"
           >
             Salvar Artigo na Revista
           </Button>
