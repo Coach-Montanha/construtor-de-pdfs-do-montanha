@@ -1,6 +1,23 @@
 import React from "react";
 import { Article, MagazineProject, MagazineTheme } from "../../types/magazine";
-import { Quote, Clock, CheckCircle2, Lightbulb, User, QrCode, PlayCircle, Flame, Shield, ArrowRight, Zap } from "lucide-react";
+import {
+  Quote,
+  Clock,
+  CheckCircle2,
+  Lightbulb,
+  User,
+  QrCode,
+  Flame,
+  ShieldCheck,
+  Zap,
+  Tag,
+  ShoppingBag,
+  ExternalLink,
+  MapPin,
+  Building,
+  Target,
+  Sparkles,
+} from "lucide-react";
 
 interface ArticleSpreadProps {
   article: Article;
@@ -18,7 +35,12 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   isPrintMode = false,
 }) => {
   const isWorkout = article.layoutTemplate === "workout-protocol";
+  const isProductAd = article.layoutTemplate === "product-ad";
+  const isFacilitySpotlight = article.layoutTemplate === "facility-spotlight";
+
   const protocol = article.workoutProtocol;
+  const promo = article.productPromotion;
+  const facility = article.facilitySpotlight;
 
   // Render markdown / formatted paragraphs with drop-cap and H2 styling
   const renderParagraphs = (text: string, enableDropCap = true) => {
@@ -89,7 +111,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           </span>
           <span className="text-slate-600">/</span>
           <span className="bg-amber-400 text-black font-black text-[9px] px-2 py-0.5 rounded-xs uppercase">
-            {article.category || "MONTANHA METHOD"}
+            {article.category || "MONTANHA DOSSIER"}
           </span>
         </div>
         <div className="flex items-center gap-3 text-slate-400 font-bold uppercase">
@@ -102,10 +124,233 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         </div>
       </div>
 
-      {/* Main Page Content Area */}
+      {/* Main Page Content Area depending on template */}
       <div className="relative z-10 flex-1 flex flex-col justify-between my-3 overflow-hidden">
-        {/* ----------------- TEMPLATE: WORKOUT PROTOCOL ----------------- */}
-        {isWorkout && protocol ? (
+        {/* ----------------- 1. TEMPLATE: FULL-PAGE PRODUCT / GEAR AD ----------------- */}
+        {isProductAd ? (
+          <div className="flex-1 flex flex-col justify-between space-y-3">
+            {/* Massive Display Slogan */}
+            <div className="text-center pt-1 border-b border-slate-800 pb-2">
+              <span className="text-[9px] font-mono font-black tracking-[0.3em] text-amber-400 uppercase block mb-1">
+                OFFICIAL GEAR PROMOTION // MONTANHA LAB
+              </span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tighter leading-none drop-shadow-md">
+                {promo?.slogan || "FORGED IN IRON // BUILT FOR WAR"}
+              </h2>
+            </div>
+
+            {/* Central High-Impact Product Imagery with Badge Overlays */}
+            <div className="relative flex-1 min-h-[160px] sm:min-h-[190px] rounded-lg overflow-hidden border-2 border-slate-800 shadow-xl group">
+              <img
+                src={promo?.productImage || article.heroImage}
+                alt={promo?.productName || article.title}
+                className="w-full h-full object-cover object-center filter contrast-125 brightness-95 group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+
+              {/* Promotional Badge (Top Right) */}
+              <div className="absolute top-3 right-3 bg-amber-400 text-black px-3 py-1.5 rounded-sm shadow-lg font-mono font-black text-[10px] sm:text-xs uppercase tracking-tight flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 fill-black" />
+                <span>{promo?.promoBadgeText || "SPECIAL OFFER // 15% OFF"}</span>
+              </div>
+
+              {/* Product Name on Bottom of Image */}
+              <div className="absolute bottom-3 inset-x-4">
+                <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-lg">
+                  {promo?.productName || article.title}
+                </h3>
+                <p className="text-xs text-amber-200/90 font-medium max-w-lg mt-0.5 leading-snug drop-shadow">
+                  {promo?.productSubtitle || article.subtitle}
+                </p>
+              </div>
+            </div>
+
+            {/* Technical Spec Badges Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {(promo?.specBadges || [
+                { title: "GRAVITY CAST", subtitle: "Single pour ductile iron" },
+                { title: "POWDER COAT", subtitle: "Matte textured grip" },
+                { title: "CALIBRATED", subtitle: "+/- 0.5% precision weight" },
+                { title: "LIFETIME SPEC", subtitle: "Indestructible warranty" },
+              ]).map((spec, idx) => (
+                <div
+                  key={idx}
+                  className="bg-slate-900/90 border border-slate-800 p-2 rounded text-center"
+                >
+                  <span className="text-[9px] font-mono font-black text-amber-400 block uppercase">
+                    {spec.title}
+                  </span>
+                  <span className="text-[8px] font-mono text-slate-400 leading-none">
+                    {spec.subtitle}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Conversion & CTA Module (Coupon + QR Code + URL) */}
+            <div className="bg-black/90 border-2 border-amber-400/80 p-3 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+              <div className="space-y-0.5 text-center sm:text-left">
+                <span className="text-[8.5px] font-mono text-slate-400 uppercase block">
+                  CUPOM EXCLUSIVO PARA LEITORES DA REVISTA:
+                </span>
+                <div className="inline-block bg-slate-900 border border-amber-400 px-3 py-1 rounded text-amber-400 font-mono font-black text-sm tracking-widest uppercase">
+                  CODE: {promo?.couponCode || "MONTANHA15"}
+                </div>
+                <p className="text-[9px] font-mono text-slate-300 mt-0.5">
+                  ACESSE: <span className="text-white font-bold">{promo?.ctaUrl || "WWW.MONTANHAIRON.COM.BR"}</span>
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 bg-slate-900 p-2 rounded border border-slate-800">
+                <div className="bg-white p-1 rounded">
+                  <QrCode className="w-8 h-8 text-black" />
+                </div>
+                <div className="text-[8px] font-mono text-left">
+                  <span className="font-black text-amber-400 block uppercase leading-none">
+                    SCAN TO SHOP
+                  </span>
+                  <span className="text-slate-400 text-[7px] leading-tight">
+                    ENTREGA DIRETA EM TODO O BRASIL
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : isFacilitySpotlight ? (
+          /* ----------------- 2. TEMPLATE: STUDIO / FACILITY SPOTLIGHT ----------------- */
+          <div className="flex-1 flex flex-col justify-between space-y-3">
+            {/* Top Multi-Photo Collage (3 Photos) */}
+            <div className="grid grid-cols-3 gap-2 h-28 sm:h-36">
+              {(facility?.galleryPhotos && facility.galleryPhotos.length > 0
+                ? facility.galleryPhotos
+                : [
+                    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80",
+                    "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80",
+                  ]
+              ).map((photoUrl, idx) => (
+                <div
+                  key={idx}
+                  className="relative rounded-md overflow-hidden border border-slate-800 group"
+                >
+                  <img
+                    src={photoUrl}
+                    alt={`Facility View ${idx + 1}`}
+                    className="w-full h-full object-cover filter contrast-125 brightness-90 group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-1 left-1 bg-black/80 px-1 py-0.5 rounded text-[7px] font-mono font-bold text-amber-400 uppercase">
+                    SPOTLIGHT #{idx + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Split Grid: Left Sidebar / Tech Sheet (1/3) + Main Narrative (2/3) */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 overflow-hidden">
+              {/* Left Sidebar / Tech Sheet (4 cols) */}
+              <div className="md:col-span-4 bg-slate-900/90 border border-slate-800 p-3 rounded-lg flex flex-col justify-between space-y-2.5 text-[10px] font-mono">
+                <div>
+                  <div className="flex items-center gap-1.5 text-amber-400 font-black uppercase text-[10px] border-b border-slate-800 pb-1 mb-2">
+                    <Building className="w-3.5 h-3.5" />
+                    <span>FACILITY TECH SHEET</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-[8px] text-slate-500 uppercase block font-bold">
+                        FACILITY NAME:
+                      </span>
+                      <span className="text-white font-black text-xs block">
+                        {facility?.facilityName || "MONTANHA PERFORMANCE LAB"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[8px] text-slate-500 uppercase block font-bold">
+                        HEAD COACH / DIRECTOR:
+                      </span>
+                      <span className="text-amber-400 font-bold">
+                        {facility?.headCoach || "COACH MONTANHA"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[8px] text-slate-500 uppercase block font-bold">
+                        LOCATION:
+                      </span>
+                      <span className="text-slate-300 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                        {facility?.location || "SÃO PAULO // SP"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-[8px] text-slate-500 uppercase block font-bold">
+                        METHODS USED:
+                      </span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {(facility?.methodsUsed || [
+                          "KETTLEBELLS",
+                          "STEEL MACES",
+                          "CLUBBELLS",
+                          "CALISTHENICS",
+                          "MOBILITY",
+                        ]).map((m, i) => (
+                          <span
+                            key={i}
+                            className="bg-black text-amber-300 text-[8px] px-1.5 py-0.5 rounded border border-slate-700 uppercase"
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-800 text-[8.5px] text-slate-400">
+                  WEB: <span className="text-white font-bold">{facility?.website || "WWW.MONTANHALAB.COM.BR"}</span>
+                </div>
+              </div>
+
+              {/* Main Narrative Area (8 cols): Overview, Mission, Coaching Philosophy & Pull Quote */}
+              <div className="md:col-span-8 flex flex-col justify-between space-y-2.5 pl-0 md:pl-1">
+                <div className="space-y-2 text-justify text-xs leading-relaxed font-sans text-slate-300">
+                  <div>
+                    <h4 className="text-xs font-mono font-black text-amber-400 uppercase mb-0.5">
+                      // OVERVIEW & ESTRUTURA
+                    </h4>
+                    <p>
+                      {facility?.overviewText ||
+                        "Projetado como um santuário para o treinamento de força pura, o Montanha Lab elimina o supérfluo para focar no que realmente constrói atletas resilientes: ferro maciço, alavancas assimétricas e protocolos de intensidade implacável."}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-mono font-black text-amber-400 uppercase mb-0.5">
+                      // MISSÃO & FILOSOFIA DE COACHING
+                    </h4>
+                    <p>
+                      {facility?.missionText ||
+                        "Nossa missão é transformar cada praticante em uma máquina de adaptação motora. Não ensinamos apenas movimentos; cultivamos a mentalidade espartana de execução sem desculpas em cada repetição."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Large Anchored Motivational Statement */}
+                <div className="bg-slate-900 border-l-4 border-amber-400 p-2.5 rounded-r shadow-md">
+                  <p className="text-xs sm:text-sm font-black text-white italic uppercase tracking-tight">
+                    "{facility?.anchoredQuote || "O ambiente certo não apenas inspira o esforço; ele torna a mediocridade insuportável."}"
+                  </p>
+                  <span className="text-[8px] font-mono text-amber-400 mt-0.5 block uppercase">
+                    — MANIFESTO MONTANHA LAB
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : isWorkout && protocol ? (
+          /* ----------------- 3. TEMPLATE: WORKOUT PROTOCOL ----------------- */
           <div className="flex-1 flex flex-col justify-between space-y-2.5">
             {/* Primary Workout Title Card */}
             <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
@@ -221,7 +466,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             </div>
           </div>
         ) : (
-          /* ----------------- TEMPLATE: STANDARD FEATURE / TECHNICAL ARTICLE ----------------- */
+          /* ----------------- 4. TEMPLATE: STANDARD FEATURE / TECHNICAL ARTICLE ----------------- */
           <div className="flex-1 flex flex-col justify-between space-y-3">
             {/* Header Block: H1 + Deck */}
             <div>

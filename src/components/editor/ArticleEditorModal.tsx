@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Article, LayoutTemplate, WorkoutExercise, WorkoutProtocol } from "../../types/magazine";
+import {
+  Article,
+  LayoutTemplate,
+  WorkoutExercise,
+  WorkoutProtocol,
+  ProductPromotion,
+  FacilitySpotlight,
+} from "../../types/magazine";
 import {
   polishEditorialText,
   generateEditorialHeadlines,
@@ -26,12 +33,11 @@ import {
   Layout,
   Plus,
   Trash2,
-  CheckCircle2,
-  RefreshCw,
   Loader2,
   Dumbbell,
-  Flame,
-  QrCode,
+  Tag,
+  Building,
+  MapPin,
 } from "lucide-react";
 
 interface ArticleEditorModalProps {
@@ -238,6 +244,63 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     updateWorkoutProtocol("exercises", currentExercises);
   };
 
+  // Product Promotion Management
+  const updateProductPromotion = (field: keyof ProductPromotion, value: any) => {
+    const defaultPromo: ProductPromotion = {
+      slogan: "FORGED IN IRON // BUILT FOR WAR",
+      productName: formData.title || "MONTANHA COMPETITION GEAR",
+      productSubtitle: formData.subtitle || "Equipamento forjado para suportar o treino mais brutal do planeta.",
+      productImage: formData.heroImage,
+      promoBadgeText: "SPECIAL LAUNCH OFFER // 15% OFF",
+      couponCode: "MONTANHA15",
+      ctaUrl: "WWW.MONTANHAIRON.COM.BR",
+      specBadges: [
+        { title: "GRAVITY CAST", subtitle: "Single pour ductile iron" },
+        { title: "POWDER COAT", subtitle: "Matte textured grip" },
+        { title: "CALIBRATED", subtitle: "+/- 0.5% precision" },
+        { title: "LIFETIME SPEC", subtitle: "Indestructible warranty" },
+      ],
+      features: ["Fundição maciça", "Acabamento antiferrugem"],
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      productPromotion: {
+        ...(prev.productPromotion || defaultPromo),
+        [field]: value,
+      },
+    }));
+  };
+
+  // Facility Spotlight Management
+  const updateFacilitySpotlight = (field: keyof FacilitySpotlight, value: any) => {
+    const defaultFac: FacilitySpotlight = {
+      facilityName: formData.title || "MONTANHA PERFORMANCE LAB",
+      headCoach: formData.author || "COACH MONTANHA",
+      location: "SÃO PAULO // SP - BRASIL",
+      website: "WWW.MONTANHALAB.COM.BR",
+      methodsUsed: ["KETTLEBELLS", "STEEL MACES", "CLUBBELLS", "CALISTHENICS", "MOBILITY"],
+      specialties: ["Condicionamento Tático", "Força Não-Convencional"],
+      galleryPhotos: [
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80",
+        "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80",
+      ],
+      overviewText: formData.content || "Santuário dedicado ao treinamento de força não-convencional e biomecânica avançada.",
+      missionText: "Forjar corpos indestrutíveis e mentes espartanas preparadas para qualquer desafio.",
+      philosophyText: "Sem máquinas guiadas. Sem desculpas. Apenas você contra a gravidade e o ferro.",
+      anchoredQuote: "O ambiente certo não apenas inspira o esforço; ele torna a mediocridade insuportável.",
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      facilitySpotlight: {
+        ...(prev.facilitySpotlight || defaultFac),
+        [field]: value,
+      },
+    }));
+  };
+
   const handleSave = () => {
     if (!formData.title) {
       alert("Por favor, preencha o título do artigo.");
@@ -253,7 +316,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
         <DialogHeader className="border-b border-slate-800 pb-3">
           <DialogTitle className="text-xl font-bold flex items-center gap-2 text-white">
             <Wand2 className="w-5 h-5 text-amber-400" />
-            <span>Editor Editorial de Artigo & Protocolos de Treino</span>
+            <span>Editor Editorial de Artigos, Treinos & Anúncios</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -275,7 +338,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               <Input
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value.toUpperCase() })}
-                placeholder="EX: MONTANHA METHOD, MONTANHA WORKOUT"
+                placeholder="EX: MONTANHA METHOD, GEAR & PROMO, STUDIO SPOTLIGHT"
                 className="bg-slate-800 border-slate-700 text-white font-bold"
               />
             </div>
@@ -348,6 +411,8 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               >
                 <option value="editorial-lead">Standard Feature / Artigo Técnico (3 Colunas + Drop Cap + Hero Banner)</option>
                 <option value="workout-protocol">Workout Protocol & Exercise Breakdowns (Clusters A1/A2, QR Code, Warmup)</option>
+                <option value="product-ad">Full-Page Product & Gear Promotion (Anúncio Full, Cupom, QR Code, Tech Specs)</option>
+                <option value="facility-spotlight">Studio / Facility Spotlight (Collage de Fotos, Tech Sheet, Manifesto)</option>
                 <option value="two-column-quote">2 Colunas Clássicas com Citação Central</option>
                 <option value="infographic-tips">Guia Prático com Cards de Dicas Numeradas</option>
               </select>
@@ -464,7 +529,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           </div>
         </div>
 
-        {/* WORKOUT PROTOCOL BUILDER (Only shown when layoutTemplate === "workout-protocol") */}
+        {/* ---------------- 1. WORKOUT PROTOCOL BUILDER ---------------- */}
         {formData.layoutTemplate === "workout-protocol" && (
           <div className="bg-slate-800/80 p-4 rounded-xl border-2 border-amber-400/60 space-y-4 my-2">
             <div className="flex items-center justify-between border-b border-slate-700 pb-2">
@@ -572,11 +637,133 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           </div>
         )}
 
+        {/* ---------------- 2. PRODUCT AD BUILDER ---------------- */}
+        {formData.layoutTemplate === "product-ad" && (
+          <div className="bg-slate-800/80 p-4 rounded-xl border-2 border-amber-400/60 space-y-4 my-2">
+            <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
+              <Tag className="w-4 h-4 text-amber-400" />
+              <h3 className="font-black text-sm text-white uppercase tracking-tight">
+                Configuração da Página de Anúncio / Produto & Gear
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-bold text-amber-400 uppercase">SLOGAN DE IMPACTO (HERO SLOGAN)</Label>
+                <Input
+                  value={formData.productPromotion?.slogan || ""}
+                  onChange={(e) => updateProductPromotion("slogan", e.target.value.toUpperCase())}
+                  placeholder="Ex: FORGED IN IRON // BUILT FOR WAR"
+                  className="bg-slate-900 border-slate-700 text-white font-black text-xs mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-amber-400 uppercase">BADGE PROMOCIONAL / DESCONTO</Label>
+                <Input
+                  value={formData.productPromotion?.promoBadgeText || ""}
+                  onChange={(e) => updateProductPromotion("promoBadgeText", e.target.value.toUpperCase())}
+                  placeholder="Ex: SPECIAL LAUNCH OFFER // 15% OFF"
+                  className="bg-slate-900 border-slate-700 text-amber-400 font-bold text-xs mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-bold text-amber-400 uppercase">CÓDIGO DO CUPOM (COUPON CODE)</Label>
+                <Input
+                  value={formData.productPromotion?.couponCode || ""}
+                  onChange={(e) => updateProductPromotion("couponCode", e.target.value.toUpperCase())}
+                  placeholder="Ex: MONTANHA15"
+                  className="bg-slate-900 border-slate-700 text-amber-400 font-mono font-black text-xs mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-amber-400 uppercase">URL DO PRODUTO / LOJA</Label>
+                <Input
+                  value={formData.productPromotion?.ctaUrl || ""}
+                  onChange={(e) => updateProductPromotion("ctaUrl", e.target.value.toUpperCase())}
+                  placeholder="Ex: WWW.MONTANHAIRON.COM.BR"
+                  className="bg-slate-900 border-slate-700 text-white font-mono text-xs mt-1"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ---------------- 3. FACILITY SPOTLIGHT BUILDER ---------------- */}
+        {formData.layoutTemplate === "facility-spotlight" && (
+          <div className="bg-slate-800/80 p-4 rounded-xl border-2 border-amber-400/60 space-y-4 my-2">
+            <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
+              <Building className="w-4 h-4 text-amber-400" />
+              <h3 className="font-black text-sm text-white uppercase tracking-tight">
+                Configuração do Studio & Facility Spotlight
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-bold text-amber-400 uppercase">NOME DO ESPAÇO / ESTÚDIO</Label>
+                <Input
+                  value={formData.facilitySpotlight?.facilityName || ""}
+                  onChange={(e) => updateFacilitySpotlight("facilityName", e.target.value.toUpperCase())}
+                  placeholder="Ex: MONTANHA PERFORMANCE & IRON LAB"
+                  className="bg-slate-900 border-slate-700 text-white font-black text-xs mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-amber-400 uppercase">HEAD COACH / DIRETOR</Label>
+                <Input
+                  value={formData.facilitySpotlight?.headCoach || ""}
+                  onChange={(e) => updateFacilitySpotlight("headCoach", e.target.value.toUpperCase())}
+                  placeholder="Ex: COACH MONTANHA"
+                  className="bg-slate-900 border-slate-700 text-amber-400 font-bold text-xs mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-bold text-amber-400 uppercase">LOCALIZAÇÃO / CIDADE</Label>
+                <Input
+                  value={formData.facilitySpotlight?.location || ""}
+                  onChange={(e) => updateFacilitySpotlight("location", e.target.value.toUpperCase())}
+                  placeholder="Ex: SÃO PAULO // SP - BRASIL"
+                  className="bg-slate-900 border-slate-700 text-white text-xs mt-1"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-amber-400 uppercase">WEBSITE / CONTATO</Label>
+                <Input
+                  value={formData.facilitySpotlight?.website || ""}
+                  onChange={(e) => updateFacilitySpotlight("website", e.target.value.toUpperCase())}
+                  placeholder="Ex: WWW.MONTANHALAB.COM.BR"
+                  className="bg-slate-900 border-slate-700 text-white text-xs mt-1 font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold text-amber-400 uppercase">CITAÇÃO DE IMPACTO ANCORADA (PULL QUOTE)</Label>
+              <Input
+                value={formData.facilitySpotlight?.anchoredQuote || ""}
+                onChange={(e) => updateFacilitySpotlight("anchoredQuote", e.target.value)}
+                placeholder="Ex: O ambiente certo não apenas inspira o esforço; ele torna a mediocridade insuportável."
+                className="bg-slate-900 border-slate-700 text-white text-xs mt-1"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Full Article Content Editor */}
         <div className="space-y-2 mt-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs font-bold text-slate-300">
-              CORPO DO ARTIGO (TEXTO COMPLETO E PARÁGRAFOS)
+              CORPO DO ARTIGO / TEXTO EDITORIAL (PARÁGRAFOS)
             </Label>
             <Button
               size="sm"

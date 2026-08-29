@@ -1,6 +1,8 @@
 export type LayoutTemplate =
   | "editorial-lead"       // Standard Feature / Technical Article (3 colunas, drop cap 3 linhas, foto hero, deck de resumo)
   | "workout-protocol"     // Workout Protocols & Exercise Breakdowns (Warm-up box, A1/A2/B1/B2 clusters, sets/reps/tempo, QR Code)
+  | "product-ad"           // Full-Page Product & Brand Promotion (Full-bleed hero, massive slogan, CTA badge, coupon, QR, tech spec badges)
+  | "facility-spotlight"   // Studio / Facility Spotlight (Photo collage, 1/3 tech sheet sidebar, 2/3 narrative overview, mission, pull quote)
   | "two-column-quote"     // 2 colunas clássicas com citação centralizada e destaque lateral
   | "three-column-dense"   // 3 colunas de leitura aprofundada com cabeçalho elegante
   | "visual-gallery"       // Artigo com grande destaque para fotografia e bloco lateral
@@ -113,6 +115,32 @@ export interface WorkoutProtocol {
   videoQrUrl?: string;
 }
 
+export interface ProductPromotion {
+  slogan: string; // "FORGED IN IRON // BUILT FOR WAR"
+  productName: string; // "MONTANHA COMPETITION KETTLEBELLS"
+  productSubtitle: string; // "Fundição de peça única em ferro dúctil com acabamento antiderrapante e calibração de precisão."
+  productImage: string;
+  promoBadgeText: string; // "SPECIAL LAUNCH OFFER // 15% OFF"
+  couponCode: string; // "MONTANHA15"
+  ctaUrl: string; // "WWW.MONTANHAIRON.COM.BR"
+  specBadges: { title: string; subtitle: string }[];
+  features: string[];
+}
+
+export interface FacilitySpotlight {
+  facilityName: string; // "MONTANHA PERFORMANCE & IRON LAB"
+  headCoach: string; // "COACH MONTANHA"
+  location: string; // "SÃO PAULO // SP - BRASIL"
+  website: string; // "WWW.MONTANHALAB.COM.BR"
+  methodsUsed: string[];
+  specialties: string[];
+  galleryPhotos: string[]; // [photo1, photo2, photo3]
+  overviewText: string;
+  missionText: string;
+  philosophyText: string;
+  anchoredQuote: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -133,6 +161,8 @@ export interface Article {
   keyTakeaways?: string[];
   layoutTemplate: LayoutTemplate;
   workoutProtocol?: WorkoutProtocol;
+  productPromotion?: ProductPromotion;
+  facilitySpotlight?: FacilitySpotlight;
   highlightColor?: string;
   tags: string[];
   estimatedReadTime: number; // minutes
