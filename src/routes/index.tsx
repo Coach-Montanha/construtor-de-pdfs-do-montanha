@@ -85,6 +85,17 @@ function Index() {
     }
   }, [project]);
 
+  // Active App Theme Config
+  const activeUiTheme =
+    APP_UI_THEMES.find((t) => t.id === uiThemeMode) || APP_UI_THEMES[0];
+
+  // Sync theme class to document body so portals and dialogs inherit theme variables
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.body.className = activeUiTheme.className;
+    }
+  }, [uiThemeMode, activeUiTheme]);
+
   // Save UI Theme to localStorage
   const handleSelectUiTheme = (mode: AppUiThemeMode) => {
     setUiThemeMode(mode);
@@ -92,10 +103,6 @@ function Index() {
       localStorage.setItem("montanha_ui_theme", mode);
     }
   };
-
-  // Active App Theme Config
-  const activeUiTheme =
-    APP_UI_THEMES.find((t) => t.id === uiThemeMode) || APP_UI_THEMES[0];
 
   // Active Publication Theme
   const currentPublicationTheme =

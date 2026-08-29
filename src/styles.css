@@ -39,6 +39,25 @@
 
 :root {
   --radius: 0.625rem;
+  /* Default Global Fallbacks for Portals and Dialogs */
+  --app-bg: #FFFFFF;
+  --app-header: #FFFFFF;
+  --app-subnav: #F4F4F5;
+  --app-surface: #FFFFFF;
+  --app-surface-hover: #F4F4F5;
+  --app-surface-subtle: #FAFAFA;
+  --app-border: #000000;
+  --app-border-subtle: #D4D4D8;
+  --app-text: #000000;
+  --app-text-heading: #000000;
+  --app-text-muted: #27272A;
+  --app-input-bg: #FFFFFF;
+  --app-input-border: #000000;
+  --app-input-text: #000000;
+  --app-accent-bg: #FACC15;
+  --app-accent-text: #000000;
+  --app-viewer-bg: #18191E;
+  --app-viewer-toolbar: #FFFFFF;
 }
 
 /* ==========================================================================
@@ -46,7 +65,7 @@
    ========================================================================== */
 
 /* 1. BRANCO PURO & ALTO CONTRASTE (Fundo 100% Branco, Fonte Preta, Bordas Pretas) */
-.app-theme-contrast-white {
+.app-theme-contrast-white, body.app-theme-contrast-white {
   --app-bg: #FFFFFF;
   --app-header: #FFFFFF;
   --app-subnav: #F4F4F5;
@@ -68,7 +87,7 @@
 }
 
 /* 2. MODO CLARO EDITORIAL SUAVE */
-.app-theme-light-clean {
+.app-theme-light-clean, body.app-theme-light-clean {
   --app-bg: #F1F5F9;
   --app-header: #FFFFFF;
   --app-subnav: #F8FAFC;
@@ -90,7 +109,7 @@
 }
 
 /* 3. MODO ESCURO ERGONÔMICO (SLATE & ÂMBAR) */
-.app-theme-dark-ergonomic {
+.app-theme-dark-ergonomic, body.app-theme-dark-ergonomic {
   --app-bg: #0B0F19;
   --app-header: #0F172A;
   --app-subnav: #111827;
@@ -112,7 +131,7 @@
 }
 
 /* 4. MODO PAPEL & LEITURA SÉPIADO (EYE-CARE) */
-.app-theme-sepia-paper {
+.app-theme-sepia-paper, body.app-theme-sepia-paper {
   --app-bg: #F4EFE6;
   --app-header: #FFFDF9;
   --app-subnav: #EFE7D8;
@@ -134,7 +153,7 @@
 }
 
 /* 5. MODO MIDNIGHT OLED */
-.app-theme-midnight-oled {
+.app-theme-midnight-oled, body.app-theme-midnight-oled {
   --app-bg: #000000;
   --app-header: #000000;
   --app-subnav: #0A0A0A;
