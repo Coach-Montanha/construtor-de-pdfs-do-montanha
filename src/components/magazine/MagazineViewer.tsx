@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { MagazineProject, MagazineTheme, PageViewMode } from "../../types/magazine";
 import { CoverPage } from "./CoverPage";
+import { EditorLetterPage } from "./EditorLetterPage";
+import { ContributorsPage } from "./ContributorsPage";
 import { EditorialPage } from "./EditorialPage";
 import { ArticleSpread } from "./ArticleSpread";
 import { BackCoverPage } from "./BackCoverPage";
@@ -35,8 +37,8 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
   const [viewMode, setViewMode] = useState<PageViewMode>("spread");
   const [zoomLevel, setZoomLevel] = useState<number>(100);
 
-  // Total pages: Cover (1) + Editorial/Index (1) + Articles (N) + BackCover (1)
-  const totalPages = 2 + project.articles.length + 1;
+  // Total pages: Cover (1) + EditorLetter (1) + Contributors (1) + TOC (1) + Articles (N) + BackCover (1)
+  const totalPages = 4 + project.articles.length;
 
   // Build the array of pages
   const renderPageByIndex = (index: number, isPrint = false) => {
@@ -45,7 +47,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
     }
     if (index === 1) {
       return (
-        <EditorialPage
+        <EditorLetterPage
           project={project}
           theme={theme}
           pageNumber={2}
@@ -53,8 +55,28 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
         />
       );
     }
-    if (index >= 2 && index < totalPages - 1) {
-      const articleIdx = index - 2;
+    if (index === 2) {
+      return (
+        <ContributorsPage
+          project={project}
+          theme={theme}
+          pageNumber={3}
+          isPrintMode={isPrint}
+        />
+      );
+    }
+    if (index === 3) {
+      return (
+        <EditorialPage
+          project={project}
+          theme={theme}
+          pageNumber={4}
+          isPrintMode={isPrint}
+        />
+      );
+    }
+    if (index >= 4 && index < totalPages - 1) {
+      const articleIdx = index - 4;
       const article = project.articles[articleIdx];
       return (
         <ArticleSpread
@@ -255,10 +277,14 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
                   {idx === 0
                     ? "1. Capa Principal"
                     : idx === 1
-                    ? "2. Editorial & Sumário"
+                    ? "2. Carta do Editor"
+                    : idx === 2
+                    ? "3. Colaboradores"
+                    : idx === 3
+                    ? "4. Sumário / Índice"
                     : idx === totalPages - 1
                     ? `${totalPages}. Contracapa`
-                    : `${idx + 1}. Artigo ${idx - 1}`}
+                    : `${idx + 1}. Artigo ${idx - 3}`}
                 </div>
               </div>
             ))}

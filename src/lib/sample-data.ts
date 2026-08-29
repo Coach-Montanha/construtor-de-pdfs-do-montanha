@@ -126,21 +126,21 @@ export const INITIAL_MAGAZINE_PROJECT: MagazineProject = {
         tag: "// 01. BALÍSTICA & POTÊNCIA",
         title: "Kettlebell Swing Pesado: O Segredo para Cadeia Posterior e Condicionamento de Choque",
         authorCallout: "Coach Montanha",
-        pageTarget: 3,
+        pageTarget: 5,
       },
       {
         id: "hl-2",
         tag: "// 02. TORQUE ROTACIONAL",
         title: "Steel Mace & Clubbell: Blindando Ombros e Construindo Força Funcional 3D",
         authorCallout: "Dra. Helena Vasconcelos",
-        pageTarget: 4,
+        pageTarget: 6,
       },
       {
         id: "hl-3",
         tag: "// 03. MINDSET DE FERRO",
         title: "A Psicologia do Implacável: Como Executar Quando a Motivação Desaparece",
         authorCallout: "Coach Montanha",
-        pageTarget: 5,
+        pageTarget: 7,
       },
     ],
     footerHighlights: [
@@ -155,7 +155,8 @@ export const INITIAL_MAGAZINE_PROJECT: MagazineProject = {
     editorName: "Coach Montanha",
     editorRole: "Fundador & Editor-Chefe",
     editorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=600&q=80",
-    editorLetterTitle: "O Manifesto da Força Não-Convencional",
+    editorActionPhoto: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=85",
+    editorLetterTitle: "O MANIFESTO DA FORÇA NÃO-CONVENCIONAL",
     editorLetter: `Bem-vindo à edição inaugural da MONTANHA MAGAZINE.
 
 Esta publicação é uma declaração de guerra contra o treino passivo, as máquinas guiadas que anestesiam o corpo e as ilusões de atalhos confortáveis. Inspirada pela metodologia crua e visceral do treinamento não-convencional (My Mad Methods style), nossa missão é resgatar a capacidade física primordial do ser humano.
@@ -164,11 +165,41 @@ Aqui, o ferro fundido, os kettlebells pesados, as clavas de aço, os sacos de ar
 
 Abrace a fricção. Domine a técnica nos detalhes invisíveis. Seja bem-vindo à irmandade da alta performance.`,
     editorialNote: "Montanha Magazine é um periódico dedicado a métodos não-convencionais de força, calistenia pesada, condicionamento tático e mindset espartano.",
+    disclaimerText: "AVISO LEGAL & MÉDICO: Os métodos de treinamento, exercícios não-convencionais e protocolos descritos nesta publicação exigem disciplina e supervisão técnica. Consulte sempre um médico e um profissional de educação física antes de iniciar qualquer programa de alta intensidade. Todos os direitos reservados à Montanha Media Group © 2026.",
     credits: [
       { id: "c1", role: "Editor-Chefe & Direção Geral", name: "Coach Montanha" },
       { id: "c2", role: "Direção de Arte & Design Tático", name: "Montanha Tactical Design" },
       { id: "c3", role: "Pesquisa & Fisiologia Não-Convencional", name: "Conselho de Força & Biomecânica" },
       { id: "c4", role: "Fotografia Editorial de Ação", name: "Montanha Iron Media" },
+    ],
+    contributors: [
+      {
+        id: "con-1",
+        name: "COACH MONTANHA",
+        title: "MASTER KETTLEBELL INSTRUCTOR // FOUNDER",
+        bio: "Pioneiro do treinamento não-convencional e biomecânica de alta performance no Brasil. Especialista em força balística e periodização tática.",
+        photo: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=400&q=80",
+        handle: "@coachmontanha",
+        facility: "MONTANHA IRON LAB // MATRIZ",
+      },
+      {
+        id: "con-2",
+        name: "DRA. HELENA VASCONCELOS",
+        title: "NEUROCIENTISTA & BIOHACKER // MD",
+        bio: "Pesquisadora em fisiologia do sono profundo, variabilidade cardíaca (HRV) e restauração neuromuscular em atletas de alto rendimento.",
+        photo: "https://images.unsplash.com/photo-1594824813628-98e3b48a1c97?auto=format&fit=crop&w=400&q=80",
+        handle: "@drahelenavasconcelos",
+        facility: "NEURORECOVERY INSTITUTE",
+      },
+      {
+        id: "con-3",
+        name: "MARCUS 'VIKING' SILVA",
+        title: "STEEL MACE & CLUBBELL SPECIALIST // CSCS",
+        bio: "Instrutor sênior de alavancas rotacionais e treinamento tridimensional. Focado em saúde escapular e prevenção de lesões em esportes de combate.",
+        photo: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=400&q=80",
+        handle: "@viking.strength",
+        facility: "TACTICAL COMBAT LAB",
+      },
     ],
   },
   articles: [

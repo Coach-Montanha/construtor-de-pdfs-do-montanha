@@ -72,15 +72,28 @@ export interface EditorialCredit {
   name: string;
 }
 
+export interface Contributor {
+  id: string;
+  name: string;
+  title: string; // e.g. "MASTER KETTLEBELL COACH // CSCS"
+  bio: string;
+  photo: string;
+  handle: string; // e.g. "@coachmontanha"
+  facility?: string; // e.g. "MONTANHA IRON LAB // CURITIBA"
+}
+
 export interface EditorialInfo {
   editorName: string;
   editorRole: string;
   editorPhoto: string;
+  editorActionPhoto?: string;
   editorLetterTitle: string;
   editorLetter: string;
   editorSignatureUrl?: string;
   credits: EditorialCredit[];
   editorialNote?: string;
+  disclaimerText?: string;
+  contributors: Contributor[];
 }
 
 export interface Article {

@@ -9,6 +9,8 @@ import { MagazineSettings } from "../components/editor/MagazineSettings";
 import { AiStudioDialog } from "../components/editor/AiStudioDialog";
 import { PdfExportModal } from "../components/export/PdfExportModal";
 import { CoverPage } from "../components/magazine/CoverPage";
+import { EditorLetterPage } from "../components/magazine/EditorLetterPage";
+import { ContributorsPage } from "../components/magazine/ContributorsPage";
 import { EditorialPage } from "../components/magazine/EditorialPage";
 import { ArticleSpread } from "../components/magazine/ArticleSpread";
 import { BackCoverPage } from "../components/magazine/BackCoverPage";
@@ -30,6 +32,7 @@ import {
   Layers,
   Save,
   CheckCircle2,
+  Users,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -130,7 +133,8 @@ function Index() {
     setIsArticleModalOpen(true);
   };
 
-  const totalPages = 2 + project.articles.length + 1;
+  // Total pages: Cover (1) + EditorLetter (1) + Contributors (1) + TOC (1) + Articles (N) + BackCover (1)
+  const totalPages = 4 + project.articles.length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
@@ -146,8 +150,8 @@ function Index() {
               <h1 className="font-black text-sm sm:text-base tracking-tight text-white uppercase">
                 MONTANHA MAGAZINE STUDIO
               </h1>
-              <span className="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30 hidden sm:inline">
-                {project.editionNumber ? `EDIÇÃO #${project.editionNumber}` : "VIRTUAL"}
+              <span className="bg-amber-400 text-black text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase hidden sm:inline">
+                {project.editionNumber ? `ED. #${project.editionNumber}` : "VIRTUAL"}
               </span>
             </div>
             <p className="text-[11px] text-slate-400 font-medium">
@@ -235,7 +239,7 @@ function Index() {
             }`}
           >
             <Feather className="w-3.5 h-3.5" />
-            <span>Editorial & Expediente</span>
+            <span>Editorial & Colaboradores</span>
           </button>
 
           <button
@@ -319,7 +323,7 @@ function Index() {
             {/* Articles List */}
             <div className="space-y-3">
               {project.articles.map((art, idx) => {
-                const pageNum = idx + 3;
+                const pageNum = idx + 5; // Starting after Cover(1), Letter(2), Contributors(3), TOC(4)
                 return (
                   <div
                     key={art.id}
@@ -331,7 +335,7 @@ function Index() {
                         <img
                           src={art.heroImage}
                           alt={art.title}
-                          className="w-16 h-16 rounded-lg object-cover border border-slate-700 shrink-0"
+                          className="w-16 h-16 rounded-lg object-cover border border-slate-700 shrink-0 filter contrast-125"
                         />
                       ) : (
                         <div className="w-16 h-16 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
@@ -341,11 +345,11 @@ function Index() {
 
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="bg-amber-500/20 text-amber-300 text-[9px] font-bold px-2 py-0.5 rounded border border-amber-500/30 uppercase">
+                          <span className="bg-amber-400 text-black text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase">
                             {art.category}
                           </span>
-                          <span className="text-[10px] font-mono text-slate-400">
-                            PÁGINA {pageNum}
+                          <span className="text-[10px] font-mono text-amber-400 font-bold">
+                            PÁGINA {pageNum < 10 ? `0${pageNum}` : pageNum}
                           </span>
                           <span className="text-[10px] text-slate-500 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
@@ -421,7 +425,7 @@ function Index() {
           </div>
         )}
 
-        {/* Tab 4: Editorial & Credits */}
+        {/* Tab 4: Editorial & Contributors */}
         {activeTab === "editorial" && (
           <div className="max-w-4xl mx-auto">
             <MagazineSettings
@@ -472,9 +476,9 @@ function Index() {
           <CoverPage project={project} theme={currentTheme} isPrintMode={true} />
         </div>
 
-        {/* Page 2: Editorial & Index */}
+        {/* Page 2: Letter from the Editor (1/3 vs 2/3 layout) */}
         <div className="magazine-print-page">
-          <EditorialPage
+          <EditorLetterPage
             project={project}
             theme={currentTheme}
             pageNumber={2}
@@ -482,14 +486,34 @@ function Index() {
           />
         </div>
 
-        {/* Pages 3 to N: Articles */}
+        {/* Page 3: Contributors Grid (Asymmetric card grid) */}
+        <div className="magazine-print-page">
+          <ContributorsPage
+            project={project}
+            theme={currentTheme}
+            pageNumber={3}
+            isPrintMode={true}
+          />
+        </div>
+
+        {/* Page 4: Table of Contents (Two-column split with visual panel) */}
+        <div className="magazine-print-page">
+          <EditorialPage
+            project={project}
+            theme={currentTheme}
+            pageNumber={4}
+            isPrintMode={true}
+          />
+        </div>
+
+        {/* Pages 5 to N: Articles */}
         {project.articles.map((art, idx) => (
           <div key={art.id} className="magazine-print-page">
             <ArticleSpread
               article={art}
               project={project}
               theme={currentTheme}
-              pageNumber={idx + 3}
+              pageNumber={idx + 5}
               isPrintMode={true}
             />
           </div>

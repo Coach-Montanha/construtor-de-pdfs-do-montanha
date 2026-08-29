@@ -3,6 +3,7 @@ import {
   MagazineProject,
   MagazineThemeId,
   EditorialCredit,
+  Contributor,
 } from "../../types/magazine";
 import { MAGAZINE_THEMES } from "../../lib/sample-data";
 import { Input } from "../ui/input";
@@ -16,7 +17,8 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
-  Share2,
+  Users,
+  ShieldAlert,
   Sparkles,
 } from "lucide-react";
 
@@ -89,8 +91,36 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     );
   };
 
+  // Contributors Management
+  const handleAddContributor = () => {
+    const newCon: Contributor = {
+      id: "con-" + Date.now(),
+      name: "NOVO COACH / AUTOR",
+      title: "SPECIALIST // CSCS",
+      bio: "Especialista em preparação física e metodologia de treinamento não-convencional.",
+      photo: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=400&q=80",
+      handle: "@treinador",
+      facility: "TACTICAL PERFORMANCE LAB",
+    };
+    updateEditorial("contributors", [...(project.editorialInfo.contributors || []), newCon]);
+  };
+
+  const handleUpdateContributor = (id: string, field: keyof Contributor, value: string) => {
+    const updated = (project.editorialInfo.contributors || []).map((c) =>
+      c.id === id ? { ...c, [field]: value } : c
+    );
+    updateEditorial("contributors", updated);
+  };
+
+  const handleRemoveContributor = (id: string) => {
+    updateEditorial(
+      "contributors",
+      (project.editorialInfo.contributors || []).filter((c) => c.id !== id)
+    );
+  };
+
   return (
-    <div className="space-y-6 text-slate-100">
+    <div className="space-y-6 text-slate-100 font-sans">
       {/* Theme & Palette Selector */}
       <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
@@ -180,11 +210,11 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* Editorial Page & Credits Settings */}
+      {/* Page 1: Letter from Editor Settings */}
       <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
           <Feather className="w-4 h-4" />
-          <span>Carta do Editor & Expediente</span>
+          <span>Página 1: Carta do Editor & Manifesto</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -198,7 +228,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           </div>
 
           <div>
-            <Label className="text-xs font-semibold text-slate-300">FOTO DO EDITOR (URL)</Label>
+            <Label className="text-xs font-semibold text-slate-300">FOTO DE PERFIL DO EDITOR (URL)</Label>
             <Input
               value={project.editorialInfo.editorPhoto}
               onChange={(e) => updateEditorial("editorPhoto", e.target.value)}
@@ -207,28 +237,48 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-xs font-semibold text-slate-300">TÍTULO DO MANIFESTO / CARTA</Label>
+            <Input
+              value={project.editorialInfo.editorLetterTitle}
+              onChange={(e) => updateEditorial("editorLetterTitle", e.target.value)}
+              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-semibold text-slate-300">FOTO DE AÇÃO DO EDITOR (INSET URL)</Label>
+            <Input
+              value={project.editorialInfo.editorActionPhoto || ""}
+              onChange={(e) => updateEditorial("editorActionPhoto", e.target.value)}
+              className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+            />
+          </div>
+        </div>
+
         <div>
-          <Label className="text-xs font-semibold text-slate-300">TÍTULO DA CARTA DO EDITOR</Label>
-          <Input
-            value={project.editorialInfo.editorLetterTitle}
-            onChange={(e) => updateEditorial("editorLetterTitle", e.target.value)}
-            className="bg-slate-800 border-slate-700 text-white text-xs mt-1"
+          <Label className="text-xs font-semibold text-slate-300">TEXTO DA CARTA DO EDITOR (CORPO DO MANIFESTO)</Label>
+          <Textarea
+            value={project.editorialInfo.editorLetter}
+            onChange={(e) => updateEditorial("editorLetter", e.target.value)}
+            className="bg-slate-800 border-slate-700 text-white text-xs mt-1 h-32 leading-relaxed font-sans"
           />
         </div>
 
         <div>
-          <Label className="text-xs font-semibold text-slate-300">TEXTO DA CARTA DO EDITOR</Label>
+          <Label className="text-xs font-semibold text-slate-300">AVISO LEGAL & MÉDICO (DISCLAIMER MICRO-TYPOGRAPHY)</Label>
           <Textarea
-            value={project.editorialInfo.editorLetter}
-            onChange={(e) => updateEditorial("editorLetter", e.target.value)}
-            className="bg-slate-800 border-slate-700 text-white text-xs mt-1 h-28 leading-relaxed"
+            value={project.editorialInfo.disclaimerText || ""}
+            onChange={(e) => updateEditorial("disclaimerText", e.target.value)}
+            className="bg-slate-800 border-slate-700 text-white text-xs mt-1 h-16 leading-tight font-mono text-[11px]"
           />
         </div>
 
         {/* Expediente Credits */}
         <div className="pt-3 border-t border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-bold text-slate-300">CRÉDITOS DO EXPEDIENTE</Label>
+            <Label className="text-xs font-bold text-slate-300">CRÉDITOS DO EXPEDIENTE & STAFF</Label>
             <Button
               size="sm"
               onClick={handleAddCredit}
@@ -267,6 +317,102 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Page 2: Contributors Grid Settings */}
+      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            <span>Página 2: Painel de Colaboradores (Contributors Grid)</span>
+          </h3>
+          <Button
+            size="sm"
+            onClick={handleAddContributor}
+            className="h-7 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold flex items-center gap-1"
+          >
+            <Plus className="w-3 h-3" />
+            Adicionar Colaborador
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          {(project.editorialInfo.contributors || []).map((con) => (
+            <div
+              key={con.id}
+              className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <Input
+                  value={con.name}
+                  onChange={(e) => handleUpdateContributor(con.id, "name", e.target.value.toUpperCase())}
+                  placeholder="NOME DO COLABORADOR (ALL CAPS)"
+                  className="bg-slate-900 border-slate-700 text-white font-black text-sm h-8"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveContributor(con.id)}
+                  className="text-red-400 hover:text-red-300 p-1"
+                  title="Remover colaborador"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-[10px] font-bold text-slate-400">TÍTULO / CERTIFICAÇÃO</Label>
+                  <Input
+                    value={con.title}
+                    onChange={(e) => handleUpdateContributor(con.id, "title", e.target.value.toUpperCase())}
+                    placeholder="Ex: MASTER KETTLEBELL COACH // CSCS"
+                    className="bg-slate-900 border-slate-700 text-amber-400 font-mono text-xs h-7 mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] font-bold text-slate-400">FOTO DO COLABORADOR (URL)</Label>
+                  <Input
+                    value={con.photo}
+                    onChange={(e) => handleUpdateContributor(con.id, "photo", e.target.value)}
+                    placeholder="URL da foto (B&W portrait)"
+                    className="bg-slate-900 border-slate-700 text-white text-xs h-7 mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-[10px] font-bold text-slate-400">MINI-BIO (3 A 5 LINHAS)</Label>
+                <Textarea
+                  value={con.bio}
+                  onChange={(e) => handleUpdateContributor(con.id, "bio", e.target.value)}
+                  placeholder="Resumo da metodologia e histórico do coach..."
+                  className="bg-slate-900 border-slate-700 text-white text-xs mt-1 h-16 leading-relaxed"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-[10px] font-bold text-slate-400">CONTATO / INSTAGRAM</Label>
+                  <Input
+                    value={con.handle}
+                    onChange={(e) => handleUpdateContributor(con.id, "handle", e.target.value)}
+                    placeholder="Ex: @coachmontanha"
+                    className="bg-slate-900 border-slate-700 text-slate-300 text-xs h-7 mt-1 font-mono"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] font-bold text-slate-400">CENTRO DE TREINAMENTO / FACILITY</Label>
+                  <Input
+                    value={con.facility || ""}
+                    onChange={(e) => handleUpdateContributor(con.id, "facility", e.target.value)}
+                    placeholder="Ex: MONTANHA IRON LAB // SP"
+                    className="bg-slate-900 border-slate-700 text-slate-300 text-xs h-7 mt-1 font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
