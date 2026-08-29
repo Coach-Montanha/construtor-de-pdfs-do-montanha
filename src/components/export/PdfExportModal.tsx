@@ -11,12 +11,7 @@ import { Button } from "../ui/button";
 import {
   Printer,
   FileDown,
-  Download,
-  CheckCircle2,
   AlertCircle,
-  Sparkles,
-  Settings2,
-  FileCheck,
 } from "lucide-react";
 
 interface PdfExportModalProps {
@@ -32,19 +27,20 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
   project,
   theme,
 }) => {
-  const [printQuality, setPrintQuality] = useState<"standard" | "ultra">("ultra");
-  const [includeBleed, setIncludeBleed] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  const totalPages = 2 + project.articles.length + 1;
+  // Total pages: Cover (1) + EditorLetter (1) + Contributors (1) + TOC (1) + Articles (N) + BackCover (1)
+  const totalPages = 4 + project.articles.length;
 
   const handlePrintPdf = () => {
     setIsExporting(true);
-    // Give brief delay to ensure styles are painted
+    // Fechamos o modal antes de disparar a impressão para garantir que nenhum overlay permaneça no DOM
+    onClose();
+
     setTimeout(() => {
       window.print();
       setIsExporting(false);
-    }, 400);
+    }, 250);
   };
 
   const handleDownloadBackupJson = () => {
@@ -53,7 +49,7 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute(
       "download",
-      `${project.title.toLowerCase().replace(/\s+/g, "_")}_edicao_${project.editionNumber}.json`
+      `${project.title.toLowerCase().replace(/\s+/g, "_")}_edicao_${project.editionNumber || "01"}.json`
     );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
@@ -62,7 +58,7 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-slate-900 border-slate-800 text-slate-100 p-6 custom-scrollbar">
+      <DialogContent className="max-w-2xl bg-slate-900 border-slate-800 text-slate-100 p-6 custom-scrollbar font-sans">
         <DialogHeader className="border-b border-slate-800 pb-3">
           <DialogTitle className="text-xl font-bold flex items-center gap-2 text-white">
             <Printer className="w-5 h-5 text-amber-400" />
@@ -75,7 +71,7 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
           <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 font-semibold uppercase">Revista:</span>
-              <span className="font-bold text-white">{project.title}</span>
+              <span className="font-bold text-white uppercase">{project.title}</span>
             </div>
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400 font-semibold uppercase">Total de Páginas:</span>

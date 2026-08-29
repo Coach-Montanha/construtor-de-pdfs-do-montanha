@@ -166,23 +166,43 @@
 }
 
 @media print {
+  /* Complete isolation of UI and modals during printing */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    background: #ffffff !important;
+    background: #0B0F19 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+    overflow: visible !important;
   }
 
-  .no-print {
+  /* Aggressively hide all UI elements, overlays, dialogs, backdrops, and portals */
+  .no-print,
+  [role="dialog"],
+  [role="region"],
+  [data-radix-portal],
+  [data-state="open"],
+  .fixed,
+  header,
+  nav,
+  button,
+  .dialog-overlay,
+  .dialog-content {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
   }
 
+  /* Show only the magazine print pages */
   .print-only-container {
     display: block !important;
     position: static !important;
     width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .magazine-print-page {
@@ -199,7 +219,7 @@
     overflow: hidden !important;
     position: relative !important;
     box-sizing: border-box !important;
-    background: white !important;
+    background: #0B0F19 !important;
   }
 
   .magazine-print-page .magazine-page {
