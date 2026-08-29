@@ -58,7 +58,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
     activePages.push({
       id: "cover",
       title: "Capa Principal",
-      render: (_, isPrint) => <CoverPage project={project} theme={theme} isPrintMode={isPrint} />,
+      render: (_, isPrint) => <CoverPage project={project} theme={theme} isPrintMode={isPrint ?? false} />,
     });
   }
 
@@ -67,7 +67,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       id: "editor-letter",
       title: "Carta do Editor",
       render: (pNum, isPrint) => (
-        <EditorLetterPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint} />
+        <EditorLetterPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
       ),
     });
   }
@@ -77,7 +77,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       id: "contributors",
       title: "Colaboradores",
       render: (pNum, isPrint) => (
-        <ContributorsPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint} />
+        <ContributorsPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
       ),
     });
   }
@@ -87,7 +87,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       id: "toc",
       title: "Sumário / Índice",
       render: (pNum, isPrint) => (
-        <EditorialPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint} />
+        <EditorialPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
       ),
     });
   }
@@ -105,7 +105,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
             project={project}
             theme={theme}
             pageNumber={pNum}
-            isPrintMode={isPrint}
+            isPrintMode={isPrint ?? false}
           />
         ),
       });
@@ -116,7 +116,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       id: "back-cover",
       title: "Contracapa",
       render: (pNum, isPrint) => (
-        <BackCoverPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint} />
+        <BackCoverPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
       ),
     });
   }

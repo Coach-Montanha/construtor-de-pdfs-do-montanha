@@ -485,7 +485,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           </div>
           <Slider
             value={[coverConfig.backgroundOverlayOpacity]}
-            onValueChange={(val) => updateField("backgroundOverlayOpacity", val[0])}
+            onValueChange={(val) => updateField("backgroundOverlayOpacity", val[0] ?? 50)}
             min={10}
             max={90}
             step={5}

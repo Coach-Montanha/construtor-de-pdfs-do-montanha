@@ -508,7 +508,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
                     </span>
                     {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-500" />}
                   </div>
-                  <p className="text-[11px] opacity-75 leading-snug">{uiTheme.desc}</p>
+                  <p className="text-[11px] opacity-75 leading-snug">{uiTheme.subtitle}</p>
                 </div>
               </div>
             );

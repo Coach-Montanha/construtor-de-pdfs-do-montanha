@@ -114,7 +114,7 @@ function Index() {
 
   // Active App Theme Config
   const activeUiTheme =
-    APP_UI_THEMES.find((t) => t.id === uiThemeMode) || APP_UI_THEMES[0];
+    APP_UI_THEMES.find((t) => t.id === uiThemeMode) || APP_UI_THEMES[0]!;
 
   // Sync theme class to document body so portals and dialogs inherit theme variables
   useEffect(() => {
@@ -133,7 +133,7 @@ function Index() {
 
   // Active Publication Theme
   const currentPublicationTheme =
-    MAGAZINE_THEMES.find((t) => t.id === project.themeId) || MAGAZINE_THEMES[0];
+    MAGAZINE_THEMES.find((t) => t.id === project.themeId) || MAGAZINE_THEMES[0]!;
 
   const handleResetToSample = () => {
     if (window.confirm("Deseja restaurar a revista de exemplo padrão? Suas alterações atuais serão substituídas.")) {
@@ -179,8 +179,8 @@ function Index() {
     const targetIdx = direction === "up" ? idx - 1 : idx + 1;
     if (targetIdx < 0 || targetIdx >= newArticles.length) return;
 
-    const temp = newArticles[idx];
-    newArticles[idx] = newArticles[targetIdx];
+    const temp = newArticles[idx]!;
+    newArticles[idx] = newArticles[targetIdx]!;
     newArticles[targetIdx] = temp;
 
     setProject({
@@ -222,7 +222,7 @@ function Index() {
     activePages.push({
       id: "cover",
       title: "Capa Principal",
-      render: (_, isPrint) => <CoverPage project={project} theme={currentPublicationTheme} isPrintMode={isPrint} />,
+      render: (_, isPrint) => <CoverPage project={project} theme={currentPublicationTheme} isPrintMode={isPrint ?? false} />,
     });
   }
 
@@ -231,7 +231,7 @@ function Index() {
       id: "editor-letter",
       title: "Carta do Editor",
       render: (pNum, isPrint) => (
-        <EditorLetterPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint} />
+        <EditorLetterPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
       ),
     });
   }
@@ -241,7 +241,7 @@ function Index() {
       id: "contributors",
       title: "Colaboradores",
       render: (pNum, isPrint) => (
-        <ContributorsPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint} />
+        <ContributorsPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
       ),
     });
   }
@@ -251,7 +251,7 @@ function Index() {
       id: "toc",
       title: "Sumário / Índice",
       render: (pNum, isPrint) => (
-        <EditorialPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint} />
+        <EditorialPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
       ),
     });
   }
@@ -269,7 +269,7 @@ function Index() {
             project={project}
             theme={currentPublicationTheme}
             pageNumber={pNum}
-            isPrintMode={isPrint}
+            isPrintMode={isPrint ?? false}
           />
         ),
       });
@@ -280,7 +280,7 @@ function Index() {
       id: "back-cover",
       title: "Contracapa",
       render: (pNum, isPrint) => (
-        <BackCoverPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint} />
+        <BackCoverPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
       ),
     });
   }
@@ -651,14 +651,14 @@ function Index() {
         onClose={() => setIsArticleModalOpen(false)}
         article={editingArticle}
         onSave={handleSaveArticle}
-        apiKey={project.geminiApiKey}
+        apiKey={project.geminiApiKey ?? ""}
       />
 
       <AiStudioDialog
         isOpen={isAiStudioOpen}
         onClose={() => setIsAiStudioOpen(false)}
         onAddArticle={handleSaveArticle}
-        apiKey={project.geminiApiKey}
+        apiKey={project.geminiApiKey ?? ""}
       />
 
       <PdfExportModal
