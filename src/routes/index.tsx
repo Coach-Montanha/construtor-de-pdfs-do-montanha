@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import React, { useState, useEffect } from "react";
 import { MagazineProject, Article } from "../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../lib/sample-data";
+import { APP_UI_THEMES, AppUiThemeMode } from "../lib/ui-theme";
 import { MagazineViewer } from "../components/magazine/MagazineViewer";
 import { CoverCustomizer } from "../components/editor/CoverCustomizer";
 import { ArticleEditorModal } from "../components/editor/ArticleEditorModal";
@@ -32,7 +33,11 @@ import {
   Clock,
   Settings,
   CheckCircle2,
-  Users,
+  Sun,
+  Moon,
+  Book,
+  Zap,
+  Eye,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -55,6 +60,17 @@ function Index() {
     return INITIAL_MAGAZINE_PROJECT;
   });
 
+  // UI Theme state (Light Clean, Dark Ergonomic, Sepia Paper, Midnight)
+  const [uiThemeMode, setUiThemeMode] = useState<AppUiThemeMode>(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("montanha_ui_theme") as AppUiThemeMode;
+      if (savedTheme && APP_UI_THEMES.some((t) => t.id === savedTheme)) {
+        return savedTheme;
+      }
+    }
+    return "dark-ergonomic";
+  });
+
   const [activeTab, setActiveTab] = useState<"viewer" | "articles" | "cover" | "editorial" | "settings">("viewer");
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState<boolean>(false);
@@ -62,7 +78,7 @@ function Index() {
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Salvo");
 
-  // Save to localStorage whenever project changes
+  // Save project to localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("montanha_magazine_project", JSON.stringify(project));
@@ -70,8 +86,20 @@ function Index() {
     }
   }, [project]);
 
-  // Current active theme
-  const currentTheme =
+  // Save UI Theme to localStorage
+  const handleSelectUiTheme = (mode: AppUiThemeMode) => {
+    setUiThemeMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("montanha_ui_theme", mode);
+    }
+  };
+
+  // Active App Theme Config
+  const activeUiTheme =
+    APP_UI_THEMES.find((t) => t.id === uiThemeMode) || APP_UI_THEMES[1];
+
+  // Active Publication Theme
+  const currentPublicationTheme =
     MAGAZINE_THEMES.find((t) => t.id === project.themeId) || MAGAZINE_THEMES[0];
 
   const handleResetToSample = () => {
@@ -137,37 +165,58 @@ function Index() {
   const totalPages = 4 + project.articles.length;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${activeUiTheme.bgClass}`}>
       {/* Top Application Header / Studio Navbar */}
-      <header className="no-print bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
+      <header className={`no-print sticky top-0 z-50 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 transition-colors ${activeUiTheme.headerBg}`}>
         {/* Brand & Issue Title */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-amber-500/20">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-black shadow-md shadow-amber-500/20">
             <BookOpen className="w-5 h-5 text-slate-950" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-black text-sm sm:text-base tracking-tight text-white uppercase">
+              <h1 className="font-black text-sm sm:text-base tracking-tight uppercase">
                 MONTANHA MAGAZINE STUDIO
               </h1>
               <span className="bg-amber-400 text-black text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase hidden sm:inline">
                 {project.editionNumber ? `ED. #${project.editionNumber}` : "VIRTUAL"}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 font-medium">
+            <p className="text-[11px] opacity-75 font-medium">
               Construtor de Revistas & Diagramador Editorial de PDFs com IA
             </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons & Quick Theme Switcher */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Quick UI Theme Switcher Toggle */}
+          <div className="hidden sm:flex items-center p-0.5 rounded-lg border border-slate-700/60 bg-black/20" title="Trocar Tema da Interface">
+            {APP_UI_THEMES.map((theme) => (
+              <button
+                key={theme.id}
+                onClick={() => handleSelectUiTheme(theme.id)}
+                className={`p-1.5 rounded-md text-xs transition-all flex items-center gap-1 ${
+                  uiThemeMode === theme.id
+                    ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
+                    : "opacity-60 hover:opacity-100"
+                }`}
+                title={theme.name}
+              >
+                {theme.icon === "sun" && <Sun className="w-3.5 h-3.5" />}
+                {theme.icon === "moon" && <Moon className="w-3.5 h-3.5" />}
+                {theme.icon === "book" && <Book className="w-3.5 h-3.5" />}
+                {theme.icon === "zap" && <Zap className="w-3.5 h-3.5" />}
+              </button>
+            ))}
+          </div>
+
           <Button
             size="sm"
             onClick={() => setIsAiStudioOpen(true)}
-            className="h-8 sm:h-9 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-bold text-xs flex items-center gap-1.5"
+            className="h-8 sm:h-9 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-500 font-bold text-xs flex items-center gap-1.5"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
             <span className="hidden md:inline">Escrever com IA</span>
           </Button>
 
@@ -192,14 +241,14 @@ function Index() {
       </header>
 
       {/* Subheader Navigation Tabs */}
-      <div className="no-print bg-slate-900 border-b border-slate-800/80 px-4 sm:px-6 flex items-center justify-between overflow-x-auto custom-scrollbar">
+      <div className={`no-print px-4 sm:px-6 flex items-center justify-between overflow-x-auto custom-scrollbar transition-colors ${activeUiTheme.subHeaderBg}`}>
         <div className="flex items-center gap-1 sm:gap-2 py-1">
           <button
             onClick={() => setActiveTab("viewer")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "viewer"
                 ? "bg-amber-500 text-slate-950 shadow-sm"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                : "opacity-75 hover:opacity-100 hover:bg-black/10"
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
@@ -211,7 +260,7 @@ function Index() {
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "articles"
                 ? "bg-amber-500 text-slate-950 shadow-sm"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                : "opacity-75 hover:opacity-100 hover:bg-black/10"
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
@@ -223,7 +272,7 @@ function Index() {
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "cover"
                 ? "bg-amber-500 text-slate-950 shadow-sm"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                : "opacity-75 hover:opacity-100 hover:bg-black/10"
             }`}
           >
             <Palette className="w-3.5 h-3.5" />
@@ -235,7 +284,7 @@ function Index() {
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "editorial"
                 ? "bg-amber-500 text-slate-950 shadow-sm"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                : "opacity-75 hover:opacity-100 hover:bg-black/10"
             }`}
           >
             <Feather className="w-3.5 h-3.5" />
@@ -247,7 +296,7 @@ function Index() {
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "settings"
                 ? "bg-amber-500 text-slate-950 shadow-sm"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                : "opacity-75 hover:opacity-100 hover:bg-black/10"
             }`}
           >
             <Settings className="w-3.5 h-3.5" />
@@ -256,14 +305,14 @@ function Index() {
         </div>
 
         {/* Right utility items */}
-        <div className="hidden lg:flex items-center gap-3 text-xs text-slate-400">
-          <span className="flex items-center gap-1 text-emerald-400 font-medium">
+        <div className="hidden lg:flex items-center gap-3 text-xs opacity-75">
+          <span className="flex items-center gap-1 text-emerald-500 font-medium">
             <CheckCircle2 className="w-3.5 h-3.5" />
             Auto-salvo
           </span>
           <button
             onClick={handleResetToSample}
-            className="flex items-center gap-1 text-slate-400 hover:text-amber-400 transition-colors"
+            className="flex items-center gap-1 hover:text-amber-500 transition-colors"
             title="Recarregar revista modelo"
           >
             <RotateCcw className="w-3 h-3" />
@@ -279,7 +328,7 @@ function Index() {
           <div className="h-[calc(100vh-140px)] min-h-[580px]">
             <MagazineViewer
               project={project}
-              theme={currentTheme}
+              theme={currentPublicationTheme}
               onOpenExportModal={() => setIsExportModalOpen(true)}
               onOpenArticleEditor={(id) => {
                 const art = project.articles.find((a) => a.id === id);
@@ -292,12 +341,12 @@ function Index() {
         {/* Tab 2: Articles Management */}
         {activeTab === "articles" && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/90 p-5 rounded-xl border border-slate-800">
+            <div className={`p-5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${activeUiTheme.cardBg}`}>
               <div>
-                <h2 className="text-lg font-black text-white uppercase tracking-tight">
+                <h2 className="text-lg font-black uppercase tracking-tight">
                   Matérias & Artigos da Edição
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs opacity-75 mt-0.5">
                   Organize a sequência das páginas, adicione novos textos ou use a IA para redigir matérias completas.
                 </p>
               </div>
@@ -312,9 +361,9 @@ function Index() {
                 <Button
                   variant="outline"
                   onClick={handleOpenNewArticle}
-                  className="h-9 border-slate-700 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center gap-1.5"
+                  className="h-9 font-semibold text-xs flex items-center gap-1.5"
                 >
-                  <Plus className="w-3.5 h-3.5 text-amber-400" />
+                  <Plus className="w-3.5 h-3.5 text-amber-500" />
                   <span>Adicionar Manualmente</span>
                 </Button>
               </div>
@@ -327,7 +376,7 @@ function Index() {
                 return (
                   <div
                     key={art.id}
-                    className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                    className={`p-4 rounded-xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group ${activeUiTheme.cardBg}`}
                   >
                     {/* Thumbnail & Info */}
                     <div className="flex items-center gap-4 flex-1">
@@ -348,31 +397,31 @@ function Index() {
                           <span className="bg-amber-400 text-black text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase">
                             {art.category}
                           </span>
-                          <span className="text-[10px] font-mono text-amber-400 font-bold">
+                          <span className="text-[10px] font-mono font-bold text-amber-500">
                             PÁGINA {pageNum < 10 ? `0${pageNum}` : pageNum}
                           </span>
-                          <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <span className="text-[10px] opacity-60 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {art.estimatedReadTime} min
                           </span>
                         </div>
-                        <h3 className="font-extrabold text-white text-sm sm:text-base leading-tight">
+                        <h3 className="font-extrabold text-sm sm:text-base leading-tight">
                           {art.title}
                         </h3>
-                        <p className="text-xs text-slate-400 line-clamp-1">
+                        <p className="text-xs opacity-75 line-clamp-1">
                           {art.subtitle || art.content.slice(0, 100)}
                         </p>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-slate-800">
+                    <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-slate-700/40">
                       {/* Move up / down */}
                       <button
                         type="button"
                         onClick={() => handleMoveArticle(idx, "up")}
                         disabled={idx === 0}
-                        className="p-1.5 text-slate-400 hover:text-white disabled:opacity-20 hover:bg-slate-800 rounded"
+                        className="p-1.5 opacity-60 hover:opacity-100 disabled:opacity-20 hover:bg-black/10 rounded"
                         title="Mover para cima"
                       >
                         <MoveUp className="w-4 h-4" />
@@ -381,7 +430,7 @@ function Index() {
                         type="button"
                         onClick={() => handleMoveArticle(idx, "down")}
                         disabled={idx === project.articles.length - 1}
-                        className="p-1.5 text-slate-400 hover:text-white disabled:opacity-20 hover:bg-slate-800 rounded"
+                        className="p-1.5 opacity-60 hover:opacity-100 disabled:opacity-20 hover:bg-black/10 rounded"
                         title="Mover para baixo"
                       >
                         <MoveDown className="w-4 h-4" />
@@ -391,16 +440,16 @@ function Index() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleEditArticle(art)}
-                        className="h-8 px-3 border-slate-700 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center gap-1"
+                        className="h-8 px-3 font-semibold text-xs flex items-center gap-1"
                       >
-                        <Edit className="w-3.5 h-3.5 text-amber-400" />
+                        <Edit className="w-3.5 h-3.5 text-amber-500" />
                         <span>Editar</span>
                       </Button>
 
                       <button
                         type="button"
                         onClick={() => handleDeleteArticle(art.id)}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                        className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
                         title="Excluir Matéria"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -435,12 +484,14 @@ function Index() {
           </div>
         )}
 
-        {/* Tab 5: Settings (Visual Themes, AI Key, Metadata, Back Cover) */}
+        {/* Tab 5: Settings (Visual Themes, UI Eye-Care Appearance, AI Key, Metadata, Back Cover) */}
         {activeTab === "settings" && (
           <div className="max-w-4xl mx-auto">
             <MagazineSettings
               project={project}
               onChange={(updatedProject) => setProject(updatedProject)}
+              currentUiTheme={uiThemeMode}
+              onSelectUiTheme={handleSelectUiTheme}
             />
           </div>
         )}
@@ -466,21 +517,21 @@ function Index() {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         project={project}
-        theme={currentTheme}
+        theme={currentPublicationTheme}
       />
 
       {/* Print-Only Container (Rendered seamlessly during window.print() / PDF export) */}
       <div className="print-only-container">
         {/* Page 1: Cover */}
         <div className="magazine-print-page">
-          <CoverPage project={project} theme={currentTheme} isPrintMode={true} />
+          <CoverPage project={project} theme={currentPublicationTheme} isPrintMode={true} />
         </div>
 
         {/* Page 2: Letter from the Editor (1/3 vs 2/3 layout) */}
         <div className="magazine-print-page">
           <EditorLetterPage
             project={project}
-            theme={currentTheme}
+            theme={currentPublicationTheme}
             pageNumber={2}
             isPrintMode={true}
           />
@@ -490,7 +541,7 @@ function Index() {
         <div className="magazine-print-page">
           <ContributorsPage
             project={project}
-            theme={currentTheme}
+            theme={currentPublicationTheme}
             pageNumber={3}
             isPrintMode={true}
           />
@@ -500,7 +551,7 @@ function Index() {
         <div className="magazine-print-page">
           <EditorialPage
             project={project}
-            theme={currentTheme}
+            theme={currentPublicationTheme}
             pageNumber={4}
             isPrintMode={true}
           />
@@ -512,7 +563,7 @@ function Index() {
             <ArticleSpread
               article={art}
               project={project}
-              theme={currentTheme}
+              theme={currentPublicationTheme}
               pageNumber={idx + 5}
               isPrintMode={true}
             />
@@ -523,7 +574,7 @@ function Index() {
         <div className="magazine-print-page">
           <BackCoverPage
             project={project}
-            theme={currentTheme}
+            theme={currentPublicationTheme}
             pageNumber={totalPages}
             isPrintMode={true}
           />

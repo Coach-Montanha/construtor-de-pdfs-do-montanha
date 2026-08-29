@@ -5,6 +5,7 @@ import {
   BackCoverConfig,
 } from "../../types/magazine";
 import { MAGAZINE_THEMES } from "../../lib/sample-data";
+import { APP_UI_THEMES, AppUiThemeMode } from "../../lib/ui-theme";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
@@ -16,7 +17,12 @@ import {
   Sliders,
   Share2,
   BookOpen,
-  Globe,
+  Eye,
+  Sun,
+  Moon,
+  Zap,
+  Book,
+  Monitor,
   Instagram,
   Youtube,
   Mail,
@@ -25,11 +31,15 @@ import {
 interface MagazineSettingsProps {
   project: MagazineProject;
   onChange: (updated: MagazineProject) => void;
+  currentUiTheme: AppUiThemeMode;
+  onSelectUiTheme: (mode: AppUiThemeMode) => void;
 }
 
 export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
   project,
   onChange,
+  currentUiTheme,
+  onSelectUiTheme,
 }) => {
   const [apiKeyInput, setApiKeyInput] = useState<string>(
     project.geminiApiKey || (typeof window !== "undefined" ? localStorage.getItem("gemini_api_key") || "" : "")
@@ -48,7 +58,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     setTimeout(() => setApiKeySaved(false), 3000);
   };
 
-  const handleSelectTheme = (themeId: MagazineThemeId) => {
+  const handleSelectMagazineTheme = (themeId: MagazineThemeId) => {
     onChange({
       ...project,
       themeId,
@@ -82,32 +92,104 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
   };
 
   return (
-    <div className="space-y-6 text-slate-100 font-sans">
+    <div className="space-y-6 font-sans">
       {/* Header Bar */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/90 border-slate-800 text-slate-100">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="bg-amber-400 text-black font-black text-[9px] font-mono px-2 py-0.5 rounded uppercase">
               STUDIO SETTINGS
             </span>
             <span className="text-xs font-mono font-bold text-amber-400 uppercase">
-              CONFIGURAÇÕES GERAIS DA REVISTA
+              CONFIGURAÇÕES GERAIS DO APP
             </span>
           </div>
           <h2 className="text-lg font-black text-white uppercase tracking-tight">
-            Temas Visuais, Chaves de IA, Metadados & Contracapa
+            Aparência da Tela, Temas da Revista & Conexão IA
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Ajuste a identidade visual, conexão com Gemini AI, número da edição e dados de contato institucionais.
+            Personalize as cores do aplicativo para descansar a visão, altere a paleta da revista e conecte sua IA.
           </p>
         </div>
       </div>
 
-      {/* 1. Theme & Palette Selector */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
+      {/* 1. APP UI THEME & ERGONOMICS (NOVO: SELETOR DE APARÊNCIA DO APP) */}
+      <div className="p-5 rounded-xl border space-y-4 bg-slate-900/90 border-slate-800 text-slate-100 shadow-md">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            <span>1. Aparência da Interface & Conforto Visual do Editor</span>
+          </h3>
+          <span className="text-[10px] font-mono font-bold bg-amber-400/10 text-amber-400 border border-amber-400/30 px-2 py-0.5 rounded uppercase">
+            EYE-CARE & CONTRASTE
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-300 leading-relaxed">
+          Selecione o esquema de cores que melhor se adapta à sua luminosidade ambiente para evitar a fadiga visual durante longas sessões de escrita e edição:
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {APP_UI_THEMES.map((theme) => {
+            const isSelected = currentUiTheme === theme.id;
+            return (
+              <div
+                key={theme.id}
+                onClick={() => onSelectUiTheme(theme.id)}
+                className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex flex-col justify-between ${
+                  isSelected
+                    ? "border-amber-400 bg-slate-800 shadow-lg shadow-amber-500/15"
+                    : "border-slate-800 bg-slate-950/70 hover:border-slate-700"
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      {theme.icon === "sun" && <Sun className="w-4 h-4 text-amber-400" />}
+                      {theme.icon === "moon" && <Moon className="w-4 h-4 text-amber-400" />}
+                      {theme.icon === "book" && <Book className="w-4 h-4 text-amber-500" />}
+                      {theme.icon === "zap" && <Zap className="w-4 h-4 text-amber-400" />}
+                      <span className="font-bold text-xs text-white uppercase">{theme.name}</span>
+                    </div>
+                    {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-400" />}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug mb-3">
+                    {theme.subtitle}
+                  </p>
+                </div>
+
+                {/* Color Swatch Preview */}
+                <div className="flex items-center gap-2 pt-2.5 border-t border-slate-800">
+                  <div
+                    className="w-5 h-5 rounded-full border border-black/20 shadow-inner"
+                    style={{ backgroundColor: theme.previewBg }}
+                    title="Fundo da Tela"
+                  />
+                  <div
+                    className="w-5 h-5 rounded-full border border-black/20 shadow-inner"
+                    style={{ backgroundColor: theme.previewCard }}
+                    title="Cor dos Cards"
+                  />
+                  <div
+                    className="w-5 h-5 rounded-full border border-black/20 shadow-inner"
+                    style={{ backgroundColor: theme.previewAccent }}
+                    title="Cor de Destaque"
+                  />
+                  <span className="text-[10px] font-mono text-slate-400 ml-auto font-semibold">
+                    {isSelected ? "● ATIVO" : "Clique para Ativar"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 2. THEME & PALETTE OF THE MAGAZINE (PALETA DA REVISTA IMPRESSA) */}
+      <div className="p-5 rounded-xl border space-y-4 bg-slate-900/90 border-slate-800 text-slate-100">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
           <Palette className="w-4 h-4" />
-          <span>Tema Visual & Identidade de Cores</span>
+          <span>2. Tema Visual da Revista Impressa & PDF</span>
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -116,7 +198,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
             return (
               <div
                 key={theme.id}
-                onClick={() => handleSelectTheme(theme.id)}
+                onClick={() => handleSelectMagazineTheme(theme.id)}
                 className={`cursor-pointer p-3.5 rounded-xl border-2 transition-all flex flex-col justify-between ${
                   isSelected
                     ? "border-amber-400 bg-slate-800/90 shadow-lg shadow-amber-500/10"
@@ -164,11 +246,11 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* 2. AI Key Settings */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
+      {/* 3. AI Key Settings */}
+      <div className="p-5 rounded-xl border space-y-4 bg-slate-900/90 border-slate-800 text-slate-100">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
           <Key className="w-4 h-4" />
-          <span>Configuração da IA (Google Gemini API)</span>
+          <span>3. Configuração da IA (Google Gemini API)</span>
         </h3>
 
         <p className="text-xs text-slate-300 leading-relaxed">
@@ -192,11 +274,11 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* 3. General Magazine Metadata */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
+      {/* 4. General Magazine Metadata */}
+      <div className="p-5 rounded-xl border space-y-4 bg-slate-900/90 border-slate-800 text-slate-100">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
           <Sliders className="w-4 h-4" />
-          <span>Metadados Gerais da Publicação</span>
+          <span>4. Metadados Gerais da Publicação</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -231,11 +313,11 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* 4. Back Cover Settings */}
-      <div className="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-4">
+      {/* 5. Back Cover Settings */}
+      <div className="p-5 rounded-xl border space-y-4 bg-slate-900/90 border-slate-800 text-slate-100">
         <h3 className="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
           <BookOpen className="w-4 h-4" />
-          <span>Contracapa da Revista (Última Página)</span>
+          <span>5. Contracapa da Revista (Última Página)</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
