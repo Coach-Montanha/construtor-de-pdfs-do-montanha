@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="50%" stop-color="#FACC15" />
+      <stop offset="100%" stop-color="#CA8A04" />
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18191E" />
+      <stop offset="100%" stop-color="#0B0F19" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded Base Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" stroke="#FACC15" stroke-width="12" />
+  
+  <!-- Outer Gold Frame Accent -->
+  <rect x="36" y="36" width="440" height="440" rx="84" fill="none" stroke="#FACC15" stroke-width="4" stroke-opacity="0.4" stroke-dasharray="16 8" />
+  
+  <!-- Center Emblem: Magazine / Book Silhouette + Mountain Monogram 'M' -->
+  <g transform="translate(256, 240)">
+    <!-- Open Book Pages Base -->
+    <path d="M-130,-50 C-70,-80 -20,-70 0,-40 C20,-70 70,-80 130,-50 L130,90 C70,60 20,70 0,100 C-20,70 -70,60 -130,90 Z" fill="url(#goldGrad)" />
+    
+    <!-- Inner Book Details -->
+    <path d="M-120,-38 C-65,-65 -18,-55 0,-30 C18,-55 65,-65 120,-38 L120,80 C65,52 18,62 0,90 C-18,62 -65,52 -120,80 Z" fill="#0B0F19" />
+    
+    <!-- Central Heavy 'M' Monogram -->
+    <path d="M-60,50 L-60,-15 L-20,35 L0,10 L20,35 L60,-15 L60,50 L40,50 L40,15 L20,45 L0,20 L-20,45 L-40,15 L-40,50 Z" fill="url(#goldGrad)" />
+  </g>
+  
+  <!-- Bottom Text Label -->
+  <text x="256" y="420" text-anchor="middle" fill="#FACC15" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" letter-spacing="6">MONTANHA</text>
+  <text x="256" y="450" text-anchor="middle" fill="#CBD5E1" font-family="system-ui, -apple-system, sans-serif" font-weight="700" font-size="16" letter-spacing="4">MAGAZINE STUDIO</text>
+</svg>

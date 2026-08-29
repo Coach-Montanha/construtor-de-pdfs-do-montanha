@@ -15,6 +15,7 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { ImagePicker } from "../ui/image-picker";
+import { PwaInstallPrompt } from "../pwa/PwaInstallPrompt";
 import {
   Palette,
   Key,
@@ -185,6 +186,9 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           </p>
         </div>
       </div>
+
+      {/* PWA INSTALLATION CARD */}
+      <PwaInstallPrompt variant="card" />
 
       {/* 0. GERENCIADOR DE PÁGINAS ATIVAS & ESTRUTURA DO PDF */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">

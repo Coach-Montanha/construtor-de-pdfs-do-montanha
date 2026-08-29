@@ -16,6 +16,7 @@ import { ContributorsPage } from "../components/magazine/ContributorsPage";
 import { EditorialPage } from "../components/magazine/EditorialPage";
 import { ArticleSpread } from "../components/magazine/ArticleSpread";
 import { BackCoverPage } from "../components/magazine/BackCoverPage";
+import { PwaInstallPrompt } from "../components/pwa/PwaInstallPrompt";
 import {
   Sparkles,
   BookOpen,
@@ -309,6 +310,9 @@ function Index() {
               </button>
             ))}
           </div>
+
+          {/* PWA Install Button */}
+          <PwaInstallPrompt variant="header" />
 
           <Button
             size="sm"

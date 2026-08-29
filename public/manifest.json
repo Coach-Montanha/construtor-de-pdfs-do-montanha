@@ -1,0 +1,64 @@
+{
+  "name": "Montanha Magazine Studio",
+  "short_name": "Montanha Mag",
+  "description": "Construtor de Revistas Digitais, PDFs e Diagramação Editorial com Inteligência Artificial",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "window-controls-overlay"],
+  "background_color": "#0B0F19",
+  "theme_color": "#FACC15",
+  "orientation": "any",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["productivity", "design", "utilities", "magazines"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Leitor & Preview",
+      "short_name": "Preview",
+      "description": "Visualizar a edição atual da revista",
+      "url": "/?tab=viewer",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Escrever com IA",
+      "short_name": "IA Studio",
+      "description": "Gerar novos artigos com inteligência artificial",
+      "url": "/?action=ai",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Exportar PDF",
+      "short_name": "PDF Export",
+      "description": "Exportar edição completa em PDF A4",
+      "url": "/?action=export",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
