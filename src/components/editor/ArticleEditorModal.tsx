@@ -192,7 +192,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     try {
       const suggestions = await generateEditorialHeadlines(formData.title, formData.content, apiKey);
       if (suggestions.length > 0) {
-        const pick = suggestions[0];
+        const pick = suggestions[0]!;
         setFormData((prev) => ({
           ...prev,
           title: pick.title,
