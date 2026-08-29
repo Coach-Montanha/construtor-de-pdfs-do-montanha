@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { MagazineProject, Article } from "../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../lib/sample-data";
 import { APP_UI_THEMES, AppUiThemeMode } from "../lib/ui-theme";
+import { loadLatestProject, syncProjectToCloud } from "../lib/cloud-sync";
 import { MagazineViewer } from "../components/magazine/MagazineViewer";
 import { CoverCustomizer } from "../components/editor/CoverCustomizer";
 import { ArticleEditorModal } from "../components/editor/ArticleEditorModal";
@@ -10,6 +11,7 @@ import { EditorialSettings } from "../components/editor/EditorialSettings";
 import { MagazineSettings } from "../components/editor/MagazineSettings";
 import { AiStudioDialog } from "../components/editor/AiStudioDialog";
 import { PdfExportModal } from "../components/export/PdfExportModal";
+import { CloudSyncDialog } from "../components/sync/CloudSyncDialog";
 import { CoverPage } from "../components/magazine/CoverPage";
 import { EditorLetterPage } from "../components/magazine/EditorLetterPage";
 import { ContributorsPage } from "../components/magazine/ContributorsPage";
@@ -38,6 +40,8 @@ import {
   Moon,
   Book,
   Zap,
+  Cloud,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -46,27 +50,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [project, setProject] = useState<MagazineProject>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("montanha_magazine_project");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          return {
-            ...INITIAL_MAGAZINE_PROJECT,
-            ...parsed,
-            pageVisibility: {
-              ...INITIAL_MAGAZINE_PROJECT.pageVisibility,
-              ...(parsed.pageVisibility || {}),
-            },
-          };
-        } catch (e) {
-          console.error("Erro ao carregar projeto do localStorage:", e);
-        }
-      }
-    }
-    return INITIAL_MAGAZINE_PROJECT;
-  });
+  const [project, setProject] = useState<MagazineProject>(INITIAL_MAGAZINE_PROJECT);
+  const [isInitialLoaded, setIsInitialLoaded] = useState<boolean>(false);
 
   // UI Theme state (Defaulting to contrast-white for crisp black on white readability)
   const [uiThemeMode, setUiThemeMode] = useState<AppUiThemeMode>(() => {
@@ -84,15 +69,48 @@ function Index() {
   const [isArticleModalOpen, setIsArticleModalOpen] = useState<boolean>(false);
   const [isAiStudioOpen, setIsAiStudioOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
-  const [saveStatus, setSaveStatus] = useState<string>("Salvo");
+  const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
+  const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
 
-  // Save project to localStorage
+  // Initial Load from Cloud API / URL / Local Storage
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("montanha_magazine_project", JSON.stringify(project));
-      setSaveStatus("Salvo");
-    }
-  }, [project]);
+    loadLatestProject().then((loaded) => {
+      if (loaded) {
+        setProject(loaded);
+      }
+      setIsInitialLoaded(true);
+    });
+  }, []);
+
+  // Sync project to Cloud + LocalStorage on every modification
+  useEffect(() => {
+    if (!isInitialLoaded) return;
+
+    setSaveStatus("Salvando...");
+    const timer = setTimeout(() => {
+      syncProjectToCloud(project).then((cloudSuccess) => {
+        setSaveStatus(cloudSuccess ? "Nuvem Sincronizada" : "Salvo Localmente");
+      });
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [project, isInitialLoaded]);
+
+  // Listen to window focus to re-sync if changed on mobile
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleFocus = () => {
+      loadLatestProject().then((latest) => {
+        if (latest && latest.updatedAt && latest.updatedAt !== project.updatedAt) {
+          setProject(latest);
+        }
+      });
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [project.updatedAt]);
 
   // Active App Theme Config
   const activeUiTheme =
@@ -119,7 +137,12 @@ function Index() {
 
   const handleResetToSample = () => {
     if (window.confirm("Deseja restaurar a revista de exemplo padrão? Suas alterações atuais serão substituídas.")) {
-      setProject(INITIAL_MAGAZINE_PROJECT);
+      const reset = {
+        ...INITIAL_MAGAZINE_PROJECT,
+        updatedAt: new Date().toISOString(),
+      };
+      setProject(reset);
+      syncProjectToCloud(reset);
     }
   };
 
@@ -163,6 +186,7 @@ function Index() {
     setProject({
       ...project,
       articles: newArticles,
+      updatedAt: new Date().toISOString(),
     });
   };
 
@@ -289,13 +313,25 @@ function Index() {
 
         {/* Action Buttons & Quick Theme Switcher */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Cloud Sync Status & Modal Button */}
+          <Button
+            size="sm"
+            onClick={() => setIsCloudSyncOpen(true)}
+            className="h-8 sm:h-9 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title="Sincronização em Nuvem & Abrir no Celular"
+          >
+            <Cloud className="w-3.5 h-3.5 text-amber-500" />
+            <span className="hidden xl:inline">{saveStatus}</span>
+            <span className="xl:hidden">Sync</span>
+          </Button>
+
           {/* Quick UI Theme Switcher Selector */}
           <div className="flex items-center p-0.5 rounded-lg border-2 border-current theme-app-card-subtle" title="Trocar Esquema de Cores do App">
             {APP_UI_THEMES.map((theme) => (
               <button
                 key={theme.id}
                 onClick={() => handleSelectUiTheme(theme.id)}
-                className={`p-1.5 rounded-md text-xs transition-all flex items-center gap-1 ${
+                className={`p-1.5 rounded-md text-xs transition-all flex items-center gap-1 cursor-pointer ${
                   uiThemeMode === theme.id
                     ? "bg-amber-500 text-slate-950 font-black shadow-sm border border-black"
                     : "opacity-60 hover:opacity-100"
@@ -317,7 +353,7 @@ function Index() {
           <Button
             size="sm"
             onClick={() => setIsAiStudioOpen(true)}
-            className="h-8 sm:h-9 bg-amber-400 hover:bg-amber-500 text-black border-2 border-black font-black text-xs flex items-center gap-1.5 shadow-xs"
+            className="h-8 sm:h-9 bg-amber-400 hover:bg-amber-500 text-black border-2 border-black font-black text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-black animate-pulse" />
             <span className="hidden md:inline">Escrever com IA</span>
@@ -326,7 +362,7 @@ function Index() {
           <Button
             size="sm"
             onClick={handleOpenNewArticle}
-            className="h-8 sm:h-9 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center gap-1.5 shadow-xs"
+            className="h-8 sm:h-9 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 text-amber-500" />
             <span className="hidden sm:inline">Novo Artigo</span>
@@ -335,7 +371,7 @@ function Index() {
           <Button
             size="sm"
             onClick={() => setIsExportModalOpen(true)}
-            className="h-8 sm:h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md border-2 border-black flex items-center gap-1.5"
+            className="h-8 sm:h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md border-2 border-black flex items-center gap-1.5 cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Exportar PDF</span>
@@ -348,7 +384,7 @@ function Index() {
         <div className="flex items-center gap-1 sm:gap-2 py-1.5">
           <button
             onClick={() => setActiveTab("viewer")}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "viewer"
                 ? "bg-amber-400 text-slate-950 border-black shadow-sm"
                 : "border-transparent opacity-75 hover:opacity-100 hover:bg-black/5"
@@ -360,7 +396,7 @@ function Index() {
 
           <button
             onClick={() => setActiveTab("articles")}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "articles"
                 ? "bg-amber-400 text-slate-950 border-black shadow-sm"
                 : "border-transparent opacity-75 hover:opacity-100 hover:bg-black/5"
@@ -372,7 +408,7 @@ function Index() {
 
           <button
             onClick={() => setActiveTab("cover")}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "cover"
                 ? "bg-amber-400 text-slate-950 border-black shadow-sm"
                 : "border-transparent opacity-75 hover:opacity-100 hover:bg-black/5"
@@ -384,7 +420,7 @@ function Index() {
 
           <button
             onClick={() => setActiveTab("editorial")}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "editorial"
                 ? "bg-amber-400 text-slate-950 border-black shadow-sm"
                 : "border-transparent opacity-75 hover:opacity-100 hover:bg-black/5"
@@ -396,7 +432,7 @@ function Index() {
 
           <button
             onClick={() => setActiveTab("settings")}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "settings"
                 ? "bg-amber-400 text-slate-950 border-black shadow-sm"
                 : "border-transparent opacity-75 hover:opacity-100 hover:bg-black/5"
@@ -409,13 +445,17 @@ function Index() {
 
         {/* Right utility items */}
         <div className="hidden lg:flex items-center gap-3 text-xs opacity-80">
-          <span className="flex items-center gap-1 font-bold text-emerald-600">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Auto-salvo ({totalPages} págs ativas)
-          </span>
+          <button
+            onClick={() => setIsCloudSyncOpen(true)}
+            className="flex items-center gap-1 font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
+            title="Abrir Central de Sincronização em Nuvem"
+          >
+            <Cloud className="w-3.5 h-3.5" />
+            <span>{saveStatus} ({totalPages} págs)</span>
+          </button>
           <button
             onClick={handleResetToSample}
-            className="flex items-center gap-1 font-bold hover:text-amber-600 transition-colors"
+            className="flex items-center gap-1 font-bold hover:text-amber-600 transition-colors cursor-pointer"
             title="Recarregar revista modelo"
           >
             <RotateCcw className="w-3 h-3" />
@@ -456,7 +496,7 @@ function Index() {
               <div className="flex gap-2">
                 <Button
                   onClick={() => setIsAiStudioOpen(true)}
-                  className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 border-2 border-black"
+                  className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 border-2 border-black cursor-pointer"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   <span>Gerar Matéria com IA</span>
@@ -464,7 +504,7 @@ function Index() {
                 <Button
                   variant="outline"
                   onClick={handleOpenNewArticle}
-                  className="h-9 font-bold text-xs flex items-center gap-1.5 border-2 border-current"
+                  className="h-9 font-bold text-xs flex items-center gap-1.5 border-2 border-current cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 text-amber-500" />
                   <span>Adicionar Manualmente</span>
@@ -525,7 +565,7 @@ function Index() {
                         type="button"
                         onClick={() => handleMoveArticle(idx, "up")}
                         disabled={idx === 0}
-                        className="p-1.5 opacity-70 hover:opacity-100 disabled:opacity-20 hover:bg-black/10 rounded"
+                        className="p-1.5 opacity-70 hover:opacity-100 disabled:opacity-20 hover:bg-black/10 rounded cursor-pointer"
                         title="Mover para cima"
                       >
                         <MoveUp className="w-4 h-4" />
@@ -534,7 +574,7 @@ function Index() {
                         type="button"
                         onClick={() => handleMoveArticle(idx, "down")}
                         disabled={idx === project.articles.length - 1}
-                        className="p-1.5 opacity-70 hover:opacity-100 disabled:opacity-20 hover:bg-black/10 rounded"
+                        className="p-1.5 opacity-70 hover:opacity-100 disabled:opacity-20 hover:bg-black/10 rounded cursor-pointer"
                         title="Mover para baixo"
                       >
                         <MoveDown className="w-4 h-4" />
@@ -544,7 +584,7 @@ function Index() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleEditArticle(art)}
-                        className="h-8 px-3 font-bold text-xs flex items-center gap-1 border-2 border-current"
+                        className="h-8 px-3 font-bold text-xs flex items-center gap-1 border-2 border-current cursor-pointer"
                       >
                         <Edit className="w-3.5 h-3.5 text-amber-500" />
                         <span>Editar</span>
@@ -553,7 +593,7 @@ function Index() {
                       <button
                         type="button"
                         onClick={() => handleDeleteArticle(art.id)}
-                        className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                        className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
                         title="Excluir Matéria"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -572,7 +612,7 @@ function Index() {
             <CoverCustomizer
               coverConfig={project.coverConfig}
               onChange={(updatedCover) =>
-                setProject({ ...project, coverConfig: updatedCover })
+                setProject({ ...project, coverConfig: updatedCover, updatedAt: new Date().toISOString() })
               }
             />
           </div>
@@ -583,7 +623,9 @@ function Index() {
           <div className="max-w-4xl mx-auto">
             <EditorialSettings
               project={project}
-              onChange={(updatedProject) => setProject(updatedProject)}
+              onChange={(updatedProject) =>
+                setProject({ ...updatedProject, updatedAt: new Date().toISOString() })
+              }
             />
           </div>
         )}
@@ -593,7 +635,9 @@ function Index() {
           <div className="max-w-4xl mx-auto">
             <MagazineSettings
               project={project}
-              onChange={(updatedProject) => setProject(updatedProject)}
+              onChange={(updatedProject) =>
+                setProject({ ...updatedProject, updatedAt: new Date().toISOString() })
+              }
               currentUiTheme={uiThemeMode}
               onSelectUiTheme={handleSelectUiTheme}
             />
@@ -622,6 +666,13 @@ function Index() {
         onClose={() => setIsExportModalOpen(false)}
         project={project}
         theme={currentPublicationTheme}
+      />
+
+      <CloudSyncDialog
+        isOpen={isCloudSyncOpen}
+        onClose={() => setIsCloudSyncOpen(false)}
+        project={project}
+        onUpdateProject={(up) => setProject(up)}
       />
 
       {/* Print-Only Container (Render ONLY active pages without blank sheets) */}
