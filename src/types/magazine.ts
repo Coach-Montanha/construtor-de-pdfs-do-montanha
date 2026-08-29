@@ -43,6 +43,7 @@ export interface CoverHighlight {
 
 export type CoverStyleVariant =
   | "mad-methods"        // My Mad Methods Industrial Aesthetic: Bold Masthead, Hexagon Badge, Yellow Accents, Technical Grid
+  | "peak-performance"  // High-Key Studio Lighting, Angular Blue/Dark Bands, Red PEAK hook, Circular Badge, Pro Edition
   | "tactical-stencil"   // Stencil Tactical Font, Warning Orange, Crosshair HUD, Military/Iron Focus
   | "monochrome-iron"    // High Contrast Gritty Black & White with Red Accents and Heavy Metal Texture
   | "clean-editorial";   // Sleek High-End Magazine
@@ -67,6 +68,17 @@ export interface CoverConfig {
   showHazardStripe: boolean;
   showTechHud: boolean;
   hexBadgeText?: string;
+  // Peak Performance specific options
+  circleBadge?: {
+    topText: string;
+    valueText: string;
+    subText: string;
+  };
+  numFeature?: {
+    number: string;
+    hook: string;
+    sub: string;
+  };
 }
 
 export interface EditorialCredit {
@@ -116,25 +128,25 @@ export interface WorkoutProtocol {
 }
 
 export interface ProductPromotion {
-  slogan: string; // "FORGED IN IRON // BUILT FOR WAR"
-  productName: string; // "MONTANHA COMPETITION KETTLEBELLS"
-  productSubtitle: string; // "Fundição de peça única em ferro dúctil com acabamento antiderrapante e calibração de precisão."
+  slogan: string;
+  productName: string;
+  productSubtitle: string;
   productImage: string;
-  promoBadgeText: string; // "SPECIAL LAUNCH OFFER // 15% OFF"
-  couponCode: string; // "MONTANHA15"
-  ctaUrl: string; // "WWW.MONTANHAIRON.COM.BR"
+  promoBadgeText: string;
+  couponCode: string;
+  ctaUrl: string;
   specBadges: { title: string; subtitle: string }[];
   features: string[];
 }
 
 export interface FacilitySpotlight {
-  facilityName: string; // "MONTANHA PERFORMANCE & IRON LAB"
-  headCoach: string; // "COACH MONTANHA"
-  location: string; // "SÃO PAULO // SP - BRASIL"
-  website: string; // "WWW.MONTANHALAB.COM.BR"
+  facilityName: string;
+  headCoach: string;
+  location: string;
+  website: string;
   methodsUsed: string[];
   specialties: string[];
-  galleryPhotos: string[]; // [photo1, photo2, photo3]
+  galleryPhotos: string[];
   overviewText: string;
   missionText: string;
   philosophyText: string;
