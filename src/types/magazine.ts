@@ -1,5 +1,6 @@
 export type LayoutTemplate =
-  | "editorial-lead"       // Matéria de capa / Destaque monumental (3 colunas, drop cap grande, foto full)
+  | "editorial-lead"       // Standard Feature / Technical Article (3 colunas, drop cap 3 linhas, foto hero, deck de resumo)
+  | "workout-protocol"     // Workout Protocols & Exercise Breakdowns (Warm-up box, A1/A2/B1/B2 clusters, sets/reps/tempo, QR Code)
   | "two-column-quote"     // 2 colunas clássicas com citação centralizada e destaque lateral
   | "three-column-dense"   // 3 colunas de leitura aprofundada com cabeçalho elegante
   | "visual-gallery"       // Artigo com grande destaque para fotografia e bloco lateral
@@ -96,6 +97,22 @@ export interface EditorialInfo {
   contributors: Contributor[];
 }
 
+export interface WorkoutExercise {
+  code: string; // "A1", "A2", "B1", "B2", "FINISHER"
+  name: string;
+  setsReps: string; // "5 SETS × 5 REPS"
+  tempoRest: string; // "TEMPO: 20X1 // REST: 90s"
+  keyPoints: string;
+}
+
+export interface WorkoutProtocol {
+  workoutTitle: string;
+  warmupPrep: string;
+  exercises: WorkoutExercise[];
+  finisher?: string;
+  videoQrUrl?: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -115,6 +132,7 @@ export interface Article {
   };
   keyTakeaways?: string[];
   layoutTemplate: LayoutTemplate;
+  workoutProtocol?: WorkoutProtocol;
   highlightColor?: string;
   tags: string[];
   estimatedReadTime: number; // minutes

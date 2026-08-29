@@ -1,6 +1,6 @@
 import React from "react";
 import { Article, MagazineProject, MagazineTheme } from "../../types/magazine";
-import { Quote, Clock, CheckCircle2, Lightbulb, User } from "lucide-react";
+import { Quote, Clock, CheckCircle2, Lightbulb, User, QrCode, PlayCircle, Flame, Shield, ArrowRight, Zap } from "lucide-react";
 
 interface ArticleSpreadProps {
   article: Article;
@@ -17,20 +17,22 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   pageNumber,
   isPrintMode = false,
 }) => {
-  // Parse content into formatted paragraphs and headers
-  const renderParagraphs = (text: string) => {
+  const isWorkout = article.layoutTemplate === "workout-protocol";
+  const protocol = article.workoutProtocol;
+
+  // Render markdown / formatted paragraphs with drop-cap and H2 styling
+  const renderParagraphs = (text: string, enableDropCap = true) => {
     return text.split("\n\n").map((chunk, idx) => {
-      // Check if it's a section header like **Title** or ### Title
+      // Standalone H2 / Subheaders
       if (chunk.startsWith("### ") || chunk.startsWith("## ")) {
         const cleanTitle = chunk.replace(/^#+\s*/, "");
         return (
-          <h4
-            key={idx}
-            className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight uppercase mt-4 mb-1.5 border-b border-amber-500/30 pb-0.5"
-            style={{ color: theme.fontSerif ? "#1E293B" : theme.primaryColor }}
-          >
-            {cleanTitle}
-          </h4>
+          <div key={idx} className="mt-3 mb-1.5 pb-0.5 border-b border-amber-400/40">
+            <h4 className="text-xs sm:text-sm font-mono font-black text-amber-400 uppercase tracking-tight flex items-center gap-1.5">
+              <span>//</span>
+              <span>{cleanTitle}</span>
+            </h4>
+          </div>
         );
       }
 
@@ -40,26 +42,23 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         const body = parts.slice(1).join("\n");
         return (
           <div key={idx} className="my-2.5">
-            <h4
-              className="text-xs sm:text-sm font-bold text-slate-900 uppercase mb-1"
-              style={{ color: theme.fontSerif ? "#0F172A" : theme.primaryColor }}
-            >
-              {title}
+            <h4 className="text-xs font-mono font-black text-amber-400 uppercase mb-0.5">
+              // {title}
             </h4>
-            <p className="text-xs text-slate-700 leading-relaxed text-justify">
+            <p className="text-xs text-slate-300 leading-relaxed text-justify">
               {body}
             </p>
           </div>
         );
       }
 
-      const isFirst = idx === 0;
+      const isFirst = idx === 0 && enableDropCap;
       return (
         <p
           key={idx}
-          className={`text-xs text-slate-700 leading-relaxed text-justify mb-3 ${
+          className={`text-xs text-slate-300 leading-relaxed text-justify mb-3 ${
             isFirst
-              ? "first-letter:text-4xl first-letter:font-black first-letter:text-amber-500 first-letter:float-left first-letter:mr-2.5 first-letter:leading-none"
+              ? "first-letter:text-4xl sm:first-letter:text-5xl first-letter:font-mono first-letter:font-black first-letter:text-amber-400 first-letter:float-left first-letter:mr-2.5 first-letter:leading-none"
               : ""
           }`}
         >
@@ -71,7 +70,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
   return (
     <div
-      className={`magazine-page relative w-full h-full bg-white text-slate-900 overflow-hidden flex flex-col justify-between p-7 select-none ${
+      className={`magazine-page relative w-full h-full bg-[#0B0F19] text-white overflow-hidden flex flex-col justify-between p-6 sm:p-7 select-none ${
         isPrintMode ? "print-page" : "shadow-2xl rounded-sm"
       }`}
       style={{
@@ -79,218 +78,260 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         fontFamily: theme.fontSerif ? "Georgia, serif" : "inherit",
       }}
     >
-      {/* Top Editorial Header Bar */}
-      <div className="border-b pb-2 flex items-center justify-between" style={{ borderColor: theme.primaryColor }}>
+      {/* Background Grid Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
+      {/* Top Header Block */}
+      <div className="relative z-10 border-b-2 border-amber-400 pb-2 flex items-center justify-between text-[10px] font-mono">
         <div className="flex items-center gap-2">
-          <span className="font-black tracking-wider text-xs uppercase" style={{ color: theme.primaryColor }}>
-            {project.coverConfig.mastheadText}
+          <span className="font-black text-amber-400 uppercase tracking-widest">
+            {project.title}
           </span>
-          <span className="text-slate-300">•</span>
-          <span className="text-[10px] font-bold tracking-widest text-amber-600 uppercase bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-            {article.category}
+          <span className="text-slate-600">/</span>
+          <span className="bg-amber-400 text-black font-black text-[9px] px-2 py-0.5 rounded-xs uppercase">
+            {article.category || "MONTANHA METHOD"}
           </span>
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold uppercase">
+        <div className="flex items-center gap-3 text-slate-400 font-bold uppercase">
           <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3 text-slate-400" />
-            {article.estimatedReadTime} min de leitura
+            <Clock className="w-3 h-3 text-amber-400" />
+            {article.estimatedReadTime} MIN READ
           </span>
           <span>•</span>
           <span>{project.date}</span>
         </div>
       </div>
 
-      {/* Main Article Content depending on template */}
-      <div className="flex-1 flex flex-col justify-between my-3 overflow-hidden">
-        {/* Article Headline & Header */}
-        <div className="mb-3">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-950 tracking-tight uppercase leading-none">
-            {article.title}
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium leading-snug mt-1 border-l-2 border-amber-500 pl-2">
-            {article.subtitle}
-          </p>
-
-          {/* Author Badge */}
-          <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-100 text-[11px]">
-            <div className="flex items-center gap-2">
-              {article.authorPhoto ? (
-                <img
-                  src={article.authorPhoto}
-                  alt={article.author}
-                  className="w-6 h-6 rounded-full object-cover border border-amber-500"
-                />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center">
-                  <User className="w-3.5 h-3.5 text-slate-600" />
-                </div>
-              )}
+      {/* Main Page Content Area */}
+      <div className="relative z-10 flex-1 flex flex-col justify-between my-3 overflow-hidden">
+        {/* ----------------- TEMPLATE: WORKOUT PROTOCOL ----------------- */}
+        {isWorkout && protocol ? (
+          <div className="flex-1 flex flex-col justify-between space-y-2.5">
+            {/* Primary Workout Title Card */}
+            <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
               <div>
-                <span className="font-bold text-slate-900">Por {article.author}</span>
-                {article.authorBio && (
-                  <span className="text-slate-400 text-[10px] ml-1.5 hidden sm:inline">
-                    • {article.authorBio}
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="bg-amber-400 text-black font-black text-[8px] font-mono px-1.5 py-0.5 rounded uppercase">
+                    WORKOUT PROTOCOL
                   </span>
+                  <span className="text-[9px] font-mono font-bold text-amber-400 uppercase">
+                    HIGH INTENSITY // DENSITY TRAINING
+                  </span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight">
+                  {protocol.workoutTitle || article.title}
+                </h2>
+                <p className="text-[11px] text-slate-300 leading-snug">
+                  {article.subtitle}
+                </p>
+              </div>
+
+              {/* Author & Coach Badge */}
+              <div className="shrink-0 flex items-center gap-2 bg-black/60 p-2 rounded border border-slate-800">
+                {article.authorPhoto && (
+                  <img
+                    src={article.authorPhoto}
+                    alt={article.author}
+                    className="w-8 h-8 rounded object-cover border border-amber-400"
+                  />
                 )}
+                <div className="text-[9px] font-mono">
+                  <span className="text-white font-bold block uppercase">{article.author}</span>
+                  <span className="text-amber-400 font-semibold">{article.authorBio || "MASTER COACH"}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Hero Image Banner with Caption */}
-        {article.heroImage && (
-          <div className="relative w-full h-36 sm:h-44 md:h-48 rounded-md overflow-hidden mb-3 border border-slate-200 group">
-            <img
-              src={article.heroImage}
-              alt={article.title}
-              className="w-full h-full object-cover object-center"
-            />
-            {article.heroImageCaption && (
-              <div className="absolute bottom-0 inset-x-0 bg-black/70 backdrop-blur-sm text-white text-[9px] px-3 py-1 flex items-center justify-between">
-                <span>{article.heroImageCaption}</span>
-                <span className="text-slate-400 text-[8px]">Foto: Montanha Editorial</span>
+            {/* Warm-Up / Mobility Prep Box */}
+            {protocol.warmupPrep && (
+              <div className="bg-amber-400/10 border-l-4 border-amber-400 p-2.5 rounded-r text-xs">
+                <div className="flex items-center gap-1.5 text-amber-400 font-mono font-black text-[10px] uppercase mb-0.5">
+                  <Flame className="w-3.5 h-3.5 fill-amber-400" />
+                  <span>FASE 0: PREPARAÇÃO ARTICULAR & AQUECIMENTO</span>
+                </div>
+                <p className="text-[11px] text-slate-200 leading-tight font-sans">
+                  {protocol.warmupPrep}
+                </p>
               </div>
             )}
-          </div>
-        )}
 
-        {/* Content Body Grid according to Template */}
-        {article.layoutTemplate === "editorial-lead" && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1">
-            <div className="md:col-span-8 text-justify columns-1 sm:columns-2 gap-3">
-              {renderParagraphs(article.content)}
-            </div>
-
-            {/* Sidebar with Pull Quote & Callout */}
-            <div className="md:col-span-4 flex flex-col justify-between border-l border-slate-200 pl-3">
-              {article.pullQuotes.length > 0 && (
-                <div className="bg-amber-500/10 border-l-4 border-amber-500 p-3 rounded-r-md my-1">
-                  <Quote className="w-5 h-5 text-amber-500 mb-1" />
-                  <p className="text-xs font-bold text-slate-900 italic leading-snug">
-                    "{article.pullQuotes[0]}"
-                  </p>
-                </div>
-              )}
-
-              {article.calloutBox && (
-                <div className="bg-slate-900 text-white p-3 rounded-md border border-slate-800 my-1">
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-amber-400 uppercase mb-1">
-                    <Lightbulb className="w-3.5 h-3.5" />
-                    <span>{article.calloutBox.title}</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-snug">
-                    {article.calloutBox.content}
-                  </p>
-                </div>
-              )}
-
-              {article.keyTakeaways && article.keyTakeaways.length > 0 && (
-                <div className="border border-slate-200 p-2.5 rounded-md bg-slate-50">
-                  <span className="text-[9px] font-bold text-slate-800 uppercase block mb-1">
-                    Pontos Fundamentais:
-                  </span>
-                  <ul className="space-y-1 text-[10px] text-slate-600">
-                    {article.keyTakeaways.map((point, idx) => (
-                      <li key={idx} className="flex items-start gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {article.layoutTemplate === "two-column-quote" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-            <div className="text-justify">
-              {renderParagraphs(article.content.split("\n\n").slice(0, 3).join("\n\n"))}
-              {article.pullQuotes.length > 0 && (
-                <div className="my-3 border-y-2 border-amber-500 py-2.5 text-center px-4 bg-amber-50/50">
-                  <p className="text-xs sm:text-sm font-extrabold text-slate-900 italic">
-                    "{article.pullQuotes[0]}"
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="text-justify flex flex-col justify-between">
-              <div>
-                {renderParagraphs(article.content.split("\n\n").slice(3).join("\n\n"))}
-              </div>
-              {article.calloutBox && (
-                <div className="bg-slate-100 p-3 rounded-lg border border-slate-300">
-                  <h5 className="font-bold text-xs text-slate-900 uppercase mb-1">
-                    {article.calloutBox.title}
-                  </h5>
-                  <p className="text-[11px] text-slate-700 leading-snug">
-                    {article.calloutBox.content}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {article.layoutTemplate === "infographic-tips" && (
-          <div className="flex-1 flex flex-col justify-between">
-            <div className="text-justify mb-2">
-              {renderParagraphs(article.content)}
-            </div>
-
-            {/* Infographic Tip Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-2">
-              {(article.keyTakeaways || []).map((tip, idx) => (
+            {/* Exercise Clusters (A1, A2, B1, B2, Finisher) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1">
+              {protocol.exercises.map((ex, idx) => (
                 <div
                   key={idx}
-                  className="bg-slate-900 text-white p-2.5 rounded-md border-t-2 flex flex-col justify-between"
-                  style={{ borderColor: theme.primaryColor }}
+                  className="bg-slate-900/80 border border-slate-800 hover:border-amber-400/60 p-2.5 rounded-lg flex flex-col justify-between transition-all"
                 >
-                  <div className="flex items-center justify-between text-amber-400 text-xs font-black mb-1">
-                    <span>PASSO 0{idx + 1}</span>
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <div>
+                    {/* Alphanumeric Notation Header */}
+                    <div className="flex items-center justify-between mb-1 pb-1 border-b border-slate-800">
+                      <span className="inline-block bg-amber-400 text-black font-mono font-black text-[9px] px-1.5 py-0.5 rounded shadow-sm">
+                        CLUSTER {ex.code}
+                      </span>
+                      <span className="text-[9px] font-mono font-bold text-amber-300">
+                        {ex.tempoRest}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xs font-black text-white uppercase tracking-tight">
+                      {ex.name}
+                    </h4>
+                    <p className="text-[10px] font-mono font-bold text-amber-400 uppercase mt-0.5">
+                      ► {ex.setsReps}
+                    </p>
                   </div>
-                  <p className="text-[11px] text-slate-200 leading-snug">
-                    {tip}
+
+                  <p className="text-[10px] text-slate-300 leading-tight mt-1.5 pt-1 border-t border-slate-800/80 font-sans italic">
+                    "{ex.keyPoints}"
                   </p>
                 </div>
               ))}
             </div>
 
-            {article.pullQuotes.length > 0 && (
-              <div className="bg-amber-50 border-l-4 border-amber-500 p-2 text-center">
-                <p className="text-xs font-bold text-slate-900 italic">
-                  "{article.pullQuotes[0]}"
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Fallback layout for other templates */}
-        {article.layoutTemplate !== "editorial-lead" &&
-          article.layoutTemplate !== "two-column-quote" &&
-          article.layoutTemplate !== "infographic-tips" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 text-justify">
-              <div>{renderParagraphs(article.content)}</div>
-              <div className="flex flex-col justify-between">
-                {article.pullQuotes.map((q, idx) => (
-                  <div key={idx} className="bg-slate-100 p-3 rounded border-l-4 border-amber-500 my-1">
-                    <p className="text-xs font-bold italic text-slate-900">"{q}"</p>
+            {/* Bottom Row: Finisher Box & Video QR Code Container */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+              {/* Finisher / Coaching Note (9 cols) */}
+              <div className="sm:col-span-9 bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5 text-amber-400 text-[10px] font-mono font-black uppercase mb-0.5">
+                    <Zap className="w-3.5 h-3.5 fill-amber-400" />
+                    <span>DIRETRIZES DE INTENSIDADE & FINISHER</span>
                   </div>
-                ))}
+                  <p className="text-[10px] text-slate-300 leading-tight">
+                    {protocol.finisher || "Mantenha o foco absoluto na cadência excêntrica de 2 segundos. Em caso de perda da postura torácica, descanse 10 segundos antes de finalizar a série."}
+                  </p>
+                </div>
+                <div className="text-[8.5px] font-mono text-slate-400 mt-1 pt-1 border-t border-slate-800">
+                  METODOLOGIA MONTANHA UNCONVENTIONAL TRAINING // PROTOCOLO APROVADO
+                </div>
+              </div>
+
+              {/* Integrated QR Code / Video Badge (3 cols) */}
+              <div className="sm:col-span-3 bg-black border-2 border-amber-400/80 p-2 rounded-lg flex flex-col items-center justify-center text-center shadow-lg">
+                <div className="bg-white p-1 rounded mb-1">
+                  <QrCode className="w-9 h-9 text-black" />
+                </div>
+                <span className="text-[7.5px] font-mono font-black text-amber-400 uppercase leading-none">
+                  SCAN FOR 4K DEMO
+                </span>
+                <span className="text-[6.5px] font-mono text-slate-400 mt-0.5">
+                  VIDEO TUTORIAL
+                </span>
               </div>
             </div>
-          )}
+          </div>
+        ) : (
+          /* ----------------- TEMPLATE: STANDARD FEATURE / TECHNICAL ARTICLE ----------------- */
+          <div className="flex-1 flex flex-col justify-between space-y-3">
+            {/* Header Block: H1 + Deck */}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[9px] font-mono font-black text-amber-400 uppercase tracking-widest">
+                  // {article.category || "MONTANHA STRENGTH"}
+                </span>
+                <span className="text-slate-600">•</span>
+                <span className="text-[9px] font-mono text-slate-400 uppercase">
+                  BY {article.author.toUpperCase()}
+                </span>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl lg:text-[2.2rem] font-black text-white uppercase tracking-tight leading-[0.95] mb-1.5">
+                {article.title}
+              </h2>
+
+              {/* Sub-headline (Deck): 1-2 sentences summarizing the core takeaway */}
+              <p className="text-xs sm:text-[13px] text-amber-200/90 font-medium leading-snug border-l-2 border-amber-400 pl-2.5 my-1.5">
+                {article.subtitle}
+              </p>
+            </div>
+
+            {/* Photographic Hero Banner */}
+            {article.heroImage && (
+              <div className="relative w-full h-36 sm:h-44 md:h-48 rounded-md overflow-hidden border border-slate-800 shadow-md group">
+                <img
+                  src={article.heroImage}
+                  alt={article.title}
+                  className="w-full h-full object-cover object-center filter contrast-125 brightness-90 group-hover:scale-105 transition-transform duration-300"
+                />
+                {article.heroImageCaption && (
+                  <div className="absolute bottom-0 inset-x-0 bg-black/80 backdrop-blur-sm text-slate-200 text-[8.5px] font-mono px-3 py-1 flex items-center justify-between border-t border-slate-800">
+                    <span>{article.heroImageCaption}</span>
+                    <span className="text-amber-400 font-bold uppercase">MONTANHA MEDIA LAB</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 3-Column / Multi-Column Text Grid & Pull Quote Block */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 overflow-hidden">
+              {/* Text Column (8 cols): Justified body with Drop-Cap */}
+              <div className="md:col-span-8 text-justify columns-1 sm:columns-2 gap-3 text-xs leading-relaxed font-sans">
+                {renderParagraphs(article.content, true)}
+              </div>
+
+              {/* Sidebar / Pull Quote & Callout Block (4 cols) */}
+              <div className="md:col-span-4 flex flex-col justify-between border-l border-slate-800 pl-3 space-y-3">
+                {/* Pull Quote Block: Oversized Display Typography with Quotes and Color Bar */}
+                {article.pullQuotes && article.pullQuotes.length > 0 && (
+                  <div className="bg-slate-900 border-l-4 border-amber-400 p-3 rounded-r-md shadow-md">
+                    <Quote className="w-5 h-5 text-amber-400 mb-1" />
+                    <p className="text-xs sm:text-sm font-black text-white italic leading-tight tracking-tight uppercase">
+                      "{article.pullQuotes[0]}"
+                    </p>
+                    <span className="text-[8px] font-mono text-amber-400/80 mt-1 block uppercase">
+                      — REGRA DO TREINADOR
+                    </span>
+                  </div>
+                )}
+
+                {/* Callout Box */}
+                {article.calloutBox && (
+                  <div className="bg-black/90 border border-slate-800 p-2.5 rounded-md">
+                    <div className="flex items-center gap-1 text-[9px] font-mono font-black text-amber-400 uppercase mb-1">
+                      <Lightbulb className="w-3 h-3 text-amber-400" />
+                      <span>{article.calloutBox.title}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-300 leading-snug font-sans">
+                      {article.calloutBox.content}
+                    </p>
+                  </div>
+                )}
+
+                {/* Key Takeaways */}
+                {article.keyTakeaways && article.keyTakeaways.length > 0 && (
+                  <div className="border border-slate-800 p-2.5 rounded-md bg-slate-900/60">
+                    <span className="text-[9px] font-mono font-black text-amber-400 uppercase block mb-1">
+                      PONTOS INEGOCIÁVEIS:
+                    </span>
+                    <ul className="space-y-1 text-[9.5px] text-slate-300 font-sans">
+                      {article.keyTakeaways.map((point, idx) => (
+                        <li key={idx} className="flex items-start gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Bottom Footer & Page Number */}
-      <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-[10px] text-slate-400 font-semibold uppercase">
-        <span>{project.title} • {article.category}</span>
-        <span className="text-slate-900 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
-          PÁGINA {pageNumber}
-        </span>
+      {/* Bottom Footer Block: Contributor Tag + Social Handle + Page Number */}
+      <div className="relative z-10 border-t border-slate-800 pt-2 flex items-center justify-between text-[10px] font-mono text-slate-400 font-bold uppercase">
+        <div className="flex items-center gap-2">
+          <span className="text-white">BY {article.author.toUpperCase()}</span>
+          <span>•</span>
+          <span className="text-amber-400">{project.title}</span>
+          <span className="hidden sm:inline text-slate-500">(@coachmontanha)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="bg-slate-900 text-amber-400 border border-slate-700 px-2 py-0.5 rounded">
+            PAGE {pageNumber < 10 ? `0${pageNumber}` : pageNumber}
+          </span>
+        </div>
       </div>
     </div>
   );

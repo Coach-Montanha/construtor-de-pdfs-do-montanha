@@ -130,9 +130,9 @@ export const INITIAL_MAGAZINE_PROJECT: MagazineProject = {
       },
       {
         id: "hl-2",
-        tag: "// 02. TORQUE ROTACIONAL",
-        title: "Steel Mace & Clubbell: Blindando Ombros e Construindo Força Funcional 3D",
-        authorCallout: "Dra. Helena Vasconcelos",
+        tag: "// 02. PROTOCOLO DE FORÇA",
+        title: "Double KB Strength Protocol: O Plano de Ataque em Clusters A1/A2 e B1/B2",
+        authorCallout: "Coach Montanha",
         pageTarget: 6,
       },
       {
@@ -207,12 +207,12 @@ Abrace a fricção. Domine a técnica nos detalhes invisíveis. Seja bem-vindo �
       id: "art-1",
       title: "KETTLEBELL DYNAMICS: O PODER BALÍSTICO DO SWING",
       subtitle: "Como o kettlebell pesado recruta a cadeia posterior, desenvolve potência de quadril e cria um motor cardiovascular inesgotável.",
-      category: "UNCONVENTIONAL IRON",
+      category: "MONTANHA METHOD",
       author: "Coach Montanha",
-      authorBio: "Master Kettlebell Instructor e especialista em força funcional não-convencional.",
+      authorBio: "Master Kettlebell Instructor e Fundador.",
       authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
       heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1400&q=85",
-      heroImageCaption: "A extensão violenta do quadril gera aceleração balística inigualável.",
+      heroImageCaption: "A aceleração violenta do quadril combinada ao travamento dorsal engaja mais de 600 músculos por segundo.",
       heroImagePrompt: "Athletic fighter doing heavy kettlebell swing in dark gritty industrial gym, chalk dust, cinematic rim lighting, 8k",
       content: `O kettlebell não é apenas um haltere com alça; é uma ferramenta de aceleração centrífuga e desaceleração excêntrica violenta. Ao contrário dos pesos convencionais onde a trajetória é linear e estática, o kettlebell exige que o sistema neuromuscular estabilize forças dinâmicas em múltiplos planos.
 
@@ -223,11 +223,10 @@ O exercício mestre — o Kettlebell Swing Hardstyle — ensina o corpo a gerar 
 Ao combinar protocolos de 10x10 com kettlebells de 32kg ou 40kg, o limiar de lactato é empurrado a níveis extremos. O coração opera na zona anaeróbica enquanto as fibras musculares do tipo II são recrutadas em sua plenitude.`,
       pullQuotes: [
         "O kettlebell pune a negligência e premia o respeito: domine a trajetória ou seja dominado por ela.",
-        "Potência não é o quanto você levanta, mas com que velocidade e violência você projeta a massa no espaço.",
       ],
       calloutBox: {
-        title: "PROTOCOLOS DE CHOQUE DO COACH",
-        content: "EMOM 10 Minutos: 10 Heavy Swings (32kg+) no início de cada minuto com postura perfeita e travamento de glúteos.",
+        title: "REGRA DE OURO DO COACH",
+        content: "A força gerada no swing vem 100% da flexão e extensão explosiva do quadril. Os braços atuam apenas como cordas que conectam o peso ao seu tronco.",
       },
       keyTakeaways: [
         "A força vem do quadril, nunca dos braços.",
@@ -241,35 +240,67 @@ Ao combinar protocolos de 10x10 com kettlebells de 32kg ou 40kg, o limiar de lac
     },
     {
       id: "art-2",
-      title: "STEEL MACE & CLUBBELLS: A ARTE DO TORQUE 3D",
-      subtitle: "Restaurando a saúde escapular, a força de pegada e a rotação anti-fragilidade com alavancas assimétricas.",
-      category: "ROTATIONAL STRENGTH",
-      author: "Dra. Helena Vasconcelos",
-      authorBio: "Fisioterapeuta esportiva e treinadora de mobilidade tática.",
+      title: "DOUBLE KB STRENGTH PROTOCOL: DENSIDADE MÁXIMA",
+      subtitle: "Estrutura avançada de treinamento dividida em clusters A1/A2 e B1/B2 com controle de tempo e descanso ativo.",
+      category: "MONTANHA WORKOUT",
+      author: "Coach Montanha",
+      authorBio: "Master Kettlebell Instructor // CSCS",
+      authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
       heroImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=85",
-      heroImageCaption: "A distribuição desbalanceada do peso desafia o manguito rotador em todos os ângulos.",
-      content: `A vida e o esporte acontecem em rotação e espirais, mas a musculação clássica insiste em treinar apenas em linhas retas (flexão e extensão no plano sagital). É exatamente nesse vácuo que a Steel Mace (maça de aço) se torna uma arma revolucionária.
+      heroImageCaption: "O rack duplo exige estabilização torácica massiva sob carga de ferro fundido.",
+      content: `Este protocolo foi desenvolvido para atletas que buscam desenvolver força bruta, capacidade de trabalho e densidade muscular sem perder agilidade atlética.
 
-**O Efeito da Alavanca Longa**
-Com 90% da massa concentrada na ponta de uma haste de aço de 1 metro, uma maça de apenas 7kg produz torque comparável a dezenas de quilos nas articulações dos ombros e oblíquos. O exercício tradicional 360 e 10-to-2 força a cintura escapular a abrir espaço articular e desenvolver estabilidade reflexa.
-
-**Força de Punho e Antebraço**
-A empunhadura espessa e a constante rotação exigem que os flexores e extensores do punho trabalhem em co-contração, eliminando fraquezas e dores crônicas nos cotovelos e ombros.`,
+**Como Executar o Treino:**
+Execute os blocos em super-séries alternadas (A1 seguido de A2). Respeite os 90 segundos de descanso antes de iniciar a próxima série. Foque na perfeição biomecânica de cada repetição.`,
       pullQuotes: [
-        "Treinar em rotação é a chave para construir um corpo verdadeiramente à prova de lesões.",
+        "A disciplina na contagem do tempo sob tensão separa o praticante amador do atleta de elite.",
       ],
-      calloutBox: {
-        title: "CHECKLIST DO 360",
-        content: "Mãos fechadas no final da haste • Costelas para baixo sem hiperestender a coluna • Movimento fluido gerado pelos cotovelos.",
+      layoutTemplate: "workout-protocol",
+      workoutProtocol: {
+        workoutTitle: "DOUBLE KB STRENGTH PROTOCOL // DOSSIER #01",
+        warmupPrep: "MOBILITY & ACTIVATION (5 MIN): Thoracic spine bridges, Halos com kettlebell leve (3x10 cada lado), Prying Goblet Squats e Pranchas com ativação glútea.",
+        exercises: [
+          {
+            code: "A1",
+            name: "DOUBLE KETTLEBELL CLEAN & STRICT PRESS",
+            setsReps: "5 SÉRIES × 5 REPETIÇÕES",
+            tempoRest: "TEMPO: 20X1 // DESCANSO: 90s",
+            keyPoints: "Trave os glúteos e abdômen no rack, empurre o chão com os pés e pressione em linha vertical pura.",
+          },
+          {
+            code: "A2",
+            name: "HEAVY DOUBLE KETTLEBELL FRONT SQUATS",
+            setsReps: "5 SÉRIES × 5 REPETIÇÕES",
+            tempoRest: "TEMPO: 31X1 // DESCANSO: 90s",
+            keyPoints: "Cotovelos altos no rack, quebre o quadril abaixo do paralelo e suba explodindo sem perder a postura torácica.",
+          },
+          {
+            code: "B1",
+            name: "ALTERNATING GORILLA ROWS",
+            setsReps: "4 SÉRIES × 8 REPETIÇÕES (CADA LADO)",
+            tempoRest: "TEMPO: 2011 // DESCANSO: 60s",
+            keyPoints: "Tronco paralelo ao solo, puxe com o cotovelo rente à costela e pressione o outro peso contra o chão.",
+          },
+          {
+            code: "B2",
+            name: "RENEGADE ROWS & STRICT PUSHUPS",
+            setsReps: "4 SÉRIES × 6 REPETIÇÕES",
+            tempoRest: "TEMPO: 20X0 // DESCANSO: 60s",
+            keyPoints: "Pés afastados na largura dos ombros para evitar rotação de quadril. Core 100% estático.",
+          },
+          {
+            code: "FINISHER",
+            name: "HEAVY FARMER CARRY PROTOCOL",
+            setsReps: "4 TIROS × 40 METROS (CARGA MÁXIMA 32KG+)",
+            tempoRest: "TEMPO: CONSTANTE // DESCANSO: 60s",
+            keyPoints: "Postura ereta, ombros encaixados para trás e para baixo. Passos curtos e respiração ritmada.",
+          },
+        ],
+        finisher: "FINISHER: Heavy Sandbag Carry (3x50m) ou 100 Snatsches com 24kg em esforço contínuo.",
+        videoQrUrl: "https://coachmontanha.com.br/protocolo-01",
       },
-      keyTakeaways: [
-        "Elimine pontos cegos articulares através do treino com alavancas assimétricas.",
-        "Desenvolva pegada e antebraço de aço sem sobrecarregar tendões.",
-        "Integre movimentos multiplanares na sua rotina semanal.",
-      ],
-      layoutTemplate: "two-column-quote",
-      tags: ["Macebell", "Clubbell", "Ombros", "Torque"],
-      estimatedReadTime: 4,
+      tags: ["Workout", "Protocolo", "Kettlebell", "Força"],
+      estimatedReadTime: 6,
       featuredOnCover: true,
     },
     {
