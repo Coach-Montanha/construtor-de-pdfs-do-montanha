@@ -7,12 +7,12 @@ export type LayoutTemplate =
   | "infographic-tips";    // Guia prático com cards de dicas e passos numerados
 
 export type MagazineThemeId =
-  | "montanha-titanium"
-  | "vogue-haute"
-  | "cyber-neon"
-  | "wellness-botanic"
-  | "business-leader"
-  | "crimson-editorial";
+  | "montanha-titanium"    // My Mad Methods / Unconventional Strength & Industrial Yellow
+  | "tactical-iron"        // Tactical Steel & Warning Orange
+  | "monochrome-grit"      // Deep Black, Stark White & Red
+  | "vogue-haute"          // Editorial Classic
+  | "cyber-neon"           // Futuristic High-Tech
+  | "wellness-botanic";    // Organic Emerald
 
 export interface MagazineTheme {
   id: MagazineThemeId;
@@ -34,14 +34,23 @@ export interface CoverHighlight {
   id: string;
   tag: string;
   title: string;
+  authorCallout?: string;
   pageTarget?: number;
 }
 
+export type CoverStyleVariant =
+  | "mad-methods"        // My Mad Methods Industrial Aesthetic: Bold Masthead, Hexagon Badge, Yellow Accents, Technical Grid
+  | "tactical-stencil"   // Stencil Tactical Font, Warning Orange, Crosshair HUD, Military/Iron Focus
+  | "monochrome-iron"    // High Contrast Gritty Black & White with Red Accents and Heavy Metal Texture
+  | "clean-editorial";   // Sleek High-End Magazine
+
 export interface CoverConfig {
   mastheadText: string;
+  sloganText: string;
   issueBadge: string;
   mainHeadline: string;
   subHeadline: string;
+  authorCallout?: string;
   highlights: CoverHighlight[];
   footerHighlights: string[];
   backgroundImage: string;
@@ -51,6 +60,10 @@ export interface CoverConfig {
   issueDate: string;
   editionNumber: string;
   categoryTag: string;
+  coverStyleVariant: CoverStyleVariant;
+  showHazardStripe: boolean;
+  showTechHud: boolean;
+  hexBadgeText?: string;
 }
 
 export interface EditorialCredit {
