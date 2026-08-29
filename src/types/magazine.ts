@@ -48,6 +48,8 @@ export type CoverStyleVariant =
   | "monochrome-iron"    // High Contrast Gritty Black & White with Red Accents and Heavy Metal Texture
   | "clean-editorial";   // Sleek High-End Magazine
 
+export type TextScalePreset = "compact" | "normal" | "large" | "extra-large";
+
 export interface CoverConfig {
   mastheadText: string;
   sloganText: string;
@@ -68,6 +70,10 @@ export interface CoverConfig {
   showHazardStripe: boolean;
   showTechHud: boolean;
   hexBadgeText?: string;
+  // Typography Size & Legibility Controls
+  textScale?: number; // 80 to 160 (%)
+  highlightsFontSize?: TextScalePreset;
+  headlineFontSize?: TextScalePreset;
   // Peak Performance specific options
   circleBadge?: {
     topText: string;

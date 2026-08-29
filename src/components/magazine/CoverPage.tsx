@@ -19,6 +19,9 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   const isPeakPerformance = coverConfig.coverStyleVariant === "peak-performance";
   const isTactical = coverConfig.coverStyleVariant === "tactical-stencil";
 
+  // Dynamic Text Scale Multiplier (Default: 1.0)
+  const scale = (coverConfig.textScale || 100) / 100;
+
   /* -------------------------------------------------------------
    * VARIANT: PEAK PERFORMANCE / PRO EDITION (High-Key Studio & Angular Blue)
    * ------------------------------------------------------------- */
@@ -74,7 +77,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
           <h1
             className="font-black italic tracking-[-3px] text-[#0b0f14] lowercase leading-[0.85]"
             style={{
-              fontSize: "clamp(2.8rem, 11cqw, 5.5rem)",
+              fontSize: `clamp(2.8rem, ${11 * scale}cqw, 5.5rem)`,
               textShadow: "0 2px 10px rgba(255,255,255,0.8)",
             }}
           >
@@ -82,8 +85,9 @@ export const CoverPage: React.FC<CoverPageProps> = ({
           </h1>
           <div className="pt-1">
             <span
-              className="bg-[#111111] text-white px-2 py-1.5 text-[8pt] font-black uppercase tracking-widest inline-block shadow-md"
+              className="bg-[#111111] text-white px-2 py-1.5 font-black uppercase tracking-widest inline-block shadow-md"
               style={{
+                fontSize: `${8 * scale}pt`,
                 writingMode: "vertical-rl",
                 transform: "rotate(180deg)",
               }}
@@ -94,104 +98,160 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         </div>
 
         {/* Chamadas da Esquerda */}
-        <div className="absolute top-[17%] left-[5%] w-[38%] z-10 space-y-1">
+        <div className="absolute top-[17%] left-[5%] w-[42%] z-10 space-y-1">
           <div className="leading-none">
-            <span className="text-[11pt] font-black text-[#111] block">THE</span>
+            <span
+              className="font-black text-[#111] block"
+              style={{ fontSize: `${11 * scale}pt` }}
+            >
+              THE
+            </span>
             <span
               className="font-black text-[#e51d24] leading-[0.85] tracking-[-1.5px] uppercase block"
-              style={{ fontSize: "clamp(1.8rem, 6cqw, 3rem)" }}
+              style={{ fontSize: `clamp(1.8rem, ${6 * scale}cqw, 3.2rem)` }}
             >
               PEAK
             </span>
-            <span className="text-[12pt] font-black text-[#111] leading-[0.95] uppercase block">
+            <span
+              className="font-black text-[#111] leading-[0.95] uppercase block"
+              style={{ fontSize: `${12 * scale}pt` }}
+            >
               PERFORMANCE ISSUE
             </span>
           </div>
 
-          <div className="mt-2 border-l-[3.5px] border-[#e51d24] pl-2 space-y-0.5">
-            <div className="text-[8.5pt] font-extrabold uppercase text-[#1a1a1a] leading-tight">
-              ■ RECOVER FASTER
-            </div>
-            <div className="text-[8.5pt] font-extrabold uppercase text-[#1a1a1a] leading-tight">
-              ■ STAY AT YOUR PEAK
-            </div>
-            <div className="text-[8.5pt] font-extrabold uppercase text-[#1a1a1a] leading-tight">
-              ■ SQUAT BETTER
-            </div>
+          <div className="mt-2 border-l-[4px] border-[#e51d24] pl-2.5 space-y-1">
+            {coverConfig.highlights && coverConfig.highlights.length > 0 ? (
+              coverConfig.highlights.slice(0, 3).map((hl) => (
+                <div
+                  key={hl.id}
+                  className="font-black uppercase text-[#1a1a1a] leading-tight flex items-center gap-1.5"
+                  style={{ fontSize: `${9 * scale}pt` }}
+                >
+                  <span className="text-[#e51d24]">■</span>
+                  <span>{hl.title}</span>
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="font-extrabold uppercase text-[#1a1a1a] leading-tight" style={{ fontSize: `${9 * scale}pt` }}>
+                  ■ RECOVER FASTER
+                </div>
+                <div className="font-extrabold uppercase text-[#1a1a1a] leading-tight" style={{ fontSize: `${9 * scale}pt` }}>
+                  ■ STAY AT YOUR PEAK
+                </div>
+                <div className="font-extrabold uppercase text-[#1a1a1a] leading-tight" style={{ fontSize: `${9 * scale}pt` }}>
+                  ■ SQUAT BETTER
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Bloco Meio-Esquerda: Research Box */}
         <div className="absolute top-[40%] left-[5%] z-10">
-          <span className="bg-[#111] text-white text-[8pt] font-black px-2 py-1 uppercase inline-block">
+          <span
+            className="bg-[#111] text-white font-black px-2 py-1 uppercase inline-block shadow-sm"
+            style={{ fontSize: `${8.5 * scale}pt` }}
+          >
             RESEARCH
           </span>
-          <span className="bg-[#0088cc] text-white text-[7.5pt] font-bold px-2 py-1 block mt-[1px]">
+          <span
+            className="bg-[#0088cc] text-white font-bold px-2 py-1 block mt-[1px] shadow-sm"
+            style={{ fontSize: `${8 * scale}pt` }}
+          >
             The truth about Taurine
           </span>
         </div>
 
         {/* Selo Promocional Circular */}
-        <div className="absolute top-[56%] left-[4%] w-[84px] h-[84px] sm:w-[94px] sm:h-[94px] rounded-full bg-[#e51d24] border-[8px] border-[#111111] z-10 flex flex-col items-center justify-center text-center text-white shadow-xl">
-          <span className="text-[7.5pt] font-black uppercase leading-none">
+        <div className="absolute top-[56%] left-[4%] w-[88px] h-[88px] sm:w-[98px] sm:h-[98px] rounded-full bg-[#e51d24] border-[8px] border-[#111111] z-10 flex flex-col items-center justify-center text-center text-white shadow-xl">
+          <span className="font-black uppercase leading-none" style={{ fontSize: `${8 * scale}pt` }}>
             {coverConfig.circleBadge?.topText || "SAVE"}
           </span>
-          <span className="text-[13pt] font-black leading-none my-0.5">
+          <span className="font-black leading-none my-0.5" style={{ fontSize: `${13.5 * scale}pt` }}>
             {coverConfig.circleBadge?.valueText || "R$100"}
           </span>
-          <span className="text-[5pt] font-extrabold uppercase leading-tight">
+          <span className="font-extrabold uppercase leading-tight" style={{ fontSize: `${5.5 * scale}pt` }}>
             {coverConfig.circleBadge?.subText || "SUPPLEMENT\nDISCOUNT\nVOUCHERS"}
           </span>
         </div>
 
         {/* Chamadas da Direita: Top */}
-        <div className="absolute top-[17%] right-[5%] w-[38%] text-right z-10">
-          <h3 className="text-[12pt] font-black text-[#111] uppercase leading-tight m-0">
+        <div className="absolute top-[17%] right-[5%] w-[40%] text-right z-10">
+          <h3
+            className="font-black text-[#111] uppercase leading-tight m-0"
+            style={{ fontSize: `${12.5 * scale}pt` }}
+          >
             BUGGING OUT
           </h3>
-          <p className="text-[7.5pt] font-bold text-[#222] uppercase leading-tight mt-0.5">
+          <p
+            className="font-bold text-[#222] uppercase leading-tight mt-0.5"
+            style={{ fontSize: `${8 * scale}pt` }}
+          >
             IS INSECT PROTEIN THE<br />NEXT BIG TREND?
           </p>
         </div>
 
         {/* Chamadas da Direita: Food Prep Box */}
         <div className="absolute top-[26%] right-[5%] z-10 text-right">
-          <span className="bg-[#111] text-white text-[8pt] font-black px-2 py-1 uppercase inline-block">
+          <span
+            className="bg-[#111] text-white font-black px-2 py-1 uppercase inline-block shadow-sm"
+            style={{ fontSize: `${8.5 * scale}pt` }}
+          >
             FOOD PREP
           </span>
-          <span className="bg-[#0088cc] text-white text-[7.5pt] font-bold px-2 py-1 block mt-[1px]">
+          <span
+            className="bg-[#0088cc] text-white font-bold px-2 py-1 block mt-[1px] shadow-sm"
+            style={{ fontSize: `${8 * scale}pt` }}
+          >
             Sear tuna like a top chef
           </span>
         </div>
 
         {/* Chamadas da Direita: Number Hook */}
-        <div className="absolute top-[40%] right-[5%] w-[42%] text-right z-10 flex items-center justify-end gap-2">
+        <div className="absolute top-[40%] right-[5%] w-[44%] text-right z-10 flex items-center justify-end gap-2">
           <div className="text-right">
-            <span className="text-[10pt] font-black text-[#e51d24] uppercase block leading-tight">
+            <span
+              className="font-black text-[#e51d24] uppercase block leading-tight"
+              style={{ fontSize: `${10.5 * scale}pt` }}
+            >
               WAYS TO BOOST YOUR INCOME
             </span>
-            <span className="text-[7pt] font-extrabold text-[#111] uppercase block mt-0.5">
+            <span
+              className="font-extrabold text-[#111] uppercase block mt-0.5"
+              style={{ fontSize: `${7.5 * scale}pt` }}
+            >
               EARN MORE AS A PERSONAL TRAINER
             </span>
           </div>
-          <span className="text-[3.2rem] font-black text-[#e51d24] leading-[0.75]">
+          <span
+            className="font-black text-[#e51d24] leading-[0.75]"
+            style={{ fontSize: `${3.4 * scale}rem` }}
+          >
             5
           </span>
         </div>
 
         {/* Destaque Principal Inferior */}
         <div className="absolute bottom-[5%] inset-x-0 text-center z-20">
-          <div className="bg-[#111] text-white text-[9pt] font-black px-4 py-1 uppercase inline-block shadow-md">
+          <div
+            className="bg-[#111] text-white font-black px-4 py-1 uppercase inline-block shadow-md"
+            style={{ fontSize: `${9.5 * scale}pt` }}
+          >
             {coverConfig.categoryTag || "SHARPEN UP"}
           </div>
           <h2
             className="font-black text-white uppercase tracking-[-1px] leading-[0.88] m-0 drop-shadow-md"
-            style={{ fontSize: "clamp(2rem, 7cqw, 3.4rem)" }}
+            style={{ fontSize: `clamp(2rem, ${7.5 * scale}cqw, 3.8rem)` }}
           >
             {coverConfig.mainHeadline || "SHOULDER WORKOUT"}
           </h2>
           <div className="mt-1">
-            <span className="bg-[#111] text-white text-[8.5pt] font-extrabold px-6 py-1 uppercase inline-block shadow-md">
+            <span
+              className="bg-[#111] text-white font-extrabold px-6 py-1 uppercase inline-block shadow-md"
+              style={{ fontSize: `${9 * scale}pt` }}
+            >
               {coverConfig.subHeadline || "BACK TO BASICS FOR SERIOUS DELT DEMOLITION"}
             </span>
           </div>
@@ -286,7 +346,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
             <h1
               className="font-black tracking-tighter uppercase leading-[0.88] drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] text-center"
               style={{
-                fontSize: "clamp(2.4rem, 10cqw, 4.8rem)",
+                fontSize: `clamp(2.4rem, ${10 * scale}cqw, 4.8rem)`,
                 color: theme.primaryColor,
                 letterSpacing: "-0.04em",
                 fontFamily: isTactical
@@ -301,7 +361,9 @@ export const CoverPage: React.FC<CoverPageProps> = ({
 
           {/* Subtitle / Slogan Bar */}
           <div className="mt-1 w-full flex items-center justify-center">
-            <div className="w-full bg-black/90 border-y border-amber-400/60 py-1 px-3 flex items-center justify-between text-[9px] font-mono font-black tracking-[0.2em] text-amber-300 uppercase shadow-md">
+            <div className="w-full bg-black/90 border-y border-amber-400/60 py-1 px-3 flex items-center justify-between font-mono font-black tracking-[0.2em] text-amber-300 uppercase shadow-md"
+              style={{ fontSize: `${9.5 * scale}px` }}
+            >
               <span className="text-white/40 hidden sm:inline">///</span>
               <span>{coverConfig.sloganText || "UNCONVENTIONAL STRENGTH & PERFORMANCE"}</span>
               <span className="text-white/40 hidden sm:inline">///</span>
@@ -312,27 +374,37 @@ export const CoverPage: React.FC<CoverPageProps> = ({
 
       {/* Middle Section: Left-aligned Story Callouts & Main Headline */}
       <div className="relative z-10 px-4 sm:p-5 md:p-6 flex-1 flex flex-col justify-end pb-2">
-        {/* Left-Aligned Sub-bullets & Story Callouts */}
-        <div className="grid grid-cols-1 gap-1.5 max-w-sm mb-2.5">
+        {/* Left-Aligned Sub-bullets & Story Callouts (High Legibility Box Cards) */}
+        <div className="grid grid-cols-1 gap-2 max-w-md mb-3">
           {coverConfig.highlights.map((hl) => (
             <div
               key={hl.id}
-              className="bg-black/80 backdrop-blur-md border-l-4 p-2 rounded-r transition-all border-amber-400 shadow-lg"
+              className="bg-black/85 backdrop-blur-md border-l-[4px] p-2.5 rounded-r transition-all border-amber-400 shadow-xl"
               style={{ borderColor: theme.primaryColor }}
             >
-              <div className="flex items-center justify-between text-[8.5px] font-mono font-black tracking-wider uppercase text-amber-400 mb-0.5">
+              <div className="flex items-center justify-between font-mono font-black tracking-wider uppercase text-amber-400 mb-0.5"
+                style={{ fontSize: `${9 * scale}px` }}
+              >
                 <span>{hl.tag}</span>
                 {hl.pageTarget && (
-                  <span className="text-white/80 font-mono text-[7.5px] bg-slate-900/90 px-1 py-0.5 rounded border border-slate-700">
+                  <span className="text-white font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 font-bold"
+                    style={{ fontSize: `${8 * scale}px` }}
+                  >
                     PÁG {hl.pageTarget}
                   </span>
                 )}
               </div>
-              <h3 className="text-xs font-black text-white leading-tight drop-shadow tracking-tight">
+              <h3
+                className="font-black text-white leading-snug drop-shadow tracking-tight uppercase"
+                style={{ fontSize: `clamp(0.85rem, ${2.2 * scale}cqw, 1.25rem)` }}
+              >
                 {hl.title}
               </h3>
               {hl.authorCallout && (
-                <p className="text-[8.5px] text-amber-200/80 font-mono font-semibold uppercase mt-0.5">
+                <p
+                  className="text-amber-200/90 font-mono font-bold uppercase mt-0.5"
+                  style={{ fontSize: `${9 * scale}px` }}
+                >
                   ► {hl.authorCallout}
                 </p>
               )}
@@ -341,13 +413,19 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         </div>
 
         {/* Extra-Bold Main Story Headline */}
-        <div className="border-t-2 pt-2 border-amber-400 bg-black/70 backdrop-blur-sm p-2.5 rounded-t-sm shadow-xl">
+        <div className="border-t-2 pt-2.5 border-amber-400 bg-black/80 backdrop-blur-sm p-3 rounded-t-sm shadow-xl">
           <div className="flex items-center gap-2 mb-1">
-            <span className="bg-amber-400 text-black font-black text-[9px] tracking-widest uppercase px-2 py-0.5 rounded-xs">
+            <span
+              className="bg-amber-400 text-black font-black tracking-widest uppercase px-2 py-0.5 rounded-xs"
+              style={{ fontSize: `${9.5 * scale}px` }}
+            >
               {coverConfig.categoryTag || "COVER STORY"}
             </span>
             {coverConfig.authorCallout && (
-              <span className="text-[9px] font-mono font-bold text-slate-300 uppercase">
+              <span
+                className="font-mono font-bold text-slate-300 uppercase"
+                style={{ fontSize: `${9.5 * scale}px` }}
+              >
                 {coverConfig.authorCallout}
               </span>
             )}
@@ -355,13 +433,16 @@ export const CoverPage: React.FC<CoverPageProps> = ({
           <h2
             className="font-black tracking-tighter uppercase leading-[0.92] text-white drop-shadow-[0_4px_12px_rgba(0,0,0,1)]"
             style={{
-              fontSize: "clamp(1.4rem, 5.5cqw, 2.3rem)",
+              fontSize: `clamp(1.4rem, ${5.5 * scale}cqw, 2.6rem)`,
               textShadow: "0 2px 10px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.8)",
             }}
           >
             {coverConfig.mainHeadline}
           </h2>
-          <p className="text-xs text-slate-200 font-semibold leading-snug mt-1 max-w-lg drop-shadow">
+          <p
+            className="text-slate-200 font-semibold leading-snug mt-1 max-w-lg drop-shadow"
+            style={{ fontSize: `${12 * scale}px` }}
+          >
             {coverConfig.subHeadline}
           </p>
         </div>
@@ -376,7 +457,9 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         {/* Footer Bar & Barcode */}
         <div className="bg-black/90 backdrop-blur-md border-t border-white/20 px-4 sm:px-6 py-2 flex items-center justify-between">
           {/* Footer Ticker Tags */}
-          <div className="flex flex-wrap gap-2 text-[8.5px] font-mono font-bold text-slate-300 uppercase tracking-wider">
+          <div className="flex flex-wrap gap-2 font-mono font-bold text-slate-300 uppercase tracking-wider"
+            style={{ fontSize: `${9 * scale}px` }}
+          >
             {coverConfig.footerHighlights.map((item, idx) => (
               <React.Fragment key={idx}>
                 <span className="hover:text-amber-400 transition-colors">{item}</span>

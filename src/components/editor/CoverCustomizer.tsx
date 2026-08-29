@@ -1,8 +1,7 @@
 import React from "react";
-import { CoverConfig, CoverHighlight, CoverStyleVariant } from "../../types/magazine";
+import { CoverConfig, CoverHighlight, CoverStyleVariant, TextScalePreset } from "../../types/magazine";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -12,12 +11,12 @@ import {
   Trash2,
   Image as ImageIcon,
   Wand2,
-  Shield,
-  Zap,
-  Flame,
   Layout,
-  Crosshair,
+  Type,
   CheckCircle2,
+  Sliders,
+  Maximize2,
+  ZoomIn,
 } from "lucide-react";
 import { generateAiImageUrl } from "../../lib/ai-service";
 
@@ -41,7 +40,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
     const newHl: CoverHighlight = {
       id: "hl-" + Date.now(),
       tag: `// 0${coverConfig.highlights.length + 1}. PROTOCOLO`,
-      title: "Nova chamada de força não-convencional e alta performance",
+      title: "Nova matéria de força e alta performance",
       authorCallout: "Coach Montanha",
       pageTarget: coverConfig.highlights.length + 3,
     };
@@ -100,12 +99,12 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
     {
       id: "mad-methods",
       name: "Montanha Mad Methods (Industrial Dark & Yellow)",
-      desc: "Estética My Mad Methods: Preto profundo, tipografia stencil/ultra-pesada, hazard stripes e HUD tático.",
+      desc: "Estética My Mad Methods: Preto profundo, tipografia ultra-pesada, hazard stripes e HUD tático.",
     },
     {
       id: "peak-performance",
       name: "Peak Performance / Pro Edition (High-Key Studio & Angular Blue)",
-      desc: "Estética Pro Fitness: Fundo High-Key Studio Lighting, grafismos angulares azul e preto, selo circular vermelho e tipografia itálica.",
+      desc: "Estética Pro Fitness: Fundo High-Key Studio Lighting, grafismos angulares azul e preto, selo circular vermelho.",
     },
     {
       id: "tactical-stencil",
@@ -119,9 +118,71 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
     },
   ];
 
+  const textScalePresets: { id: TextScalePreset; label: string; scale: number }[] = [
+    { id: "compact", label: "Compacto", scale: 90 },
+    { id: "normal", label: "Padrão (100%)", scale: 100 },
+    { id: "large", label: "Grande (115% - Recomendado)", scale: 115 },
+    { id: "extra-large", label: "Extra Grande (135% - Alta Legibilidade)", scale: 135 },
+  ];
+
+  const currentScale = coverConfig.textScale || 100;
+
   return (
     <div className="space-y-6 font-sans">
-      {/* Cover Style Variant Switcher */}
+      {/* 1. Typography Size & Legibility Manager */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <Type className="w-4 h-4 text-amber-500" />
+            <span>Gerenciador de Tamanho & Legibilidade dos Textos da Capa</span>
+          </h3>
+          <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black">
+            ESCALA ATUAL: {currentScale}%
+          </span>
+        </div>
+
+        {/* Quick Size Presets */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {textScalePresets.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => {
+                updateField("textScale", preset.scale);
+                updateField("highlightsFontSize", preset.id);
+              }}
+              className={`p-2.5 rounded-lg border-2 text-xs font-black transition-all text-center flex flex-col items-center gap-1 ${
+                currentScale === preset.scale
+                  ? "bg-amber-400 text-black border-black shadow-sm"
+                  : "theme-app-card-subtle border-slate-300 hover:border-black"
+              }`}
+            >
+              <span>{preset.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Fine-Tuning Slider */}
+        <div className="space-y-2 pt-2 border-t border-slate-200">
+          <div className="flex justify-between text-xs font-bold">
+            <span className="flex items-center gap-1">
+              <Sliders className="w-3.5 h-3.5 text-amber-500" />
+              Ajuste Fino de Escala de Todas as Fontes da Capa
+            </span>
+            <span className="font-mono text-amber-600 font-black">{currentScale}%</span>
+          </div>
+          <Slider
+            value={[currentScale]}
+            onValueChange={(val) => updateField("textScale", val[0])}
+            min={80}
+            max={160}
+            step={5}
+            className="py-1"
+          />
+        </div>
+      </div>
+
+      {/* 2. Cover Style Variant Switcher */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
           <Layout className="w-4 h-4 text-amber-500" />
@@ -154,11 +215,11 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
         </div>
       </div>
 
-      {/* Visual Identity & Masthead Section */}
+      {/* 3. Visual Identity & Masthead Section */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
           <Wand2 className="w-4 h-4 text-amber-500" />
-          <span>1. Identidade Visual & Masthead</span>
+          <span>Identidade Visual & Masthead</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -234,11 +295,88 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
         )}
       </div>
 
-      {/* Main Cover Story Headline */}
+      {/* 4. Side Highlights / Articles Presented on Cover */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+              <Maximize2 className="w-4 h-4 text-amber-500" />
+              <span>Chamadas Laterais & Artigos Apresentados na Capa</span>
+            </h3>
+            <p className="text-xs opacity-75 mt-0.5">
+              Defina os títulos das matérias em destaque que aparecem com fundo escuro de alto contraste na capa.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleAddHighlight}
+            className="h-8 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1 border border-black shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Adicionar Chamada</span>
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {coverConfig.highlights.map((hl, idx) => (
+            <div
+              key={hl.id}
+              className="theme-app-card-subtle p-3.5 rounded-lg border-2 border-slate-300 space-y-2.5"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-xs font-black text-amber-600 uppercase">
+                  CHAMADA #{idx + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveHighlight(hl.id)}
+                  className="p-1 text-red-500 hover:text-red-700 hover:bg-red-500/10 rounded transition-colors"
+                  title="Remover Chamada"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-4">
+                  <Label className="text-[10px] font-bold">TAG / CATEGORIA</Label>
+                  <Input
+                    value={hl.tag}
+                    onChange={(e) => handleUpdateHighlight(hl.id, "tag", e.target.value.toUpperCase())}
+                    placeholder="Ex: HIPERTROFIA & CIÊNCIA"
+                    className="theme-app-input text-xs font-mono font-bold mt-1 border-2"
+                  />
+                </div>
+                <div className="sm:col-span-6">
+                  <Label className="text-[10px] font-bold">TÍTULO DA MATÉRIA NA CAPA</Label>
+                  <Input
+                    value={hl.title}
+                    onChange={(e) => handleUpdateHighlight(hl.id, "title", e.target.value)}
+                    placeholder="Título chamativo de alta legibilidade"
+                    className="theme-app-input text-xs font-bold mt-1 border-2"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label className="text-[10px] font-bold">PÁGINA</Label>
+                  <Input
+                    type="number"
+                    value={hl.pageTarget || ""}
+                    onChange={(e) => handleUpdateHighlight(hl.id, "pageTarget", parseInt(e.target.value) || 0)}
+                    placeholder="Ex: 3"
+                    className="theme-app-input text-xs font-mono font-bold mt-1 border-2"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 5. Main Cover Story Headline */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-          <Zap className="w-4 h-4 text-amber-500" />
-          <span>2. Destaque Principal & Manchetes</span>
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <span>Manchete Principal da Capa</span>
         </h3>
 
         <div>
@@ -246,7 +384,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           <Input
             value={coverConfig.categoryTag}
             onChange={(e) => updateField("categoryTag", e.target.value.toUpperCase())}
-            placeholder="Ex: SHARPEN UP ou COVER STORY"
+            placeholder="Ex: EXCLUSIVO ou COVER STORY"
             className="theme-app-input font-mono text-xs mt-1 border-2 text-amber-600 font-bold"
           />
         </div>
@@ -256,7 +394,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           <Input
             value={coverConfig.mainHeadline}
             onChange={(e) => updateField("mainHeadline", e.target.value.toUpperCase())}
-            placeholder="Ex: SHOULDER WORKOUT ou UNCONVENTIONAL STRENGTH"
+            placeholder="Ex: O CÓDIGO DA ALTA PERFORMANCE"
             className="theme-app-input font-black text-base mt-1 border-2"
           />
         </div>
@@ -266,18 +404,18 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           <Input
             value={coverConfig.subHeadline}
             onChange={(e) => updateField("subHeadline", e.target.value.toUpperCase())}
-            placeholder="Ex: BACK TO BASICS FOR SERIOUS DELT DEMOLITION"
+            placeholder="Ex: Como reprogramar o metabolismo e forjar disciplina inabalável."
             className="theme-app-input text-xs mt-1 border-2"
           />
         </div>
       </div>
 
-      {/* Photography & Subject Presets */}
+      {/* 6. Photography & Subject Presets */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
             <ImageIcon className="w-4 h-4 text-amber-500" />
-            <span>3. Fotografia Atlética & Fundo</span>
+            <span>Fotografia Atlética & Fundo</span>
           </h3>
           <Button
             size="sm"
