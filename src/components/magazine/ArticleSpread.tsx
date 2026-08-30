@@ -217,7 +217,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             // {title}
           </h4>
           <p
-            className={`${bodyTextSizeClass} text-justify ${bodyFontClass}`}
+            className={`${bodyTextSizeClass} text-left leading-relaxed ${bodyFontClass}`}
             style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
           >
             {renderInlineFormatted(body)}
@@ -230,7 +230,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     return (
       <p
         key={idx}
-        className={`${bodyTextSizeClass} text-justify ${bodyFontClass} ${
+        className={`${bodyTextSizeClass} text-left leading-relaxed ${bodyFontClass} ${
           enableDropCap
             ? "first-letter:text-3xl sm:first-letter:text-4xl first-letter:font-black first-letter:float-left first-letter:mr-2 first-letter:leading-none"
             : ""
@@ -616,7 +616,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                   </div>
 
                   <p
-                    className={`text-[9.5px] leading-tight mt-1.5 pt-1.5 border-t text-justify ${bodyFontClass}`}
+                    className={`text-[9.5px] leading-tight mt-1.5 pt-1.5 border-t text-left ${bodyFontClass}`}
                     style={{ borderColor: `${primaryColor}20`, color: isLight ? "#334155" : "#94A3B8" }}
                   >
                     {ex.keyPoints}

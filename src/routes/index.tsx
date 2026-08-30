@@ -389,9 +389,6 @@ function Index() {
             ))}
           </div>
 
-          {/* PWA Install Button */}
-          <PwaInstallPrompt variant="header" />
-
           <Button
             size="sm"
             onClick={() => setIsAiStudioOpen(true)}

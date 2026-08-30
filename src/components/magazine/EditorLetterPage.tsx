@@ -127,11 +127,11 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
               <FileText className="w-2.5 h-2.5" />
               <span>FICHA CATALOGRÁFICA (CIP) & TERMOS LEGAIS</span>
             </div>
-            <p className="text-[7.5px] font-mono leading-tight text-justify" style={{ color: textMutedColor }}>
+            <p className="text-[7.5px] font-mono leading-tight text-left" style={{ color: textMutedColor }}>
               {editorialInfo.catalogingData ||
                 "Dados Internacionais de Catalogação na Publicação (CIP): Revista Montanha / Editor-Chefe: Coach Montanha. São Paulo: Montanha Editorial, 2026. Publicação Mensal. CDD 613.71. Todos os direitos reservados."}
             </p>
-            <p className="text-[7px] font-mono leading-tight text-justify" style={{ color: isLight ? "#64748B" : "#64748B" }}>
+            <p className="text-[7px] font-mono leading-tight text-left" style={{ color: isLight ? "#64748B" : "#64748B" }}>
               {editorialInfo.disclaimerText ||
                 "AVISO LEGAL & MÉDICO: O conteúdo destina-se a fins informativos e educacionais. A prática de exercícios de alta intensidade exige avaliação médica prévia e acompanhamento profissional habilitado. © 2026 Montanha Media."}
             </p>
@@ -201,25 +201,38 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
             )}
           </div>
 
-          {/* Letter Body (2 Colunas Elegantes no Desktop/Print para leitura fluida) */}
-          <div
-            className={`grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-[11.5px] leading-relaxed text-justify flex-1 overflow-hidden ${bodyFontClass}`}
-            style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
-          >
-            {editorialInfo.editorLetter.split("\n\n").map((paragraph, idx) => (
-              <p
-                key={idx}
-                className={
-                  idx === 0
-                    ? "first-letter:text-3xl first-letter:font-black first-letter:float-left first-letter:mr-2 first-letter:leading-none first-letter:font-mono"
-                    : ""
-                }
-                style={idx === 0 ? ({ "--tw-first-letter-color": primaryColor } as any) : undefined}
+          {/* Letter Body (2 Colunas Sequenciais Contínuas: Coluna 1 do topo à base, depois Coluna 2) */}
+          {(() => {
+            const paragraphs = (editorialInfo.editorLetter || "")
+              .split("\n\n")
+              .map((p) => p.trim())
+              .filter(Boolean);
+            const half = Math.ceil(paragraphs.length / 2);
+            const leftCol = paragraphs.slice(0, half);
+            const rightCol = paragraphs.slice(half);
+
+            return (
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs sm:text-[11.5px] leading-relaxed text-left flex-1 overflow-hidden ${bodyFontClass}`}
+                style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
               >
-                {paragraph}
-              </p>
-            ))}
-          </div>
+                <div className="space-y-3">
+                  {leftCol.map((paragraph, idx) => (
+                    <p key={idx} className="leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+                <div className="space-y-3">
+                  {rightCol.map((paragraph, idx) => (
+                    <p key={idx} className="leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Bottom Signature & Sign-off */}
