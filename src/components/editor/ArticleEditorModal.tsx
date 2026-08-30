@@ -429,6 +429,23 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 <option value="infographic-tips">Guia Prático com Cards de Dicas Numeradas</option>
               </select>
             </div>
+
+            {/* Featured on Cover Switch */}
+            <div className="flex items-center justify-between p-2.5 rounded-lg border-2 theme-app-card-subtle">
+              <div className="space-y-0.5">
+                <span className="text-xs font-bold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  Destaque na Capa da Revista
+                </span>
+                <p className="text-[10px] opacity-75">
+                  Indexar automaticamente o título e categoria desta matéria na capa da edição
+                </p>
+              </div>
+              <Switch
+                checked={formData.featuredOnCover}
+                onCheckedChange={(val) => setFormData({ ...formData, featuredOnCover: val })}
+              />
+            </div>
           </div>
 
           {/* Right Column: Hero Image with ImagePicker & Quotes */}

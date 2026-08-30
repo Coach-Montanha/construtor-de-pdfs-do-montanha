@@ -611,6 +611,8 @@ function Index() {
           <div className="max-w-4xl mx-auto">
             <CoverCustomizer
               coverConfig={project.coverConfig}
+              articles={project.articles}
+              pageVisibility={project.pageVisibility}
               onChange={(updatedCover) =>
                 setProject({ ...project, coverConfig: updatedCover, updatedAt: new Date().toISOString() })
               }

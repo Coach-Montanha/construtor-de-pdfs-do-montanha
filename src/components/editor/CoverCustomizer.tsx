@@ -1,5 +1,11 @@
 import React from "react";
-import { CoverConfig, CoverHighlight, CoverStyleVariant, TextScalePreset } from "../../types/magazine";
+import {
+  Article,
+  CoverConfig,
+  CoverHighlight,
+  CoverStyleVariant,
+  TextScalePreset,
+} from "../../types/magazine";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
@@ -18,17 +24,31 @@ import {
   CheckCircle2,
   Sliders,
   Maximize2,
+  RefreshCw,
+  Zap,
+  Bookmark,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
-import { generateAiImageUrl } from "../../lib/ai-service";
 
 interface CoverCustomizerProps {
   coverConfig: CoverConfig;
   onChange: (updated: CoverConfig) => void;
+  articles?: Article[];
+  pageVisibility?: {
+    showCover?: boolean;
+    showEditorLetter?: boolean;
+    showContributors?: boolean;
+    showTableOfContents?: boolean;
+    showBackCover?: boolean;
+  };
 }
 
 export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
   coverConfig,
   onChange,
+  articles = [],
+  pageVisibility,
 }) => {
   const updateField = <K extends keyof CoverConfig>(field: K, value: CoverConfig[K]) => {
     onChange({
@@ -48,6 +68,77 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
   const handleAdjustScale = (delta: number) => {
     const newScale = Math.min(160, Math.max(80, (coverConfig.textScale || 100) + delta));
     updateField("textScale", newScale);
+  };
+
+  // Helper to compute calculated page number for each article
+  const getArticlePageNumber = (targetArticleId: string): number => {
+    let page = 1; // Cover is page 1
+    if (pageVisibility?.showEditorLetter !== false) page += 1;
+    if (pageVisibility?.showContributors) page += 1;
+    if (pageVisibility?.showTableOfContents !== false) page += 1;
+
+    const enabledArticles = articles.filter((a) => a.enabled !== false);
+    const artIndex = enabledArticles.findIndex((a) => a.id === targetArticleId);
+    return artIndex >= 0 ? page + artIndex : page;
+  };
+
+  // Auto-Index Highlights directly from project articles
+  const handleAutoIndexAllArticles = () => {
+    const activeArticles = articles.filter((a) => a.enabled !== false);
+    if (activeArticles.length === 0) {
+      alert("Nenhum artigo ativo encontrado no projeto.");
+      return;
+    }
+
+    const indexedHighlights: CoverHighlight[] = activeArticles.slice(0, 4).map((art, idx) => {
+      const pageNum = getArticlePageNumber(art.id);
+      return {
+        id: "hl-" + Date.now() + "-" + idx,
+        tag: art.category ? `// 0${idx + 1}. ${art.category}` : `// 0${idx + 1}. MATÉRIA`,
+        title: art.title,
+        authorCallout: art.author,
+        pageTarget: pageNum,
+      };
+    });
+
+    updateField("highlights", indexedHighlights);
+  };
+
+  // Link single highlight to a specific article
+  const handleLinkHighlightToArticle = (highlightId: string, articleId: string) => {
+    const art = articles.find((a) => a.id === articleId);
+    if (!art) return;
+
+    const pageNum = getArticlePageNumber(art.id);
+    const currentHlIndex = coverConfig.highlights.findIndex((h) => h.id === highlightId);
+    const numPrefix = currentHlIndex >= 0 ? `// 0${currentHlIndex + 1}. ` : "";
+
+    const updated = coverConfig.highlights.map((h) =>
+      h.id === highlightId
+        ? {
+            ...h,
+            tag: art.category ? `${numPrefix}${art.category}` : `${numPrefix}DOSSIER`,
+            title: art.title,
+            authorCallout: art.author,
+            pageTarget: pageNum,
+          }
+        : h
+    );
+    updateField("highlights", updated);
+  };
+
+  // Set Main Headline directly from an article
+  const handleSetMainHeadlineFromArticle = (articleId: string) => {
+    const art = articles.find((a) => a.id === articleId);
+    if (!art) return;
+
+    onChange({
+      ...coverConfig,
+      mainHeadline: art.title.toUpperCase(),
+      subHeadline: art.subtitle || (art.content ? art.content.slice(0, 110) + "..." : ""),
+      categoryTag: art.category || "EXCLUSIVO",
+      authorCallout: art.author ? art.author.toUpperCase() : "COACH MONTANHA",
+    });
   };
 
   const handleAddHighlight = () => {
@@ -161,12 +252,13 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                 }`}
               >
                 <span>{preset.label}</span>
+                <span className="font-mono text-[10px] opacity-75">{preset.scale}%</span>
               </button>
             );
           })}
         </div>
 
-        {/* Fine-Tuning Slider + Buttons */}
+        {/* Fine-Tuning Scale Slider with Step Buttons */}
         <div className="space-y-3 pt-2 border-t border-slate-200">
           <div className="flex items-center justify-between text-xs font-bold">
             <span className="flex items-center gap-1.5">
@@ -250,119 +342,255 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           <span>Identidade Visual & Masthead</span>
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-xs font-bold">MASTHEAD / TÍTULO DA REVISTA</Label>
+            <Label className="text-xs font-bold">NOME DA REVISTA (MASTHEAD)</Label>
             <Input
               value={coverConfig.mastheadText}
-              onChange={(e) => updateField("mastheadText", e.target.value)}
-              placeholder="Ex: MONTANHA ou montanha"
-              className="theme-app-input font-black text-lg mt-1 tracking-tight border-2 text-amber-600"
+              onChange={(e) => updateField("mastheadText", e.target.value.toUpperCase())}
+              placeholder="Ex: MONTANHA"
+              className="theme-app-input font-black text-base mt-1 border-2"
             />
           </div>
 
           <div>
-            <Label className="text-xs font-bold">SLOGAN / SUBTÍTULO INTEGRADO</Label>
+            <Label className="text-xs font-bold">SLOGAN / SUBTÍTULO DO LOGOTIPO</Label>
             <Input
-              value={coverConfig.sloganText || ""}
+              value={coverConfig.sloganText}
               onChange={(e) => updateField("sloganText", e.target.value.toUpperCase())}
-              placeholder="Ex: UNCONVENTIONAL STRENGTH & PERFORMANCE"
+              placeholder="Ex: UNCONVENTIONAL STRENGTH & HIGH PERFORMANCE"
+              className="theme-app-input text-xs mt-1 border-2"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div>
+            <Label className="text-xs font-bold">BADGE DE EDIÇÃO</Label>
+            <Input
+              value={coverConfig.issueBadge}
+              onChange={(e) => updateField("issueBadge", e.target.value.toUpperCase())}
+              placeholder="Ex: EDIÇÃO ESPECIAL // Nº 01"
+              className="theme-app-input font-mono text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">SELO DE PREÇO / CATEGORIA</Label>
+            <Input
+              value={coverConfig.priceBadge}
+              onChange={(e) => updateField("priceBadge", e.target.value.toUpperCase())}
+              placeholder="Ex: EDIÇÃO PREMIUM"
+              className="theme-app-input font-mono text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">DATA DE LANÇAMENTO</Label>
+            <Input
+              value={coverConfig.issueDate}
+              onChange={(e) => updateField("issueDate", e.target.value.toUpperCase())}
+              placeholder="Ex: SETEMBRO 2026"
               className="theme-app-input font-mono text-xs mt-1 border-2"
             />
           </div>
         </div>
 
-        {/* Technical Badging & Metadata */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-          <div>
-            <Label className="text-[11px] font-bold">BADGE VERTICAL / TÁTICO</Label>
-            <Input
-              value={coverConfig.issueBadge}
-              onChange={(e) => updateField("issueBadge", e.target.value.toUpperCase())}
-              placeholder="Ex: PRO EDITION ou ISSUE #01"
-              className="theme-app-input font-mono text-xs mt-1 border-2 text-amber-600 font-bold"
-            />
-          </div>
-          <div>
-            <Label className="text-[11px] font-bold">DATA / MÊS DA EDIÇÃO</Label>
-            <Input
-              value={coverConfig.issueDate}
-              onChange={(e) => updateField("issueDate", e.target.value)}
-              className="theme-app-input text-xs mt-1 border-2"
-            />
-          </div>
-          <div>
-            <Label className="text-[11px] font-bold">ESPECIFICAÇÃO / PREÇO</Label>
-            <Input
-              value={coverConfig.priceBadge}
-              onChange={(e) => updateField("priceBadge", e.target.value)}
-              className="theme-app-input text-xs mt-1 border-2"
-            />
-          </div>
-        </div>
-
-        {/* Toggles for Industrial Effects */}
-        {coverConfig.coverStyleVariant !== "peak-performance" && (
-          <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-slate-300 text-xs">
-            <div className="flex items-center gap-2">
+        {/* Tech Badges & Hazard Stripes toggles */}
+        {coverConfig.coverStyleVariant === "mad-methods" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold">Faixa Industrial Amarela (Hazard Stripe)</span>
               <Switch
                 checked={coverConfig.showHazardStripe}
                 onCheckedChange={(val) => updateField("showHazardStripe", val)}
               />
-              <span className="font-bold">Faixa de Advertência Industrial (Hazard Stripe)</span>
             </div>
-
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold">HUD Tático & Grid Técnico</span>
               <Switch
                 checked={coverConfig.showTechHud}
                 onCheckedChange={(val) => updateField("showTechHud", val)}
               />
-              <span className="font-bold">HUD Tático & Grid Técnico</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* 4. Side Highlights / Articles Presented on Cover */}
-      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between">
+      {/* 4. Main Cover Story Headline (Direct Indexing from Project Articles) */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>4. Manchete Principal da Capa (Cover Story)</span>
+            </h3>
+            <p className="text-xs opacity-75 mt-0.5">
+              Indexe diretamente da matéria principal da edição ou digite manualmente.
+            </p>
+          </div>
+
+          {/* Quick Selector from Project Articles */}
+          {articles.length > 0 && (
+            <div className="flex items-center gap-2 shrink-0">
+              <select
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleSetMainHeadlineFromArticle(e.target.value);
+                    e.target.value = "";
+                  }
+                }}
+                defaultValue=""
+                className="theme-app-input font-bold text-xs h-8 border-2 border-black rounded px-2 bg-white text-black cursor-pointer shadow-xs"
+              >
+                <option value="" disabled>
+                  ⚡ Puxar de uma Matéria...
+                </option>
+                {articles.map((art, idx) => (
+                  <option key={art.id} value={art.id}>
+                    Matéria #{idx + 1}: {art.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-xs font-bold">TAG DE CATEGORIA SUPERIOR</Label>
+            <Input
+              value={coverConfig.categoryTag}
+              onChange={(e) => updateField("categoryTag", e.target.value.toUpperCase())}
+              placeholder="Ex: EXCLUSIVO ou COVER STORY"
+              className="theme-app-input font-mono text-xs mt-1 border-2 text-amber-600 font-bold"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">AUTOR EM DESTAQUE NA MANCHETE</Label>
+            <Input
+              value={coverConfig.authorCallout || ""}
+              onChange={(e) => updateField("authorCallout", e.target.value.toUpperCase())}
+              placeholder="Ex: COACH MONTANHA"
+              className="theme-app-input font-mono text-xs mt-1 border-2 font-bold"
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label className="text-xs font-bold">MANCHETE PRINCIPAL (ALL CAPS)</Label>
+          <Input
+            value={coverConfig.mainHeadline}
+            onChange={(e) => updateField("mainHeadline", e.target.value.toUpperCase())}
+            placeholder="Ex: O CÓDIGO DA ALTA PERFORMANCE"
+            className="theme-app-input font-black text-base mt-1 border-2"
+          />
+        </div>
+
+        <div>
+          <Label className="text-xs font-bold">SUBTÍTULO DA MATÉRIA PRINCIPAL</Label>
+          <Input
+            value={coverConfig.subHeadline}
+            onChange={(e) => updateField("subHeadline", e.target.value)}
+            placeholder="Ex: Como reprogramar o metabolismo e forjar disciplina inabalável."
+            className="theme-app-input text-xs mt-1 border-2 font-medium"
+          />
+        </div>
+      </div>
+
+      {/* 5. Side Highlights / Articles Presented on Cover (Auto-Indexing & Live Link) */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
               <Maximize2 className="w-4 h-4 text-amber-500" />
-              <span>Chamadas Laterais & Artigos Apresentados na Capa</span>
+              <span>5. Chamadas Laterais & Artigos Apresentados na Capa</span>
             </h3>
             <p className="text-xs opacity-75 mt-0.5">
-              Defina os títulos das matérias em destaque que aparecem com fundo escuro de alto contraste na capa.
+              Indexe as matérias cadastradas para sincronizar títulos, tags e números exatos de página automaticamente.
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={handleAddHighlight}
-            className="h-8 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1 border border-black shadow-sm"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Adicionar Chamada</span>
-          </Button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {articles.length > 0 && (
+              <Button
+                size="sm"
+                onClick={handleAutoIndexAllArticles}
+                className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs flex items-center gap-1 border-2 border-black shadow-xs cursor-pointer"
+                title="Puxa todas as matérias cadastradas e calcula as páginas automaticamente"
+              >
+                <Zap className="w-3.5 h-3.5 text-black" />
+                <span>⚡ Auto-Indexar Matérias</span>
+              </Button>
+            )}
+
+            <Button
+              size="sm"
+              onClick={handleAddHighlight}
+              variant="outline"
+              className="h-8 font-black text-xs flex items-center gap-1 border-2 border-current shadow-xs cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Adicionar Manual</span>
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-3">
           {coverConfig.highlights.map((hl, idx) => (
             <div
               key={hl.id}
-              className="theme-app-card-subtle p-3.5 rounded-lg border-2 border-slate-300 space-y-2.5"
+              className="theme-app-card-subtle p-3.5 rounded-lg border-2 border-slate-300 space-y-2.5 shadow-xs"
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-xs font-black text-amber-600 uppercase">
-                  CHAMADA #{idx + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveHighlight(hl.id)}
-                  className="p-1 text-red-500 hover:text-red-700 hover:bg-red-500/10 rounded transition-colors"
-                  title="Remover Chamada"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-black text-amber-600 uppercase">
+                    CHAMADA #{idx + 1}
+                  </span>
+                  {hl.pageTarget ? (
+                    <span className="bg-black text-amber-400 font-mono text-[9px] font-black px-2 py-0.5 rounded border border-black uppercase">
+                      PÁG. {hl.pageTarget < 10 ? `0${hl.pageTarget}` : hl.pageTarget}
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Quick Link Dropdown */}
+                <div className="flex items-center gap-2">
+                  {articles.length > 0 && (
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleLinkHighlightToArticle(hl.id, e.target.value);
+                          e.target.value = "";
+                        }
+                      }}
+                      defaultValue=""
+                      className="theme-app-input text-[11px] font-bold h-7 border rounded px-1.5 bg-white text-black cursor-pointer"
+                    >
+                      <option value="" disabled>
+                        🔗 Vincular à Matéria...
+                      </option>
+                      {articles.map((art) => {
+                        const pageNum = getArticlePageNumber(art.id);
+                        return (
+                          <option key={art.id} value={art.id}>
+                            [Pág {pageNum < 10 ? `0${pageNum}` : pageNum}] {art.title}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveHighlight(hl.id)}
+                    className="p-1 text-red-500 hover:text-red-700 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                    title="Remover Chamada"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -371,7 +599,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                   <Input
                     value={hl.tag}
                     onChange={(e) => handleUpdateHighlight(hl.id, "tag", e.target.value.toUpperCase())}
-                    placeholder="Ex: HIPERTROFIA & CIÊNCIA"
+                    placeholder="Ex: // 01. BALÍSTICA & POTÊNCIA"
                     className="theme-app-input text-xs font-mono font-bold mt-1 border-2"
                   />
                 </div>
@@ -397,44 +625,6 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* 5. Main Cover Story Headline */}
-      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
-        <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-amber-500" />
-          <span>Manchete Principal da Capa</span>
-        </h3>
-
-        <div>
-          <Label className="text-xs font-bold">TAG DE CATEGORIA SUPERIOR</Label>
-          <Input
-            value={coverConfig.categoryTag}
-            onChange={(e) => updateField("categoryTag", e.target.value.toUpperCase())}
-            placeholder="Ex: EXCLUSIVO ou COVER STORY"
-            className="theme-app-input font-mono text-xs mt-1 border-2 text-amber-600 font-bold"
-          />
-        </div>
-
-        <div>
-          <Label className="text-xs font-bold">MANCHETE PRINCIPAL (ALL CAPS)</Label>
-          <Input
-            value={coverConfig.mainHeadline}
-            onChange={(e) => updateField("mainHeadline", e.target.value.toUpperCase())}
-            placeholder="Ex: O CÓDIGO DA ALTA PERFORMANCE"
-            className="theme-app-input font-black text-base mt-1 border-2"
-          />
-        </div>
-
-        <div>
-          <Label className="text-xs font-bold">SUBTÍTULO DA MATÉRIA PRINCIPAL</Label>
-          <Input
-            value={coverConfig.subHeadline}
-            onChange={(e) => updateField("subHeadline", e.target.value.toUpperCase())}
-            placeholder="Ex: Como reprogramar o metabolismo e forjar disciplina inabalável."
-            className="theme-app-input text-xs mt-1 border-2"
-          />
         </div>
       </div>
 
@@ -558,4 +748,3 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
     </div>
   );
 };
-
