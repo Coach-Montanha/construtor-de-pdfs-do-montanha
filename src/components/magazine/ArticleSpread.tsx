@@ -110,7 +110,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     // Bold title + paragraph block
     if (chunk.startsWith("**") && chunk.includes("**\n")) {
       const parts = chunk.split("**\n");
-      const title = parts[0].replace(/\*\*/g, "");
+      const title = (parts[0] ?? "").replace(/\*\*/g, "");
       const body = parts.slice(1).join("\n");
       return (
         <div key={idx} className="my-1.5">

@@ -652,7 +652,7 @@ function Index() {
             <CoverCustomizer
               coverConfig={project.coverConfig}
               articles={project.articles}
-              pageVisibility={project.pageVisibility}
+              pageVisibility={project.pageVisibility ?? {}}
               onChange={(updatedCover) =>
                 setProject({ ...project, coverConfig: updatedCover, updatedAt: new Date().toISOString() })
               }
