@@ -95,20 +95,60 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
   project.articles
     .filter((art) => art.enabled !== false)
     .forEach((art) => {
-      activePages.push({
-        id: art.id,
-        title: art.title,
-        render: (pNum, isPrint) => (
-          <ArticleSpread
-            key={art.id}
-            article={art}
-            project={project}
-            theme={theme}
-            pageNumber={pNum}
-            isPrintMode={isPrint ?? false}
-          />
-        ),
-      });
+      const isTwoPage = art.pageSpan === 2;
+      if (isTwoPage) {
+        // Page Part 1
+        activePages.push({
+          id: `${art.id}-part1`,
+          title: `${art.title} (Parte 1)`,
+          render: (pNum, isPrint) => (
+            <ArticleSpread
+              key={`${art.id}-part1`}
+              article={art}
+              project={project}
+              theme={theme}
+              pageNumber={pNum}
+              isPrintMode={isPrint ?? false}
+              pagePart={1}
+              totalPagesForArticle={2}
+            />
+          ),
+        });
+        // Page Part 2
+        activePages.push({
+          id: `${art.id}-part2`,
+          title: `${art.title} (Parte 2)`,
+          render: (pNum, isPrint) => (
+            <ArticleSpread
+              key={`${art.id}-part2`}
+              article={art}
+              project={project}
+              theme={theme}
+              pageNumber={pNum}
+              isPrintMode={isPrint ?? false}
+              pagePart={2}
+              totalPagesForArticle={2}
+            />
+          ),
+        });
+      } else {
+        activePages.push({
+          id: art.id,
+          title: art.title,
+          render: (pNum, isPrint) => (
+            <ArticleSpread
+              key={art.id}
+              article={art}
+              project={project}
+              theme={theme}
+              pageNumber={pNum}
+              isPrintMode={isPrint ?? false}
+              pagePart={1}
+              totalPagesForArticle={1}
+            />
+          ),
+        });
+      }
     });
 
   if (visibility.showBackCover) {

@@ -430,6 +430,30 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </select>
             </div>
 
+            {/* Extension / Page Span (1 Page vs 2 Pages Spread) */}
+            <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold flex items-center gap-1.5">
+                  <Layout className="w-3.5 h-3.5 text-amber-500" />
+                  <span>EXTENSÃO DO ARTIGO NA REVISTA</span>
+                </Label>
+                <span className="text-[10px] font-mono font-bold text-amber-600 uppercase">
+                  {formData.pageSpan === 2 ? "2 PÁGINAS (DUPLA)" : "1 PÁGINA A4"}
+                </span>
+              </div>
+              <select
+                value={formData.pageSpan || 1}
+                onChange={(e) => setFormData({ ...formData, pageSpan: parseInt(e.target.value) as 1 | 2 })}
+                className="w-full theme-app-input text-xs font-bold border-2 p-1.5 rounded"
+              >
+                <option value={1}>1 Página A4 (Artigo Padrão)</option>
+                <option value={2}>2 Páginas A4 (Matéria Longa / Página Dupla Especial)</option>
+              </select>
+              <p className="text-[10px] opacity-75 leading-tight">
+                Use 2 Páginas para matérias principais extensas, permitindo ler todo o texto com fotos maiores e diagramação espaçosa.
+              </p>
+            </div>
+
             {/* Featured on Cover Switch */}
             <div className="flex items-center justify-between p-2.5 rounded-lg border-2 theme-app-card-subtle">
               <div className="space-y-0.5">
@@ -498,6 +522,24 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 className="theme-app-input text-xs mt-1 border"
               />
             </div>
+
+            {/* Secondary Image for 2-Page Spreads */}
+            {formData.pageSpan === 2 && (
+              <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2 bg-amber-400/5">
+                <Label className="text-xs font-bold flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
+                  <span>FOTO SECUNDÁRIA (PARTE 2 / PÁGINA DUPLA)</span>
+                </Label>
+                <ImagePicker
+                  label="Segunda Imagem Editorial"
+                  value={formData.secondaryImage || ""}
+                  onChange={(url) => setFormData({ ...formData, secondaryImage: url })}
+                  aspectRatio="landscape"
+                  placeholderPrompt="Fotografia complementar de apoio em alta resolução..."
+                  helperText="Exibida no topo da 2ª página da matéria dupla"
+                />
+              </div>
+            )}
 
             {/* Pull Quotes Manager */}
             <div className="theme-app-card-subtle p-3.5 rounded-lg border-2 space-y-2">

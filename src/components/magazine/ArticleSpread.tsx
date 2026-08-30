@@ -18,6 +18,7 @@ import {
   Building,
   Target,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 
 interface ArticleSpreadProps {
@@ -26,6 +27,8 @@ interface ArticleSpreadProps {
   theme: MagazineTheme;
   pageNumber: number;
   isPrintMode?: boolean;
+  pagePart?: 1 | 2; // For 2-page spreads (Part 1 or Part 2)
+  totalPagesForArticle?: 1 | 2;
 }
 
 export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
@@ -34,6 +37,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   theme,
   pageNumber,
   isPrintMode = false,
+  pagePart = 1,
+  totalPagesForArticle = article.pageSpan || 1,
 }) => {
   const isWorkout = article.layoutTemplate === "workout-protocol";
   const isProductAd = article.layoutTemplate === "product-ad";
@@ -58,18 +63,31 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
   // Dynamic Text Density / Font Sizing
   const density = article.textDensity || "normal";
+  const isTwoPage = totalPagesForArticle === 2;
+
   const bodyTextSizeClass =
     density === "compact"
-      ? "text-[9.5px] leading-snug sm:text-[10px] sm:leading-snug mb-2"
+      ? "text-[9px] leading-tight sm:text-[9.5px] sm:leading-snug mb-1.5"
       : density === "spacious"
-      ? "text-[12px] leading-relaxed sm:text-[12.5px] sm:leading-relaxed mb-3"
-      : "text-[10.5px] leading-snug sm:text-[11px] sm:leading-normal mb-2.5";
+      ? "text-[11.5px] leading-relaxed sm:text-[12px] sm:leading-relaxed mb-2.5"
+      : isTwoPage
+      ? "text-[11px] leading-relaxed sm:text-[11.5px] sm:leading-relaxed mb-2.5"
+      : "text-[10px] leading-snug sm:text-[10.5px] sm:leading-snug mb-2";
 
   // Split content into clean paragraph chunks
-  const rawChunks = (article.content || "")
+  const allRawChunks = (article.content || "")
     .split("\n\n")
     .map((c) => c.trim())
     .filter(Boolean);
+
+  // Determine chunks for this page part
+  let pageChunks: string[] = [];
+  if (isTwoPage) {
+    const half = Math.ceil(allRawChunks.length / 2);
+    pageChunks = pagePart === 1 ? allRawChunks.slice(0, half) : allRawChunks.slice(half);
+  } else {
+    pageChunks = allRawChunks;
+  }
 
   // Render individual paragraph chunks with markdown support
   const renderSingleChunk = (chunk: string, idx: number, isFirstOverall: boolean) => {
@@ -77,9 +95,9 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     if (chunk.startsWith("### ") || chunk.startsWith("## ")) {
       const cleanTitle = chunk.replace(/^#+\s*/, "");
       return (
-        <div key={idx} className="mt-2.5 mb-1 pb-0.5 border-b" style={{ borderColor: `${primaryColor}50` }}>
+        <div key={idx} className="mt-2 mb-1 pb-0.5 border-b" style={{ borderColor: `${primaryColor}50` }}>
           <h4
-            className={`text-[11px] sm:text-xs font-black uppercase tracking-tight flex items-center gap-1 ${headlineFontClass}`}
+            className={`text-[10.5px] sm:text-[11px] font-black uppercase tracking-tight flex items-center gap-1 ${headlineFontClass}`}
             style={{ color: primaryColor }}
           >
             <span>//</span>
@@ -95,9 +113,9 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       const title = parts[0].replace(/\*\*/g, "");
       const body = parts.slice(1).join("\n");
       return (
-        <div key={idx} className="my-2">
+        <div key={idx} className="my-1.5">
           <h4
-            className={`text-[10.5px] sm:text-[11px] font-black uppercase mb-0.5 ${headlineFontClass}`}
+            className={`text-[10px] sm:text-[10.5px] font-black uppercase mb-0.5 ${headlineFontClass}`}
             style={{ color: primaryColor }}
           >
             // {title}
@@ -112,7 +130,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       );
     }
 
-    const enableDropCap = isFirstOverall;
+    const enableDropCap = isFirstOverall && pagePart === 1;
     return (
       <p
         key={idx}
@@ -128,28 +146,21 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     );
   };
 
-  // Divide chunks evenly across 2 columns so text NEVER overflows or disappears
+  // Divide this page's chunks across 2 columns
+  const halfCol = Math.ceil(pageChunks.length / 2);
+  const leftChunks = pageChunks.slice(0, halfCol);
+  const rightChunks = pageChunks.slice(halfCol);
+
+  // Quote & Takeaways visibility
   const hasPullQuote = article.pullQuotes && article.pullQuotes.length > 0;
   const hasTakeaways = article.keyTakeaways && article.keyTakeaways.length > 0;
-
-  let leftChunks: string[] = [];
-  let rightChunks: string[] = [];
-
-  if (rawChunks.length <= 2) {
-    leftChunks = rawChunks;
-    rightChunks = [];
-  } else {
-    // If there is a quote in column 2, allocate slightly more text to column 1
-    const splitIndex = hasPullQuote
-      ? Math.max(1, Math.ceil(rawChunks.length * 0.55))
-      : Math.max(1, Math.ceil(rawChunks.length * 0.5));
-    leftChunks = rawChunks.slice(0, splitIndex);
-    rightChunks = rawChunks.slice(splitIndex);
-  }
+  const showQuoteOnThisPage = hasPullQuote && (!isTwoPage || pagePart === 2);
+  const showTakeawaysOnThisPage = hasTakeaways && (!isTwoPage || pagePart === 2);
 
   // Hero Image layout styling
   const heroLayout = article.heroImageLayout || "banner";
-  const showHeroImage = article.heroImage && heroLayout !== "hidden";
+  const showHeroImage = article.heroImage && heroLayout !== "hidden" && pagePart === 1;
+  const showSecondaryImage = article.secondaryImage && isTwoPage && pagePart === 2;
 
   return (
     <div
@@ -167,7 +178,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
       {/* Top Header Block */}
       <div
-        className="relative z-10 border-b-2 pb-2 flex items-center justify-between text-[10px] font-mono shrink-0"
+        className="relative z-10 border-b-2 pb-1.5 flex items-center justify-between text-[10px] font-mono shrink-0"
         style={{ borderColor: primaryColor }}
       >
         <div className="flex items-center gap-2">
@@ -181,6 +192,11 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           >
             {article.category || "MONTANHA DOSSIER"}
           </span>
+          {isTwoPage && (
+            <span className="font-mono text-[8.5px] font-bold opacity-75 hidden sm:inline">
+              // PARTE {pagePart} DE 2
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3 font-bold uppercase" style={{ color: textMutedColor }}>
           <span className="flex items-center gap-1">
@@ -192,12 +208,11 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         </div>
       </div>
 
-      {/* Main Page Content Area depending on template */}
+      {/* Main Page Content Area */}
       <div className="relative z-10 flex-1 flex flex-col justify-between my-2 overflow-hidden">
         {/* ----------------- 1. TEMPLATE: FULL-PAGE PRODUCT / GEAR AD ----------------- */}
         {isProductAd ? (
           <div className="flex-1 flex flex-col justify-between space-y-3">
-            {/* Massive Display Slogan */}
             <div className="text-center pt-1 border-b pb-2" style={{ borderColor: `${primaryColor}40` }}>
               <span
                 className="text-[9px] font-mono font-black tracking-[0.3em] uppercase block mb-1"
@@ -213,7 +228,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </h2>
             </div>
 
-            {/* Central High-Impact Product Imagery */}
             <div
               className="relative flex-1 min-h-[160px] sm:min-h-[190px] rounded-lg overflow-hidden border-2 shadow-xl group"
               style={{ borderColor: `${primaryColor}60` }}
@@ -225,7 +239,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
 
-              {/* Promotional Badge */}
               <div
                 className="absolute top-3 right-3 px-3 py-1.5 rounded-sm shadow-lg font-mono font-black text-[10px] sm:text-xs uppercase tracking-tight flex items-center gap-1.5"
                 style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
@@ -234,7 +247,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                 <span>{promo?.promoBadgeText || "SPECIAL OFFER // 15% OFF"}</span>
               </div>
 
-              {/* Product Name */}
               <div className="absolute bottom-3 inset-x-4">
                 <h3 className={`text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-lg ${headlineFontClass}`}>
                   {promo?.productName || article.title}
@@ -245,7 +257,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             </div>
 
-            {/* Technical Spec Badges */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {(promo?.specBadges || [
                 { title: "GRAVITY CAST", subtitle: "Single pour ductile iron" },
@@ -268,7 +279,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               ))}
             </div>
 
-            {/* Conversion CTA Module */}
             <div
               className="p-3 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg border-2"
               style={{ backgroundColor: cardBg, borderColor: primaryColor }}
@@ -309,7 +319,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         ) : isFacilitySpotlight ? (
           /* ----------------- 2. TEMPLATE: STUDIO / FACILITY SPOTLIGHT ----------------- */
           <div className="flex-1 flex flex-col justify-between space-y-3">
-            {/* Top Multi-Photo Collage */}
             <div className="grid grid-cols-3 gap-2 h-28 sm:h-36">
               {(facility?.galleryPhotos && facility.galleryPhotos.length > 0
                 ? facility.galleryPhotos
@@ -339,7 +348,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               ))}
             </div>
 
-            {/* Split Grid */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 overflow-hidden">
               <div
                 className="md:col-span-4 p-3 rounded-lg border space-y-2 flex flex-col justify-between"
@@ -392,7 +400,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                 </div>
               </div>
 
-              {/* Right Narrative */}
               <div className="md:col-span-8 flex flex-col justify-between space-y-2 overflow-hidden">
                 <div>
                   <h3
@@ -402,7 +409,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                     {article.title}
                   </h3>
                   <div className="space-y-1.5">
-                    {rawChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
+                    {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
                   </div>
                 </div>
 
@@ -419,7 +426,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         ) : isWorkout ? (
           /* ----------------- 3. TEMPLATE: WORKOUT PROTOCOL ----------------- */
           <div className="flex-1 flex flex-col justify-between space-y-3">
-            {/* Protocol Header */}
             <div className="space-y-2">
               <div
                 className="flex items-center justify-between border-b pb-1.5"
@@ -439,7 +445,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                 </div>
               </div>
 
-              {/* Warm-Up Box */}
               <div
                 className="p-2.5 rounded-lg border flex items-center gap-3 text-xs"
                 style={{ backgroundColor: cardBg, borderColor: `${primaryColor}40` }}
@@ -456,7 +461,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             </div>
 
-            {/* Exercise Clusters Matrix */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1 overflow-hidden">
               {(protocol?.exercises || [
                 {
@@ -525,7 +529,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               ))}
             </div>
 
-            {/* Bottom Finisher */}
             <div
               className="p-2.5 rounded-lg border flex items-center justify-between gap-3 shadow-sm"
               style={{ backgroundColor: cardBg, borderColor: primaryColor }}
@@ -558,46 +561,53 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             </div>
           </div>
         ) : (
-          /* ----------------- 4. TEMPLATE: HIGH-CAPACITY TWO-COLUMN EDITORIAL SPREAD ----------------- */
+          /* ----------------- 4. TEMPLATE: EDITORIAL ARTICLE SPREAD ----------------- */
           <div className="flex-1 flex flex-col justify-between space-y-2.5 overflow-hidden">
-            {/* 1. Article Header (Title, Subtitle, Author Strip) */}
-            <div className="shrink-0">
-              <h2
-                className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight leading-[0.95] mb-1 ${headlineFontClass}`}
-                style={{ color: textColor }}
-              >
-                {article.title}
-              </h2>
-              {article.subtitle && (
-                <p className={`text-[11px] sm:text-xs font-semibold leading-snug mb-1.5 ${bodyFontClass}`} style={{ color: primaryColor }}>
-                  {article.subtitle}
-                </p>
-              )}
+            {/* Header Area (Part 1: Title, Subtitle, Author / Part 2: Continuing Header) */}
+            {pagePart === 1 ? (
+              <div className="shrink-0">
+                <h2
+                  className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight leading-[0.95] mb-1 ${headlineFontClass}`}
+                  style={{ color: textColor }}
+                >
+                  {article.title}
+                </h2>
+                {article.subtitle && (
+                  <p className={`text-[11px] sm:text-xs font-semibold leading-snug mb-1.5 ${bodyFontClass}`} style={{ color: primaryColor }}>
+                    {article.subtitle}
+                  </p>
+                )}
 
-              {/* Author Metadata Strip */}
-              <div
-                className="flex items-center justify-between pt-1 border-t text-[8.5px] sm:text-[9px] font-mono"
-                style={{ borderColor: `${primaryColor}30`, color: textMutedColor }}
-              >
-                <div className="flex items-center gap-2">
-                  {article.authorPhoto ? (
-                    <img
-                      src={article.authorPhoto}
-                      alt={article.author}
-                      className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover border"
-                      style={{ borderColor: primaryColor }}
-                    />
-                  ) : (
-                    <User className="w-3.5 h-3.5" style={{ color: primaryColor }} />
-                  )}
-                  <span className="font-bold uppercase" style={{ color: textColor }}>{article.author}</span>
-                  {article.authorBio && <span>• {article.authorBio}</span>}
+                {/* Author Metadata Strip */}
+                <div
+                  className="flex items-center justify-between pt-1 border-t text-[8.5px] sm:text-[9px] font-mono"
+                  style={{ borderColor: `${primaryColor}30`, color: textMutedColor }}
+                >
+                  <div className="flex items-center gap-2">
+                    {article.authorPhoto ? (
+                      <img
+                        src={article.authorPhoto}
+                        alt={article.author}
+                        className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover border"
+                        style={{ borderColor: primaryColor }}
+                      />
+                    ) : (
+                      <User className="w-3.5 h-3.5" style={{ color: primaryColor }} />
+                    )}
+                    <span className="font-bold uppercase" style={{ color: textColor }}>{article.author}</span>
+                    {article.authorBio && <span>• {article.authorBio}</span>}
+                  </div>
+                  <span className="font-bold uppercase" style={{ color: primaryColor }}>{project.title} EDITORIAL</span>
                 </div>
-                <span className="font-bold uppercase" style={{ color: primaryColor }}>{project.title} EDITORIAL</span>
               </div>
-            </div>
+            ) : (
+              <div className="shrink-0 flex items-center justify-between border-b pb-1 text-xs font-mono font-black" style={{ borderColor: `${primaryColor}40` }}>
+                <span className="uppercase text-amber-500">// {article.title} (PARTE 2 // CONCLUSÃO)</span>
+                <span className="text-[9px] opacity-75 font-semibold uppercase">{article.author}</span>
+              </div>
+            )}
 
-            {/* 2. Hero Image Banner (Preserves natural framing with contain / cover options) */}
+            {/* Hero Image (Part 1) */}
             {showHeroImage && (
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-xs ${
@@ -624,49 +634,72 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* 3. True Two-Column Fluid Narrative Flow (Never cuts off text!) */}
+            {/* Secondary Image (Part 2 if available) */}
+            {showSecondaryImage && (
+              <div
+                className="relative w-full h-28 sm:h-36 rounded-md overflow-hidden border shrink-0 shadow-xs"
+                style={{ borderColor: `${primaryColor}40` }}
+              >
+                <img
+                  src={article.secondaryImage}
+                  alt="Foto Secundária"
+                  className="w-full h-full object-cover object-center filter contrast-110 brightness-95"
+                />
+                {article.secondaryImageCaption && (
+                  <div className="absolute bottom-1 right-2 bg-black/80 px-2 py-0.5 rounded text-[7.5px] font-mono text-white">
+                    {article.secondaryImageCaption}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* True Two-Column Fluid Narrative Flow */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 flex-1 overflow-hidden">
-              {/* Column 1 (Left): First Half of Paragraphs */}
+              {/* Column 1 (Left): First Half */}
               <div className="flex flex-col justify-start overflow-hidden">
                 {leftChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
               </div>
 
-              {/* Column 2 (Right): Pull Quote Card + Second Half of Paragraphs */}
-              <div className="flex flex-col justify-between overflow-hidden space-y-2">
-                {/* Pull Quote Box (if available) */}
-                {hasPullQuote && (
+              {/* Column 2 (Right): Second Half */}
+              <div className="flex flex-col justify-start overflow-hidden">
+                {rightChunks.map((chunk, idx) => renderSingleChunk(chunk, idx + leftChunks.length, false))}
+              </div>
+            </div>
+
+            {/* Bottom Inset: Pull Quote & Key Takeaways AT THE END OF THE ARTICLE */}
+            {(showQuoteOnThisPage || showTakeawaysOnThisPage) && (
+              <div className="shrink-0 space-y-2 pt-1 border-t" style={{ borderColor: `${primaryColor}30` }}>
+                {/* Pull Quote placed cleanly at the end/conclusion of article */}
+                {showQuoteOnThisPage && (
                   <div
-                    className="p-2.5 rounded-lg border shadow-xs shrink-0"
+                    className="p-2.5 rounded-lg border shadow-xs flex items-center gap-3"
                     style={{ backgroundColor: cardBg, borderColor: primaryColor }}
                   >
-                    <Quote className="w-3.5 h-3.5 mb-0.5" style={{ color: primaryColor }} />
-                    <p className={`text-[11px] sm:text-xs font-black italic leading-snug ${headlineFontClass}`} style={{ color: primaryColor }}>
-                      "{article.pullQuotes![0]}"
-                    </p>
-                    <span className="text-[7.5px] font-mono uppercase block mt-1 text-right" style={{ color: textMutedColor }}>
-                      — {article.author}
-                    </span>
+                    <Quote className="w-5 h-5 shrink-0" style={{ color: primaryColor }} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[11px] sm:text-xs font-black italic leading-snug ${headlineFontClass}`} style={{ color: primaryColor }}>
+                        "{article.pullQuotes![0]}"
+                      </p>
+                      <span className="text-[7.5px] font-mono uppercase block text-right mt-0.5" style={{ color: textMutedColor }}>
+                        — {article.author}
+                      </span>
+                    </div>
                   </div>
                 )}
 
-                {/* Remaining Paragraphs (Flowing naturally below the quote) */}
-                <div className="flex-1 overflow-hidden">
-                  {rightChunks.map((chunk, idx) => renderSingleChunk(chunk, idx + leftChunks.length, false))}
-                </div>
-
                 {/* Key Takeaways Box (if available) */}
-                {hasTakeaways && (
+                {showTakeawaysOnThisPage && (
                   <div
-                    className="p-2 rounded-lg border space-y-1 shrink-0"
+                    className="p-2 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                     style={{ backgroundColor: cardBg, borderColor: `${primaryColor}40` }}
                   >
-                    <div className="flex items-center gap-1 text-[8.5px] font-mono font-black uppercase" style={{ color: primaryColor }}>
-                      <Lightbulb className="w-3 h-3" />
+                    <div className="flex items-center gap-1 text-[8.5px] font-mono font-black uppercase shrink-0" style={{ color: primaryColor }}>
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
                       <span>PONTOS-CHAVE:</span>
                     </div>
-                    <ul className={`text-[9px] space-y-0.5 ${bodyFontClass}`} style={{ color: isLight ? "#334155" : "#CBD5E1" }}>
-                      {article.keyTakeaways!.slice(0, 2).map((takeaway, idx) => (
-                        <li key={idx} className="flex items-start gap-1 leading-tight">
+                    <ul className={`text-[9px] flex flex-wrap gap-x-3 gap-y-1 ${bodyFontClass}`} style={{ color: isLight ? "#334155" : "#CBD5E1" }}>
+                      {article.keyTakeaways!.slice(0, 3).map((takeaway, idx) => (
+                        <li key={idx} className="flex items-center gap-1 leading-tight">
                           <span style={{ color: primaryColor }}>▸</span>
                           <span>{takeaway}</span>
                         </li>
@@ -675,7 +708,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                   </div>
                 )}
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
@@ -685,7 +718,14 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         className="relative z-10 border-t pt-1.5 flex items-center justify-between text-[9px] font-mono font-bold uppercase shrink-0"
         style={{ borderColor: `${primaryColor}40`, color: textMutedColor }}
       >
-        <span>{project.title} • {project.coverConfig?.editionNumber || project.editionNumber ? `ED. #${project.coverConfig?.editionNumber || project.editionNumber}` : "ED. #01"}</span>
+        <div className="flex items-center gap-2">
+          <span>{project.title} • {project.coverConfig?.editionNumber || project.editionNumber ? `ED. #${project.coverConfig?.editionNumber || project.editionNumber}` : "ED. #01"}</span>
+          {isTwoPage && pagePart === 1 && (
+            <span className="text-amber-500 font-black animate-pulse">
+              (CONTINUA NA PÁGINA {(pageNumber + 1) < 10 ? `0${pageNumber + 1}` : pageNumber + 1} ▸)
+            </span>
+          )}
+        </div>
         <span
           className="px-2 py-0.5 rounded border font-bold"
           style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
