@@ -20,6 +20,10 @@ import { ArticleSpread } from "../components/magazine/ArticleSpread";
 import { BackCoverPage } from "../components/magazine/BackCoverPage";
 import { PwaInstallPrompt } from "../components/pwa/PwaInstallPrompt";
 import { ContentRepositoryView } from "../components/repository/ContentRepositoryView";
+import { ImportFromRepositoryModal } from "../components/repository/ImportFromRepositoryModal";
+import { AiApprovalModal } from "../components/repository/AiApprovalModal";
+import { analyzeAndDiagramEditorialText, EditorialAnalysisResult } from "../lib/ai-service";
+import { RepositoryDocument } from "../types/magazine";
 import {
   Sparkles,
   BookOpen,
@@ -73,6 +77,13 @@ function Index() {
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
+
+  // Repository Import State
+  const [isImportFromRepoOpen, setIsImportFromRepoOpen] = useState<boolean>(false);
+  const [repoAnalysisResult, setRepoAnalysisResult] = useState<EditorialAnalysisResult | null>(null);
+  const [selectedRepoDoc, setSelectedRepoDoc] = useState<RepositoryDocument | null>(null);
+  const [isRepoApprovalOpen, setIsRepoApprovalOpen] = useState<boolean>(false);
+  const [isRepoAnalyzing, setIsRepoAnalyzing] = useState<boolean>(false);
 
   // Initial Load from Cloud API / URL / Local Storage
   useEffect(() => {
@@ -200,6 +211,63 @@ function Index() {
   const handleEditArticle = (article: Article) => {
     setEditingArticle(article);
     setIsArticleModalOpen(true);
+  };
+
+  // Repository Import Handlers
+  const handleImportWithAiFromRepo = async (doc: RepositoryDocument) => {
+    setIsRepoAnalyzing(true);
+    setSelectedRepoDoc(doc);
+    try {
+      const result = await analyzeAndDiagramEditorialText(doc.rawContent, project.geminiApiKey);
+      setRepoAnalysisResult(result);
+      setIsRepoApprovalOpen(true);
+    } catch (err: any) {
+      alert("Erro na análise por IA: " + err.message);
+    } finally {
+      setIsRepoAnalyzing(false);
+    }
+  };
+
+  const handleImportDirectFromRepo = (doc: RepositoryDocument) => {
+    const newArt: Article = {
+      id: "art-" + Date.now(),
+      title: doc.title,
+      subtitle: "Artigo importado do acervo editorial.",
+      category: doc.category || "MONTANHA METHOD",
+      author: "Coach Montanha",
+      authorBio: "Master Coach & Fundador",
+      authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
+      heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+      heroImageCaption: "Foto editorial // Montanha Media",
+      content: doc.rawContent,
+      pullQuotes: [],
+      keyTakeaways: [],
+      layoutTemplate: doc.wordCount > 550 ? "editorial-lead" : "two-column-quote",
+      pageSpan: doc.wordCount > 550 ? 2 : 1,
+      quotePlacement: "end",
+      textDensity: "normal",
+      tags: [doc.category || "Geral", "Alta Performance"],
+      estimatedReadTime: Math.max(1, Math.round(doc.wordCount / 130)),
+      featuredOnCover: false,
+      enabled: true,
+    };
+    setEditingArticle(newArt);
+    setIsArticleModalOpen(true);
+  };
+
+  const handleApproveRepoArticle = (approvedArt: Article, sourceDocId?: string) => {
+    const updatedArticles = [...project.articles, approvedArt];
+    const updatedDocs = sourceDocId && project.contentRepository
+      ? project.contentRepository.map((d) => (d.id === sourceDocId ? { ...d, status: "published" as const } : d))
+      : project.contentRepository;
+
+    setProject({
+      ...project,
+      articles: updatedArticles,
+      contentRepository: updatedDocs,
+      updatedAt: new Date().toISOString(),
+    });
+    alert(`✓ Matéria "${approvedArt.title}" importada e diagramada com sucesso na revista!`);
   };
 
   // Dynamic active page visibility calculation
@@ -544,10 +612,17 @@ function Index() {
                   Organize a sequência das páginas, adicione novos textos ou use a IA para redigir matérias completas.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() => setIsImportFromRepoOpen(true)}
+                  className="h-9 bg-black hover:bg-slate-900 text-white font-black text-xs flex items-center gap-1.5 border-2 border-black cursor-pointer shadow-xs"
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Importar do Acervo ({project.contentRepository?.length || 0})</span>
+                </Button>
                 <Button
                   onClick={() => setIsAiStudioOpen(true)}
-                  className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 border-2 border-black cursor-pointer"
+                  className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 border-2 border-black cursor-pointer shadow-xs"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   <span>Gerar Matéria com IA</span>
@@ -555,7 +630,7 @@ function Index() {
                 <Button
                   variant="outline"
                   onClick={handleOpenNewArticle}
-                  className="h-9 font-bold text-xs flex items-center gap-1.5 border-2 border-current cursor-pointer"
+                  className="h-9 font-bold text-xs flex items-center gap-1.5 border-2 border-current cursor-pointer shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5 text-amber-500" />
                   <span>Adicionar Manualmente</span>
@@ -738,6 +813,27 @@ function Index() {
         onClose={() => setIsCloudSyncOpen(false)}
         project={project}
         onUpdateProject={(up) => setProject(up)}
+      />
+
+      <ImportFromRepositoryModal
+        isOpen={isImportFromRepoOpen}
+        onClose={() => setIsImportFromRepoOpen(false)}
+        project={project}
+        onImportWithAi={handleImportWithAiFromRepo}
+        onImportDirect={handleImportDirectFromRepo}
+        onNavigateToAcervo={() => setActiveTab("repository")}
+      />
+
+      <AiApprovalModal
+        isOpen={isRepoApprovalOpen}
+        onClose={() => setIsRepoApprovalOpen(false)}
+        analysis={repoAnalysisResult}
+        sourceDoc={selectedRepoDoc}
+        onApprove={handleApproveRepoArticle}
+        onOpenAdvancedEditor={(draftArt) => {
+          setEditingArticle(draftArt);
+          setIsArticleModalOpen(true);
+        }}
       />
 
       {/* Print-Only Container (Render ONLY active pages without blank sheets) */}
