@@ -19,6 +19,7 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { ImagePicker } from "../ui/image-picker";
+import { Switch } from "../ui/switch";
 import {
   Sparkles,
   Plus,
