@@ -19,6 +19,7 @@ import { EditorialPage } from "../components/magazine/EditorialPage";
 import { ArticleSpread } from "../components/magazine/ArticleSpread";
 import { BackCoverPage } from "../components/magazine/BackCoverPage";
 import { PwaInstallPrompt } from "../components/pwa/PwaInstallPrompt";
+import { ContentRepositoryView } from "../components/repository/ContentRepositoryView";
 import {
   Sparkles,
   BookOpen,
@@ -42,6 +43,7 @@ import {
   Zap,
   Cloud,
   ArrowRightLeft,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -64,7 +66,7 @@ function Index() {
     return "contrast-white";
   });
 
-  const [activeTab, setActiveTab] = useState<"viewer" | "articles" | "cover" | "editorial" | "settings">("viewer");
+  const [activeTab, setActiveTab] = useState<"viewer" | "articles" | "repository" | "cover" | "editorial" | "settings">("viewer");
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState<boolean>(false);
   const [isAiStudioOpen, setIsAiStudioOpen] = useState<boolean>(false);
@@ -447,6 +449,18 @@ function Index() {
           </button>
 
           <button
+            onClick={() => setActiveTab("repository")}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
+              activeTab === "repository"
+                ? "bg-amber-400 text-slate-950 border-black shadow-sm"
+                : "border-transparent opacity-75 hover:opacity-100 hover:bg-black/5"
+            }`}
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            <span>Acervo & Textos ({project.contentRepository?.length || 0})</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("cover")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "cover"
@@ -643,6 +657,18 @@ function Index() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Tab: Content Repository & AI Ingestion */}
+        {activeTab === "repository" && (
+          <div className="max-w-6xl mx-auto">
+            <ContentRepositoryView
+              project={project}
+              onUpdateProject={(updated) => setProject(updated)}
+              onOpenArticleEditor={(art) => handleEditArticle(art)}
+              onNavigateToViewer={() => setActiveTab("viewer")}
+            />
           </div>
         )}
 

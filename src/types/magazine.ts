@@ -258,6 +258,19 @@ export type BodyFontOption =
   | "roboto"       // Roboto (Neutral Sans)
   | "space";       // Space Grotesk (Mono Technical)
 
+export interface RepositoryDocument {
+  id: string;
+  title: string;
+  rawContent: string;
+  category?: string;
+  tags?: string[];
+  sourceFileName?: string;
+  wordCount: number;
+  status: "draft" | "ready" | "published";
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface FontConfig {
   headlineFont: HeadlineFontOption;
   bodyFont: BodyFontOption;
@@ -275,6 +288,7 @@ export interface MagazineProject {
   coverConfig: CoverConfig;
   editorialInfo: EditorialInfo;
   articles: Article[];
+  contentRepository?: RepositoryDocument[];
   backCoverConfig: BackCoverConfig;
   pageVisibility?: PageVisibilityConfig;
   fontConfig?: FontConfig;
@@ -284,3 +298,4 @@ export interface MagazineProject {
 }
 
 export type PageViewMode = "spread" | "single" | "grid";
+

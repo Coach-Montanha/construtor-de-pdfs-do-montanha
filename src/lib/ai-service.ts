@@ -304,6 +304,203 @@ export function generateAiImageUrl(prompt: string, width = 1200, height = 800): 
   )}`;
 }
 
+export interface EditorialAnalysisResult {
+  title: string;
+  subtitle: string;
+  category: string;
+  author: string;
+  authorBio: string;
+  recommendedPageSpan: 1 | 2;
+  recommendedTemplate:
+    | "editorial-lead"
+    | "workout-protocol"
+    | "product-ad"
+    | "facility-spotlight"
+    | "two-column-quote"
+    | "infographic-tips";
+  rationale: string;
+  wordCount: number;
+  estimatedReadTime: number;
+  formattedContent: string;
+  pullQuotes: string[];
+  keyTakeaways: string[];
+  heroImagePrompt: string;
+  suggestedHeroImage: string;
+  secondaryImagePrompt?: string;
+  suggestedSecondaryImage?: string;
+}
+
+/**
+ * Motor de Análise e Enquadramento Editorial por IA
+ * Analisa volume de texto, sugere 1 ou 2 páginas, template ideal, extrai citações e aplica formatação rica
+ */
+export async function analyzeAndDiagramEditorialText(
+  rawText: string,
+  apiKey?: string
+): Promise<EditorialAnalysisResult> {
+  const words = rawText.trim().split(/\s+/).filter(Boolean);
+  const wordCount = words.length;
+  const estimatedReadTime = Math.max(1, Math.round(wordCount / 130));
+
+  const isWorkoutText =
+    /série|reps|repetiç|descanso|exercício|kettlebell|mace|warmup|aquecimento|supino|agachamento|bloco/i.test(
+      rawText
+    );
+  const isProductText = /preço|cupom|loja|compre|desconto|equipamento|frete|garantia/i.test(rawText);
+  const isFacilityText = /estúdio|academia|box|centro de treinamento|unidade|matriz|instalações/i.test(
+    rawText
+  );
+
+  const system = `Você é o Diretor Editorial e Diagramador-Chefe da Revista Montanha (publicação de alta performance, força e estilo).
+Sua função é analisar o texto bruto fornecido, avaliar o volume de palavras e estruturar o artigo diagramado perfeito para publicação em PDF A4.
+
+REGRAS DE ENQUADRAMENTO:
+1. Se o volume tiver mais de 550 palavras, defina "recommendedPageSpan": 2 (Matéria Dupla de 2 Páginas).
+2. Se tiver menos de 550 palavras, defina "recommendedPageSpan": 1 (Página Única).
+3. Se o texto for predominantemente sobre exercícios e séries, sugira template "workout-protocol".
+4. Se for sobre produto/equipamento, sugira "product-ad".
+5. Se for artigo de reflexão ou técnico, sugira "editorial-lead" ou "two-column-quote".
+6. Formate o texto aplicando:
+   - ==marca-texto== nos conceitos mais importantes (2 a 3 no máximo).
+   - **negrito** em termos-chave.
+   - <u>sublinhado</u> em princípios fundamentais.
+   - "aspas" em declarações.
+   - ### Subtítulo nos intertítulos de seção.
+7. Extraia 1 a 2 citações de impacto memoráveis (pullQuotes) que representem o clímax do artigo.
+8. Extraia 2 a 3 pontos-chave (keyTakeaways).
+9. Gere um prompt em inglês em alta resolução para a imagem de abertura da matéria.
+
+Retorne RIGOROSAMENTE no formato JSON com esta estrutura:
+{
+  "title": "TÍTULO EM CAIXA ALTA MONUMENTAL",
+  "subtitle": "Subtítulo envolvente e explicativo",
+  "category": "CATEGORIA EM MAIÚSCULAS",
+  "author": "Coach Montanha",
+  "authorBio": "Master Coach & Fundador",
+  "recommendedPageSpan": 1 ou 2,
+  "recommendedTemplate": "editorial-lead" | "workout-protocol" | "product-ad" | "facility-spotlight" | "two-column-quote" | "infographic-tips",
+  "rationale": "Explicação concisa do motivo pelo qual a IA escolheu esse enquadramento e número de páginas",
+  "formattedContent": "Texto formatado com parágrafos bem divididos por quebras duplas, usando ==destaques==, **negrito** e ### Subtítulos",
+  "pullQuotes": ["Citação marcante do artigo"],
+  "keyTakeaways": ["Ponto chave 1", "Ponto chave 2"],
+  "heroImagePrompt": "Cinematic photography of athletic warrior in gritty industrial studio...",
+  "secondaryImagePrompt": "Close up details of iron equipment and chalk dust..."
+}`;
+
+  const prompt = `Analise e diagrame o seguinte texto bruto (Volume: ${wordCount} palavras):
+"""
+${rawText}
+"""`;
+
+  try {
+    const rawResponse = await callGeminiApi(prompt, apiKey, system);
+    const cleanJson = rawResponse.replace(/```json/g, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleanJson);
+
+    const recommendedPageSpan: 1 | 2 = parsed.recommendedPageSpan === 2 || wordCount > 550 ? 2 : 1;
+    const heroImg = getEditorialCuratedImage(parsed.category || "fitness", 0);
+    const secondaryImg = getEditorialCuratedImage(parsed.category || "fitness", 1);
+
+    return {
+      title: parsed.title || "MATÉRIA EDITORIAL DE ALTA PERFORMANCE",
+      subtitle: parsed.subtitle || "Princípios fundamentais e estratégias aplicadas de transformação.",
+      category: parsed.category || (isWorkoutText ? "PROTOCOLO DE FORÇA" : "MONTANHA METHOD"),
+      author: parsed.author || "Coach Montanha",
+      authorBio: parsed.authorBio || "Master Coach & Fundador",
+      recommendedPageSpan,
+      recommendedTemplate: parsed.recommendedTemplate || (isWorkoutText ? "workout-protocol" : "editorial-lead"),
+      rationale:
+        parsed.rationale ||
+        (recommendedPageSpan === 2
+          ? `Volume de ${wordCount} palavras detectado: Recomendada Matéria Dupla de 2 Páginas para manter leitura fluida com fotos de apoio sem cortes.`
+          : `Volume de ${wordCount} palavras: Perfeito para 1 Página A4 de alto impacto visual com 2 colunas equilibradas.`),
+      wordCount,
+      estimatedReadTime,
+      formattedContent: parsed.formattedContent || rawText,
+      pullQuotes: parsed.pullQuotes || ["A disciplina consistente nos detalhes constrói o corpo e a mente indestrutíveis."],
+      keyTakeaways: parsed.keyTakeaways || [
+        "Aplique a metodologia com regularidade.",
+        "Monitore o progresso semanal.",
+      ],
+      heroImagePrompt:
+        parsed.heroImagePrompt ||
+        "Aesthetic dynamic athletic photography in dramatic lighting, 8k resolution, editorial style",
+      suggestedHeroImage: heroImg,
+      secondaryImagePrompt: parsed.secondaryImagePrompt,
+      suggestedSecondaryImage: secondaryImg,
+    };
+  } catch (error) {
+    console.warn("AI fallback para análise e enquadramento:", error);
+
+    const recommendedPageSpan: 1 | 2 = wordCount > 550 ? 2 : 1;
+    const paragraphs = rawText
+      .split(/\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    // Heuristics to format paragraphs
+    const formattedParagraphs = paragraphs.map((para, idx) => {
+      let p = para;
+      if (idx === 0 && !p.startsWith("#")) {
+        // Highlight important part of first sentence
+        const firstDot = p.indexOf(".");
+        if (firstDot > 20 && firstDot < 80) {
+          p = `==${p.substring(0, firstDot)}==` + p.substring(firstDot);
+        }
+      }
+      return p;
+    });
+
+    const firstSentence = paragraphs[0]?.split(".")[0] || "A consistência gera excelência";
+    const pullQuotes = [
+      firstSentence.length > 25 && firstSentence.length < 120
+        ? firstSentence
+        : "A excelência diária nos detalhes constrói resultados que ninguém pode ignorar.",
+    ];
+
+    const category = isWorkoutText
+      ? "PROTOCOLO DE FORÇA"
+      : isProductText
+      ? "GEAR & PROMO"
+      : isFacilityText
+      ? "STUDIO SPOTLIGHT"
+      : "MONTANHA METHOD";
+
+    const titleCandidate = paragraphs[0]?.length < 70 ? paragraphs[0].toUpperCase() : "O CÓDIGO DA CONSISTÊNCIA & FORÇA";
+
+    return {
+      title: titleCandidate,
+      subtitle: "Como transformar teoria em prática diária com método inegociável.",
+      category,
+      author: "Coach Montanha",
+      authorBio: "Master Coach & Fundador",
+      recommendedPageSpan,
+      recommendedTemplate: isWorkoutText
+        ? "workout-protocol"
+        : isProductText
+        ? "product-ad"
+        : isFacilityText
+        ? "facility-spotlight"
+        : "editorial-lead",
+      rationale:
+        recommendedPageSpan === 2
+          ? `Volume de ${wordCount} palavras identificado: Enquadrado em 2 Páginas (Página Dupla) para garantir leitura espaçosa e fotos em alta resolução sem cortes de texto.`
+          : `Volume de ${wordCount} palavras: Enquadrado em 1 Página A4 otimizada com 2 colunas e citação ao final.`,
+      wordCount,
+      estimatedReadTime,
+      formattedContent: formattedParagraphs.join("\n\n"),
+      pullQuotes,
+      keyTakeaways: [
+        "Foque na execução consistente dos princípios fundamentais.",
+        "Mantenha o controle da sobrecarga progressiva e recuperação.",
+      ],
+      heroImagePrompt: `Editorial photography of athletic training in dark studio, high contrast, 8k`,
+      suggestedHeroImage: getEditorialCuratedImage("fitness", 0),
+      suggestedSecondaryImage: getEditorialCuratedImage("fitness", 1),
+    };
+  }
+}
+
 function polishTextOfflineFallback(text: string, tone: string): string {
   const paragraphs = text
     .split(/\n+/)
@@ -320,3 +517,4 @@ function polishTextOfflineFallback(text: string, tone: string): string {
 
   return polished.join("\n\n");
 }
+

@@ -558,6 +558,46 @@ Ao combinar protocolos de 10x10 com kettlebells de 32kg ou 40kg, o limiar de lac
       enabled: true,
     },
   ],
+  contentRepository: [
+    {
+      id: "doc-1",
+      title: "O Segredo da Respiração Diafragmática e Pressão Intra-Abdominal (IAP)",
+      rawContent: `A respiração no levantamento de peso pesado não é apenas para oxigenar o sangue; ela é uma ferramenta mecânica de estabilização da coluna. Quando realizamos a manobra de Valsalva controlada e expandimos o abdômen em 360 graus contra o cinto de musculação, criamos uma câmara hidráulica interna impenetrável.
+
+Muitos atletas novatos cometem o erro fatal de encolher a barriga durante o agachamento ou levantamento terra. Isso transfere toda a carga cisalhante para as vértebras lombares. A forma correta é inflar a caixa abdominal como um cilindro de alta pressão.
+
+O treinamento respiratório com kettlebells pesados ensina o corpo a manter essa rigidez enquanto se move. É o que chamamos de 'respiração por trás do escudo'. Você aprende a emitir força explosiva expirando com um chiado curto ('tsss!') no ápice do movimento, preservando a tensão no core.
+
+Dominar essa técnica reduz o risco de hérnias de disco a quase zero e adiciona de 10% a 20% de carga imediata na sua barra. Treine a respiração diafragmática todos os dias antes de tocar no primeiro peso.`,
+      category: "BIOMECÂNICA",
+      sourceFileName: "respiracao-diafragmatica-iap.txt",
+      wordCount: 168,
+      status: "ready",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "doc-2",
+      title: "Manual Completo do Remo Nórdico & Bioenergética: O Guia de Alta Densidade",
+      rawContent: `O remo indoor e as variações nórdicas de tração representam um dos estímulos fisiológicos mais completos do planeta. Ao contrário da corrida onde o impacto articular é elevado, o remo oferece uma cadeia cinética fechada onde pernas, tronco e membros superiores trabalham em sinergia contínua de alta potência.
+
+**A Fisiologia do Deslocamento de Potência**
+Cada remada exige uma fase de impulsão balística liderada pelos quadríceps e glúteos (60% da força), seguida pela extensão controlada do quadril (20%) e finalizada pela tração dorsal com os braços (20%). Essa divisão garante que grandes grupos musculares dissipem a fadiga enquanto o coração é forçado a bombear sangue para todo o organismo simultaneamente.
+
+**O Protocolo Nórdico de 500 Metros**
+Para desenvolver um motor cardiovascular inabalável, o teste de 500m all-out é a referência padrão. Atletas de elite completam essa distância em menos de 1 minuto e 20 segundos. O acúmulo de lactato no sangue atinge níveis comparáveis aos de um combate profissional de MMA.
+
+A recuperação entre tiros deve ser rigorosamente calculada com base na variabilidade da frequência cardíaca (HRV). Integrar o remo nórdico duas vezes por semana na sua periodização melhora a densidade mitocondrial, a capilarização muscular e a capacidade de suportar dor psicológica sob esforço máximo.
+
+A consistência na cadência — mantendo entre 28 e 32 golpes por minuto com força máxima por braçada — separa os remadores comuns dos verdadeiros monstros da resistência muscular. O ferro forja o músculo, mas o ergômetro forja o coração do guerreiro.`,
+      category: "CONDICIONAMENTO",
+      sourceFileName: "guia-remo-nordico-completo.md",
+      wordCount: 242,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ],
   backCoverConfig: {
     headline: "FORJA O SEU CORPO. DOMINA A SUA MENTE.",
     subheadline: "Junte-se à fraternidade do Coach Montanha e treine com métodos não-convencionais de elite.",
