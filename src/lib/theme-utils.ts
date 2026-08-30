@@ -41,7 +41,7 @@ export function getBodyFontClass(bodyFont?: BodyFontOption): string {
  * Returns dynamic inline styles and CSS variables computed from the chosen MagazineTheme
  */
 export function getMagazineThemeVariables(theme: MagazineTheme) {
-  const isLight = theme.id === "vogue-haute";
+  const isLight = Boolean(theme.isLight);
   
   return {
     "--theme-primary": theme.primaryColor,
@@ -55,3 +55,4 @@ export function getMagazineThemeVariables(theme: MagazineTheme) {
     color: theme.textColor,
   } as React.CSSProperties;
 }
+

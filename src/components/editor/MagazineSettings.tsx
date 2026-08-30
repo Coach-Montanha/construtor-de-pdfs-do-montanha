@@ -54,6 +54,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     project.geminiApiKey || (typeof window !== "undefined" ? localStorage.getItem("gemini_api_key") || "" : "")
   );
   const [apiKeySaved, setApiKeySaved] = useState<boolean>(false);
+  const [themeFilter, setThemeFilter] = useState<"all" | "dark" | "light" | "vibrant">("all");
 
   const visibility = {
     showCover: true,
@@ -405,21 +406,72 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
 
       {/* 2. THEME SELECTION FOR THE MAGAZINE PUBLICATION (CORES REALISTAS DAS PÁGINAS INTERNAS) */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-            <Palette className="w-4 h-4 text-amber-500" />
-            <span>2. Tema Visual da Revista (Paleta de Cores Real das Páginas)</span>
-          </h3>
-          <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded border border-current">
-            PRODUÇÃO A4
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+              <Palette className="w-4 h-4 text-amber-500" />
+              <span>2. Tema Visual da Revista (16 Paletas de Cores Editoriais)</span>
+            </h3>
+            <p className="text-xs opacity-75 mt-0.5">
+              Escolha a identidade visual completa para a capa, páginas internas, caixas de destaque e contracapa.
+            </p>
+          </div>
+          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase shrink-0">
+            {MAGAZINE_THEMES.length} TEMAS DISPONÍVEIS
           </span>
         </div>
-        <p className="text-xs opacity-75 leading-relaxed">
-          Define a identidade visual e o contraste de todas as páginas da revista (capa, editorial, sumário, matérias e contracapa).
-        </p>
 
+        {/* Category Filter Tabs */}
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          <button
+            type="button"
+            onClick={() => setThemeFilter("all")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all border-2 cursor-pointer ${
+              themeFilter === "all"
+                ? "bg-amber-400 text-black border-black shadow-xs"
+                : "theme-app-card-subtle border-slate-300 hover:border-black opacity-80"
+            }`}
+          >
+            Todos ({MAGAZINE_THEMES.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setThemeFilter("dark")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all border-2 cursor-pointer ${
+              themeFilter === "dark"
+                ? "bg-amber-400 text-black border-black shadow-xs"
+                : "theme-app-card-subtle border-slate-300 hover:border-black opacity-80"
+            }`}
+          >
+            Escuros & Táticos ({MAGAZINE_THEMES.filter((t) => t.category === "dark").length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setThemeFilter("light")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all border-2 cursor-pointer ${
+              themeFilter === "light"
+                ? "bg-amber-400 text-black border-black shadow-xs"
+                : "theme-app-card-subtle border-slate-300 hover:border-black opacity-80"
+            }`}
+          >
+            Claros & Editoriais ({MAGAZINE_THEMES.filter((t) => t.category === "light").length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setThemeFilter("vibrant")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all border-2 cursor-pointer ${
+              themeFilter === "vibrant"
+                ? "bg-amber-400 text-black border-black shadow-xs"
+                : "theme-app-card-subtle border-slate-300 hover:border-black opacity-80"
+            }`}
+          >
+            Vibrantes & High-Energy ({MAGAZINE_THEMES.filter((t) => t.category === "vibrant").length})
+          </button>
+        </div>
+
+        {/* Themes Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
-          {MAGAZINE_THEMES.map((theme) => {
+          {MAGAZINE_THEMES.filter((t) => themeFilter === "all" || t.category === themeFilter).map((theme) => {
             const isSelected = project.themeId === theme.id;
             return (
               <div
@@ -427,39 +479,55 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
                 onClick={() => handleSelectMagazineTheme(theme.id)}
                 className={`theme-app-card-subtle cursor-pointer p-4 rounded-xl border-2 transition-all flex flex-col justify-between ${
                   isSelected
-                    ? "border-amber-500 ring-2 ring-amber-400 shadow-md"
+                    ? "border-amber-500 ring-2 ring-amber-400 shadow-md bg-amber-400/5"
                     : "border-slate-300 hover:border-slate-700"
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-black text-xs uppercase">{theme.name}</span>
-                    {isSelected && <CheckCircle2 className="w-4 h-4 text-amber-500" />}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-black text-xs uppercase truncate pr-2">{theme.name}</span>
+                    {isSelected ? (
+                      <span className="shrink-0 flex items-center gap-1 bg-amber-400 text-black px-1.5 py-0.2 rounded font-mono font-black text-[9px] border border-black">
+                        <CheckCircle2 className="w-3 h-3 text-black" />
+                        ATIVO
+                      </span>
+                    ) : (
+                      <span className="shrink-0 font-mono text-[8px] opacity-60 uppercase">
+                        {theme.isLight ? "Claro" : theme.category === "vibrant" ? "Vibrante" : "Escuro"}
+                      </span>
+                    )}
                   </div>
                   <p className="text-[11px] opacity-75 leading-snug mb-3">{theme.description}</p>
                 </div>
 
                 {/* Color swatches with explicit color tags */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-300 text-[10px] font-mono">
+                <div className="flex items-center justify-between pt-2.5 border-t border-slate-300 text-[10px] font-mono">
                   <div className="flex items-center gap-1.5">
                     <div
-                      className="w-4 h-4 rounded-full border border-black shadow-xs"
+                      className="w-4 h-4 rounded-full border border-black shadow-xs shrink-0"
                       style={{ backgroundColor: theme.primaryColor }}
                       title={`Cor Primária: ${theme.primaryColor}`}
                     />
                     <div
-                      className="w-4 h-4 rounded-full border border-black shadow-xs"
+                      className="w-4 h-4 rounded-full border border-black shadow-xs shrink-0"
                       style={{ backgroundColor: theme.accentColor }}
                       title={`Destaque: ${theme.accentColor}`}
                     />
                     <div
-                      className="w-4 h-4 rounded-full border border-black shadow-xs"
-                      style={{ backgroundColor: theme.id === "vogue-haute" ? theme.bgLight : theme.bgDark }}
-                      title={`Fundo: ${theme.id === "vogue-haute" ? theme.bgLight : theme.bgDark}`}
+                      className="w-4 h-4 rounded-full border border-black shadow-xs shrink-0"
+                      style={{ backgroundColor: theme.isLight ? theme.bgLight : theme.bgDark }}
+                      title={`Fundo: ${theme.isLight ? theme.bgLight : theme.bgDark}`}
                     />
                   </div>
-                  <span className="font-bold uppercase text-[9px]">
-                    {theme.id === "vogue-haute" ? "Fundo Branco" : "Fundo Escuro"}
+                  <span
+                    className="font-bold uppercase text-[9px] px-1.5 py-0.5 rounded border"
+                    style={{
+                      backgroundColor: theme.isLight ? "#FAFAF9" : "#0F172A",
+                      color: theme.isLight ? "#0F172A" : "#FFFFFF",
+                      borderColor: theme.primaryColor,
+                    }}
+                  >
+                    {theme.isLight ? "Fundo Branco" : "Fundo Escuro"}
                   </span>
                 </div>
               </div>

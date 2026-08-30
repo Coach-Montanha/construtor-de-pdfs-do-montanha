@@ -20,7 +20,7 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
 
   const headlineFontClass = getHeadlineFontClass(project.fontConfig?.headlineFont);
   const bodyFontClass = getBodyFontClass(project.fontConfig?.bodyFont);
-  const isLight = theme.id === "vogue-haute";
+  const isLight = Boolean(theme.isLight);
 
   const primaryColor = theme.primaryColor;
   const accentColor = theme.accentColor;

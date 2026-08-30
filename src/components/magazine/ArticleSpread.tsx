@@ -45,7 +45,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
   const headlineFontClass = getHeadlineFontClass(project.fontConfig?.headlineFont);
   const bodyFontClass = getBodyFontClass(project.fontConfig?.bodyFont);
-  const isLight = theme.id === "vogue-haute";
+  const isLight = Boolean(theme.isLight);
 
   // Dynamic Theme Colors
   const bgColor = isLight ? theme.bgLight : theme.bgDark;

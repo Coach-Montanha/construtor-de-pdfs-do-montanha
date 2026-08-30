@@ -13,14 +13,25 @@ export type MagazineThemeId =
   | "montanha-titanium"    // My Mad Methods / Unconventional Strength & Industrial Yellow
   | "tactical-iron"        // Tactical Steel & Warning Orange
   | "monochrome-grit"      // Deep Black, Stark White & Red
-  | "vogue-haute"          // Editorial Classic
-  | "cyber-neon"           // Futuristic High-Tech
-  | "wellness-botanic";    // Organic Emerald
+  | "vogue-haute"          // Editorial Classic Serif (Fundo Branco)
+  | "cyber-neon"           // Futuristic High-Tech & Electric Blue
+  | "wellness-botanic"     // Organic Emerald & Biohacking
+  | "olimpo-gold"          // Royal Gold & Obsidian Luxury
+  | "desert-coyote"        // Desert Storm & Coyote Tan Camo
+  | "nordic-ice"           // Scandinavian Minimalist Ice (Fundo Branco Polar)
+  | "gladiator-crimson"    // Gladiator Crimson & Forged Iron
+  | "vintage-golden-era"   // 1970s Golden Era Bodybuilding & Leather
+  | "midnight-ultraviolet" // Midnight Deep Purple & Ultraviolet
+  | "ronin-crimson"        // Japanese Ronin / Sumi Ink & Blood Red
+  | "concrete-monolith"    // Heavy Concrete & Industrial Slate
+  | "acid-lime-athletic"   // High-Voltage Acid Lime / Cyber Athletic
+  | "swiss-helvetica";     // Swiss Minimalist / Alpine Red (Fundo Branco)
 
 export interface MagazineTheme {
   id: MagazineThemeId;
   name: string;
   description: string;
+  category?: "dark" | "light" | "vibrant";
   primaryColor: string;
   accentColor: string;
   textColor: string;
@@ -31,7 +42,9 @@ export interface MagazineTheme {
   fontHeadline: string;
   fontBody: string;
   fontSerif: boolean;
+  isLight?: boolean;
 }
+
 
 export interface CoverHighlight {
   id: string;

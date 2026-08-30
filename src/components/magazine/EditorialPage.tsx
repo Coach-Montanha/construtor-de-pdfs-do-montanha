@@ -20,7 +20,7 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
 
   const headlineFontClass = getHeadlineFontClass(project.fontConfig?.headlineFont);
   const bodyFontClass = getBodyFontClass(project.fontConfig?.bodyFont);
-  const isLight = theme.id === "vogue-haute";
+  const isLight = Boolean(theme.isLight);
 
   const bgColor = isLight ? theme.bgLight : theme.bgDark;
   const textColor = theme.textColor;
