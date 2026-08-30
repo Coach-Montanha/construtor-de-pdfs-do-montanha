@@ -493,6 +493,69 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           />
         </div>
       </div>
+
+      {/* 7. Base & Rodapé da Capa (Editora, Metadados Técnicos, Código de Barras e Destaques) */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
+        <div className="flex items-center justify-between border-b pb-2">
+          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <Layout className="w-4 h-4 text-amber-500" />
+            <span>7. Textos da Base da Capa (Rodapé, Editora & Código de Barras)</span>
+          </h3>
+          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
+            RODAPÉ DA CAPA
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-xs font-bold">NOME DA EDITORA / IMPRINT (RODAPÉ ESQUERDO)</Label>
+            <Input
+              value={coverConfig.footerPublisherText ?? ""}
+              onChange={(e) => updateField("footerPublisherText", e.target.value.toUpperCase())}
+              placeholder="Ex: REVISTA MONTANHA EDITORIAL CORP."
+              className="theme-app-input font-bold text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">SUBTEXTO TÉCNICO DO RODAPÉ</Label>
+            <Input
+              value={coverConfig.footerSubText ?? ""}
+              onChange={(e) => updateField("footerSubText", e.target.value.toUpperCase())}
+              placeholder="Ex: DIAGRAMAÇÃO A4 DIGITAL // PRINT-READY"
+              className="theme-app-input text-xs mt-1 border-2"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div>
+            <Label className="text-xs font-bold">CÓDIGO DE BARRAS (NUMÉRICO)</Label>
+            <Input
+              value={coverConfig.barcodeText}
+              onChange={(e) => updateField("barcodeText", e.target.value)}
+              placeholder="Ex: 9 772026 001008"
+              className="theme-app-input font-mono text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">PALAVRAS-CHAVE / DESTAQUES DO RODAPÉ (SEPARADOS POR VÍRGULA)</Label>
+            <Input
+              value={(coverConfig.footerHighlights || []).join(", ")}
+              onChange={(e) =>
+                updateField(
+                  "footerHighlights",
+                  e.target.value.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean)
+                )
+              }
+              placeholder="Ex: NUTRIÇÃO DE PRECISÃO, SUPLEMENTAÇÃO, LONGEVIDADE ATIVA"
+              className="theme-app-input text-xs mt-1 border-2 font-mono"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
+

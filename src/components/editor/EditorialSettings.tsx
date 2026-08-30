@@ -137,6 +137,63 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
         </div>
       </div>
 
+      {/* 0. CABEÇALHO & TEXTOS DO TOPO DA PÁGINA (HEADER BAR) */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
+        <div className="flex items-center justify-between border-b pb-2">
+          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <Award className="w-4 h-4 text-amber-500" />
+            <span>0. Textos do Topo das Páginas (Cabeçalho / Header Bar)</span>
+          </h3>
+          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
+            TOPO DA PÁGINA
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-xs font-bold">NOME DA MARCA NO TOPO (ESQUERDA)</Label>
+            <Input
+              value={project.editorialInfo.headerBrandTitle ?? ""}
+              onChange={(e) => updateEditorial("headerBrandTitle", e.target.value.toUpperCase())}
+              placeholder={`Padrão: ${project.title}`}
+              className="theme-app-input font-black text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">TÍTULO DA SEÇÃO NO TOPO</Label>
+            <Input
+              value={project.editorialInfo.headerDocTitle ?? ""}
+              onChange={(e) => updateEditorial("headerDocTitle", e.target.value.toUpperCase())}
+              placeholder="Ex: DOCUMENTAÇÃO LEGAL & MANIFESTO EDITORIAL"
+              className="theme-app-input text-xs mt-1 border-2 font-bold"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div>
+            <Label className="text-xs font-bold">BADGE DE EDIÇÃO DO CABEÇALHO (DIREITA)</Label>
+            <Input
+              value={project.editorialInfo.headerBadgeText ?? ""}
+              onChange={(e) => updateEditorial("headerBadgeText", e.target.value.toUpperCase())}
+              placeholder="Ex: EDIÇÃO #01"
+              className="theme-app-input font-mono text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">DATA / SUBTÍTULO DO TOPO (DIREITA)</Label>
+            <Input
+              value={project.editorialInfo.headerDateText ?? ""}
+              onChange={(e) => updateEditorial("headerDateText", e.target.value.toUpperCase())}
+              placeholder={`Padrão: ${project.date}`}
+              className="theme-app-input font-mono text-xs mt-1 border-2"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* 1. DOCUMENTAÇÃO LEGAL, ISBN, ISSN E FICHA CATALOGRÁFICA (CIP) */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
         <div className="flex items-center justify-between border-b pb-3">

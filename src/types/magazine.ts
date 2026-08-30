@@ -72,6 +72,8 @@ export interface CoverConfig {
   authorCallout?: string;
   highlights: CoverHighlight[];
   footerHighlights: string[];
+  footerPublisherText?: string;
+  footerSubText?: string;
   backgroundImage: string;
   backgroundOverlayOpacity: number; // 0 to 100
   barcodeText: string;
@@ -117,6 +119,10 @@ export interface Contributor {
 }
 
 export interface EditorialInfo {
+  headerBrandTitle?: string;
+  headerDocTitle?: string;
+  headerBadgeText?: string;
+  headerDateText?: string;
   editorName: string;
   editorRole: string;
   editorPhoto: string;
@@ -135,6 +141,7 @@ export interface EditorialInfo {
   publisherInfo?: string;
   contributors: Contributor[];
 }
+
 
 export interface WorkoutExercise {
   code: string; // "A1", "A2", "B1", "B2", "FINISHER"

@@ -412,14 +412,21 @@ export const CoverPage: React.FC<CoverPageProps> = ({
             </span>
           </div>
           <div className="text-[9px] font-mono text-slate-300 leading-tight">
-            <span className="text-white font-bold block">{project.title} EDITORIAL CORP.</span>
-            <span>DIAGRAMAÇÃO A4 DIGITAL // PRINT-READY</span>
+            <span className="text-white font-bold block">
+              {coverConfig.footerPublisherText || `${project.title} EDITORIAL CORP.`}
+            </span>
+            <span>
+              {coverConfig.footerSubText || "DIAGRAMAÇÃO A4 DIGITAL // PRINT-READY"}
+            </span>
           </div>
         </div>
 
         {/* Footer Teaser Keywords */}
         <div className="flex items-center gap-2 sm:gap-3 text-[9px] font-mono font-bold tracking-wider text-slate-300 uppercase">
-          {coverConfig.footerHighlights?.slice(0, 3).map((item, idx) => (
+          {(coverConfig.footerHighlights && coverConfig.footerHighlights.length > 0
+            ? coverConfig.footerHighlights
+            : ["NUTRIÇÃO DE PRECISÃO", "SUPLEMENTAÇÃO ESTRATÉGICA", "LONGEVIDADE ATIVA"]
+          ).slice(0, 4).map((item, idx) => (
             <span key={idx} className="flex items-center gap-1.5">
               <span className="text-amber-400 font-black">/</span>
               <span>{item}</span>

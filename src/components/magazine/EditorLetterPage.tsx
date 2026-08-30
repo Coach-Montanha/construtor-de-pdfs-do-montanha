@@ -51,21 +51,21 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
       >
         <div className="flex items-center gap-2">
           <span className="font-mono font-black text-xs uppercase" style={{ color: primaryColor }}>
-            {project.title}
+            {editorialInfo.headerBrandTitle || project.title}
           </span>
           <span className="opacity-40 font-mono">/</span>
           <span className="text-[10px] font-mono font-bold tracking-widest uppercase" style={{ color: textMutedColor }}>
-            DOCUMENTAÇÃO LEGAL & MANIFESTO EDITORIAL
+            {editorialInfo.headerDocTitle || "DOCUMENTAÇÃO LEGAL & MANIFESTO EDITORIAL"}
           </span>
         </div>
         <div className="flex items-center gap-2 text-[9px] font-mono font-semibold uppercase" style={{ color: textMutedColor }}>
           <span
-            className="px-1.5 py-0.5 rounded border"
+            className="px-1.5 py-0.5 rounded border font-bold"
             style={{ backgroundColor: `${primaryColor}20`, color: primaryColor, borderColor: `${primaryColor}50` }}
           >
-            {coverConfig.editionNumber ? `EDIÇÃO #${coverConfig.editionNumber}` : "ED. #01"}
+            {editorialInfo.headerBadgeText || (coverConfig.editionNumber ? `EDIÇÃO #${coverConfig.editionNumber}` : "ED. #01")}
           </span>
-          <span>{project.date}</span>
+          <span>{editorialInfo.headerDateText || project.date}</span>
         </div>
       </div>
 
