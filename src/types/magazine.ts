@@ -196,6 +196,8 @@ export interface Article {
   heroImage: string;
   heroImageCaption?: string;
   heroImagePrompt?: string;
+  heroImageLayout?: "banner" | "side" | "contain" | "compact" | "hidden";
+  textDensity?: "compact" | "normal" | "spacious";
   content: string; // Markdown or raw text paragraphs
   pullQuotes: string[];
   calloutBox?: {

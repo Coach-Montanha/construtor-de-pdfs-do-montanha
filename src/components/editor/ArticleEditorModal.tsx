@@ -443,6 +443,35 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               helperText="Upload do PC, IA ou URL"
             />
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-[10px] font-bold">ENQUADRAMENTO DA FOTO NO ARTIGO</Label>
+                <select
+                  value={formData.heroImageLayout || "banner"}
+                  onChange={(e) => setFormData({ ...formData, heroImageLayout: e.target.value as any })}
+                  className="w-full theme-app-input text-xs font-bold mt-1 border-2 p-1.5 rounded"
+                >
+                  <option value="banner">Horizontal Panorâmico (Padrão)</option>
+                  <option value="contain">Sem Cortar / Enquadramento Total</option>
+                  <option value="compact">Faixa Compacta (Mais espaço para texto)</option>
+                  <option value="hidden">Ocultar Foto (Apenas Texto e Citações)</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-[10px] font-bold">DENSIDADE / TAMANHO DO TEXTO</Label>
+                <select
+                  value={formData.textDensity || "normal"}
+                  onChange={(e) => setFormData({ ...formData, textDensity: e.target.value as any })}
+                  className="w-full theme-app-input text-xs font-bold mt-1 border-2 p-1.5 rounded"
+                >
+                  <option value="compact">Texto Compacto (Cabe mais texto sem cortar)</option>
+                  <option value="normal">Normal (Equilibrado)</option>
+                  <option value="spacious">Espaçoso (Artigos curtos)</option>
+                </select>
+              </div>
+            </div>
+
             <div>
               <Label className="text-[10px] font-bold">LEGENDA DA FOTO HERO (CRÉDITOS)</Label>
               <Input
