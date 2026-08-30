@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Article,
   LayoutTemplate,
@@ -35,6 +35,15 @@ import {
   Building,
   Loader2,
   Check,
+  Bold,
+  Italic,
+  Underline,
+  Highlighter,
+  Heading2,
+  Heading3,
+  List,
+  Eye,
+  Edit3,
 } from "lucide-react";
 import {
   polishEditorialText,
@@ -84,6 +93,33 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   const [newTagInput, setNewTagInput] = useState<string>("");
   const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
   const [aiStatusMsg, setAiStatusMsg] = useState<string>("");
+  const [previewFormatted, setPreviewFormatted] = useState<boolean>(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const applyFormatting = (prefix: string, suffix: string, defaultPlaceholder = "texto") => {
+    const el = textareaRef.current;
+    if (!el) {
+      setFormData((prev) => ({ ...prev, content: (prev.content || "") + `${prefix}${defaultPlaceholder}${suffix}` }));
+      return;
+    }
+
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    const currentVal = formData.content || "";
+
+    const selectedText = currentVal.substring(start, end);
+    const textToWrap = selectedText || defaultPlaceholder;
+    const replacement = `${prefix}${textToWrap}${suffix}`;
+
+    const newVal = currentVal.substring(0, start) + replacement + currentVal.substring(end);
+    setFormData((prev) => ({ ...prev, content: newVal }));
+
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + prefix.length, start + prefix.length + textToWrap.length);
+    }, 40);
+  };
 
   useEffect(() => {
     if (article) {
@@ -831,17 +867,44 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           </div>
         )}
 
-        {/* Article Body Content */}
+        {/* Article Body Content & Rich Formatting Toolbar */}
         <div className="space-y-2 pt-2 border-t">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs font-bold">CORPO DO TEXTO (PARÁGRAFOS)</Label>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs font-black uppercase tracking-tight">
+                CORPO DO TEXTO (PARÁGRAFOS)
+              </Label>
+              <div className="flex items-center rounded border overflow-hidden text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setPreviewFormatted(false)}
+                  className={`px-2 py-0.5 flex items-center gap-1 cursor-pointer ${
+                    !previewFormatted ? "bg-amber-400 text-black font-black" : "opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <Edit3 className="w-3 h-3" />
+                  <span>Editor</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewFormatted(true)}
+                  className={`px-2 py-0.5 flex items-center gap-1 cursor-pointer ${
+                    previewFormatted ? "bg-amber-400 text-black font-black" : "opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>Pré-Visualizar Formatação</span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-bold opacity-75 mr-1">Polir com IA:</span>
               <button
                 type="button"
                 onClick={() => handlePolishText("journalistic")}
                 disabled={isAiLoading || !formData.content}
-                className="text-[10px] font-bold bg-amber-400 text-black px-2 py-0.5 rounded border border-black hover:bg-amber-500 cursor-pointer"
+                className="text-[10px] font-bold bg-amber-400 text-black px-2 py-0.5 rounded border border-black hover:bg-amber-500 cursor-pointer shadow-xs"
               >
                 Jornalístico
               </button>
@@ -849,19 +912,126 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 type="button"
                 onClick={() => handlePolishText("motivational")}
                 disabled={isAiLoading || !formData.content}
-                className="text-[10px] font-bold bg-amber-400 text-black px-2 py-0.5 rounded border border-black hover:bg-amber-500 cursor-pointer"
+                className="text-[10px] font-bold bg-amber-400 text-black px-2 py-0.5 rounded border border-black hover:bg-amber-500 cursor-pointer shadow-xs"
               >
                 Motivacional
               </button>
             </div>
           </div>
 
-          <Textarea
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            placeholder="Escreva os parágrafos da matéria aqui. Separe os parágrafos com uma linha em branco para criar a diagramação de revista..."
-            className="theme-app-input text-xs h-44 leading-relaxed font-sans border-2"
-          />
+          {/* Quick Formatting Toolbar */}
+          <div className="flex flex-wrap items-center gap-1 p-1.5 rounded-lg border-2 theme-app-card-subtle text-xs">
+            <button
+              type="button"
+              onClick={() => applyFormatting("**", "**", "texto em negrito")}
+              className="px-2 py-1 rounded border hover:bg-black/10 font-black flex items-center gap-1 cursor-pointer"
+              title="Negrito (**texto**)"
+            >
+              <Bold className="w-3.5 h-3.5" />
+              <span>Negrito</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("*", "*", "texto em itálico")}
+              className="px-2 py-1 rounded border hover:bg-black/10 italic font-bold flex items-center gap-1 cursor-pointer"
+              title="Itálico (*texto*)"
+            >
+              <Italic className="w-3.5 h-3.5" />
+              <span>Itálico</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("<u>", "</u>", "texto sublinhado")}
+              className="px-2 py-1 rounded border hover:bg-black/10 underline font-bold flex items-center gap-1 cursor-pointer"
+              title="Sublinhado (<u>texto</u>)"
+            >
+              <Underline className="w-3.5 h-3.5" />
+              <span>Sublinhado</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("==", "==", "texto destacado")}
+              className="px-2 py-1 rounded border bg-amber-400/20 text-amber-700 hover:bg-amber-400/40 font-black flex items-center gap-1 cursor-pointer"
+              title="Marca-Texto / Destaque (==texto==)"
+            >
+              <Highlighter className="w-3.5 h-3.5" />
+              <span>Destaque</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("“", "”", "citação de impacto")}
+              className="px-2 py-1 rounded border hover:bg-black/10 font-bold flex items-center gap-1 cursor-pointer"
+              title="Aspas Editoriais (“texto”)"
+            >
+              <Quote className="w-3.5 h-3.5" />
+              <span>Aspas</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("\n\n### ", "\n", "SUBTÍTULO DE SEÇÃO")}
+              className="px-2 py-1 rounded border hover:bg-black/10 font-mono font-bold flex items-center gap-1 cursor-pointer"
+              title="Subtítulo Intermediário (### Título)"
+            >
+              <Heading3 className="w-3.5 h-3.5" />
+              <span>Subtítulo</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("\n- ", "", "Ponto chave da matéria")}
+              className="px-2 py-1 rounded border hover:bg-black/10 font-bold flex items-center gap-1 cursor-pointer"
+              title="Lista de Marcadores (- item)"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Lista</span>
+            </button>
+          </div>
+
+          {!previewFormatted ? (
+            <Textarea
+              ref={textareaRef}
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              placeholder="Escreva os parágrafos da matéria aqui. Use a barra de ferramentas acima para destacar, sublinhar, aplicar aspas e subtítulos..."
+              className="theme-app-input text-xs h-48 leading-relaxed font-sans border-2"
+            />
+          ) : (
+            <div className="theme-app-card p-4 rounded-lg border-2 h-48 overflow-y-auto space-y-2 text-xs leading-relaxed custom-scrollbar bg-slate-900/10">
+              {(formData.content || "")
+                .split("\n\n")
+                .map((p, idx) => {
+                  if (p.startsWith("### ") || p.startsWith("## ")) {
+                    return (
+                      <h4 key={idx} className="font-black text-amber-500 uppercase text-xs pt-1 border-b border-amber-500/30">
+                        // {p.replace(/^#+\s*/, "")}
+                      </h4>
+                    );
+                  }
+                  if (p.startsWith("- ") || p.startsWith("• ")) {
+                    return (
+                      <ul key={idx} className="space-y-1 pl-2">
+                        {p.split("\n").map((line, liIdx) => (
+                          <li key={liIdx} className="flex items-start gap-1">
+                            <span className="text-amber-500 font-bold">▸</span>
+                            <span>{line.replace(/^[-•]\s*/, "")}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  }
+                  return (
+                    <p key={idx} className="text-justify">
+                      {p}
+                    </p>
+                  );
+                })}
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}

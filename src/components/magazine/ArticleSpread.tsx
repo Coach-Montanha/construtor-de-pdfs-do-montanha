@@ -89,7 +89,86 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     pageChunks = allRawChunks;
   }
 
-  // Render individual paragraph chunks with markdown support
+  // Helper to parse inline rich typography tokens (bold, italic, underline, mark, quotes)
+  const renderInlineFormatted = (rawText: string) => {
+    // Tokenize: ==highlight==, **bold**, <b>bold</b>, <u>underline</u>, __underline__, *italic*, <i>italic</i>, "quotes", “quotes”
+    const tokenRegex = /(==[\s\S]+?==|<mark>[\s\S]+?<\/mark>|\*\*[\s\S]+?\*\*|<b>[\s\S]+?<\/b>|<u>[\s\S]+?<\/u>|__[\s\S]+?__|\*[\s\S]+?\*|<i>[\s\S]+?<\/i>|“[\s\S]+?”|"[^"]+?")/g;
+    const parts = rawText.split(tokenRegex);
+
+    return parts.map((part, index) => {
+      if (!part) return null;
+
+      // 1. Highlight / Marca-texto (==...== or <mark>...</mark>)
+      if ((part.startsWith("==") && part.endsWith("==")) || (part.startsWith("<mark>") && part.endsWith("</mark>"))) {
+        const inner = part.startsWith("==") ? part.slice(2, -2) : part.slice(6, -7);
+        return (
+          <mark
+            key={index}
+            className="px-1 py-0.5 rounded font-bold"
+            style={{
+              backgroundColor: `${primaryColor}40`,
+              color: isLight ? "#0F172A" : "#FFFFFF",
+              borderBottom: `2px solid ${primaryColor}`,
+            }}
+          >
+            {inner}
+          </mark>
+        );
+      }
+
+      // 2. Bold (**...** or <b>...</b>)
+      if ((part.startsWith("**") && part.endsWith("**")) || (part.startsWith("<b>") && part.endsWith("</b>"))) {
+        const inner = part.startsWith("**") ? part.slice(2, -2) : part.slice(3, -4);
+        return (
+          <strong
+            key={index}
+            className="font-black"
+            style={{ color: isLight ? "#000000" : "#FFFFFF" }}
+          >
+            {inner}
+          </strong>
+        );
+      }
+
+      // 3. Underline (<u>...</u> or __...__)
+      if ((part.startsWith("<u>") && part.endsWith("</u>")) || (part.startsWith("__") && part.endsWith("__"))) {
+        const inner = part.startsWith("<u>") ? part.slice(3, -4) : part.slice(2, -2);
+        return (
+          <span
+            key={index}
+            className="underline decoration-2 underline-offset-2 font-semibold"
+            style={{ textDecorationColor: primaryColor }}
+          >
+            {inner}
+          </span>
+        );
+      }
+
+      // 4. Italic (*...* or <i>...</i>)
+      if ((part.startsWith("*") && part.endsWith("*")) || (part.startsWith("<i>") && part.endsWith("</i>"))) {
+        const inner = part.startsWith("*") ? part.slice(1, -1) : part.slice(3, -4);
+        return (
+          <em key={index} className="italic font-medium">
+            {inner}
+          </em>
+        );
+      }
+
+      // 5. Quotes (“...” or "...")
+      if ((part.startsWith("“") && part.endsWith("”")) || (part.startsWith('"') && part.endsWith('"'))) {
+        const inner = part.slice(1, -1);
+        return (
+          <span key={index} className="italic font-bold" style={{ color: primaryColor }}>
+            “{inner}”
+          </span>
+        );
+      }
+
+      return part;
+    });
+  };
+
+  // Render individual paragraph chunks with markdown and rich formatting support
   const renderSingleChunk = (chunk: string, idx: number, isFirstOverall: boolean) => {
     // Standalone H2 / Subheaders (### or ##)
     if (chunk.startsWith("### ") || chunk.startsWith("## ")) {
@@ -104,6 +183,23 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             <span>{cleanTitle}</span>
           </h4>
         </div>
+      );
+    }
+
+    // Bullet points (- or •)
+    if (chunk.startsWith("- ") || chunk.startsWith("• ")) {
+      const items = chunk.split("\n").filter((l) => l.trim().startsWith("- ") || l.trim().startsWith("• "));
+      return (
+        <ul key={idx} className={`my-1.5 space-y-1 ${bodyFontClass}`}>
+          {items.map((item, itemIdx) => (
+            <li key={itemIdx} className={`flex items-start gap-1.5 leading-snug ${bodyTextSizeClass}`}>
+              <span className="font-bold shrink-0" style={{ color: primaryColor }}>▸</span>
+              <span style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}>
+                {renderInlineFormatted(item.replace(/^[-•]\s*/, ""))}
+              </span>
+            </li>
+          ))}
+        </ul>
       );
     }
 
@@ -124,7 +220,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             className={`${bodyTextSizeClass} text-justify ${bodyFontClass}`}
             style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
           >
-            {body}
+            {renderInlineFormatted(body)}
           </p>
         </div>
       );
@@ -141,7 +237,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         }`}
         style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
       >
-        {chunk.replace(/\*\*(.*?)\*\*/g, "$1")}
+        {renderInlineFormatted(chunk)}
       </p>
     );
   };
