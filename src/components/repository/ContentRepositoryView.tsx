@@ -9,6 +9,13 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../ui/dialog";
+import {
   analyzeAndDiagramEditorialText,
   EditorialAnalysisResult,
 } from "../../lib/ai-service";
@@ -24,6 +31,8 @@ import {
   Sparkles,
   Search,
   CheckCircle2,
+  Check,
+  Eye,
   Clock,
   Layers,
   FileUp,
@@ -63,6 +72,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
   const [analysisResult, setAnalysisResult] = useState<EditorialAnalysisResult | null>(null);
   const [selectedSourceDoc, setSelectedSourceDoc] = useState<RepositoryDocument | null>(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState<boolean>(false);
+  const [previewDoc, setPreviewDoc] = useState<RepositoryDocument | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -484,6 +494,15 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
+                      onClick={() => setPreviewDoc(doc)}
+                      className="p-1.5 opacity-70 hover:opacity-100 hover:bg-black/10 rounded cursor-pointer"
+                      title="Pré-visualizar / Ler Texto"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-amber-600" />
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => handleEditDraft(doc)}
                       className="p-1.5 opacity-70 hover:opacity-100 hover:bg-black/10 rounded cursor-pointer"
                       title="Editar Rascunho"
@@ -519,6 +538,70 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
             );
           })}
         </div>
+      )}
+
+      {/* Quick Reading Modal */}
+      {previewDoc && (
+        <Dialog open={Boolean(previewDoc)} onOpenChange={() => setPreviewDoc(null)}>
+          <DialogContent className="theme-app-card max-w-2xl max-h-[85vh] overflow-y-auto p-6 custom-scrollbar font-sans border-2 border-black shadow-2xl">
+            <DialogHeader className="border-b-2 border-current pb-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
+                  {previewDoc.category || "GERAL"}
+                </span>
+                <span className="text-[10px] font-mono opacity-75 font-bold">
+                  {previewDoc.wordCount} PALAVRAS • ~{Math.max(1, Math.round(previewDoc.wordCount / 130))} MIN DE LEITURA
+                </span>
+              </div>
+              <DialogTitle className="text-base sm:text-lg font-black uppercase tracking-tight mt-1">
+                {previewDoc.title}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="my-4 theme-app-card-subtle p-4 rounded-xl border-2 max-h-[50vh] overflow-y-auto custom-scrollbar font-sans text-xs leading-relaxed whitespace-pre-wrap">
+              {previewDoc.rawContent}
+            </div>
+
+            <DialogFooter className="border-t pt-3 flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const doc = previewDoc;
+                  setPreviewDoc(null);
+                  handleEditDraft(doc);
+                }}
+                className="h-8 text-xs font-bold border-2 flex items-center gap-1"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Editar Rascunho</span>
+              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewDoc(null)}
+                  className="h-8 text-xs font-bold border-2"
+                >
+                  Fechar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const doc = previewDoc;
+                    setPreviewDoc(null);
+                    handleTriggerAiAnalysis(doc);
+                  }}
+                  className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border border-black shadow-xs cursor-pointer flex items-center gap-1"
+                >
+                  <Wand2 className="w-3.5 h-3.5 text-black" />
+                  <span>⚡ Diagramar com IA</span>
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* AI Approval Modal */}

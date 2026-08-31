@@ -180,14 +180,25 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
                     readOnly
                     className="theme-app-input font-mono text-[10px] h-8 border-2 truncate"
                   />
-                  <Button
-                    size="sm"
-                    onClick={handleCopyLink}
-                    className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black shrink-0 cursor-pointer flex items-center gap-1"
-                  >
-                    {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5 text-black" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedLink ? "Link Copiado!" : "Copiar Link"}</span>
-                  </Button>
+                  <div className="flex gap-1.5 shrink-0">
+                    <Button
+                      size="sm"
+                      onClick={handleCopyLink}
+                      className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black shrink-0 cursor-pointer flex items-center gap-1"
+                    >
+                      {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5 text-black" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedLink ? "Link Copiado!" : "Copiar Link"}</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(shareUrl, "_blank")}
+                      className="h-8 text-xs font-bold border-2 shrink-0 cursor-pointer flex items-center gap-1"
+                      title="Abrir em Nova Aba"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-amber-500" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -31,14 +31,29 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
   const borderColor = theme.borderColor;
 
   // Filter articles with images for the Visual Feature Column (right)
-  const visualArticles = articles.filter((a) => a.heroImage).slice(0, 3);
+  const visualArticles = articles.filter((a) => a.heroImage && a.enabled !== false).slice(0, 3);
 
-  // Compute starting page for articles based on active previous pages
-  let articleStartPage = 1;
-  if (pageVisibility?.showCover !== false) articleStartPage++;
-  if (pageVisibility?.showEditorLetter !== false) articleStartPage++;
-  if (pageVisibility?.showContributors) articleStartPage++;
-  if (pageVisibility?.showTableOfContents !== false) articleStartPage++;
+  // Compute exact starting page for each article dynamically accumulating page spans
+  let currentOffset = 1;
+  if (pageVisibility?.showCover !== false) currentOffset += 1;
+  if (pageVisibility?.showEditorLetter !== false) currentOffset += 1;
+  if (pageVisibility?.showContributors) currentOffset += 1;
+  if (pageVisibility?.showTableOfContents !== false) currentOffset += 1;
+
+  const activeArticlesWithPages = articles
+    .filter((art) => art.enabled !== false)
+    .map((art) => {
+      const startPage = currentOffset;
+      const isTwoPage = art.pageSpan === 2;
+      const span = isTwoPage ? 2 : 1;
+      currentOffset += span;
+      return {
+        article: art,
+        startPage,
+        endPage: startPage + span - 1,
+        isTwoPage,
+      };
+    });
 
   return (
     <div
@@ -100,9 +115,10 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
             </div>
 
             <div className="space-y-3">
-              {articles.map((art, idx) => {
-                const articlePage = articleStartPage + idx;
-                const paddedPage = articlePage < 10 ? `0${articlePage}` : `${articlePage}`;
+              {activeArticlesWithPages.map(({ article: art, startPage, endPage, isTwoPage }) => {
+                const startPadded = startPage < 10 ? `0${startPage}` : `${startPage}`;
+                const endPadded = endPage < 10 ? `0${endPage}` : `${endPage}`;
+                const pageLabel = isTwoPage ? `${startPadded}-${endPadded}` : startPadded;
 
                 return (
                   <div
@@ -110,14 +126,19 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
                     className="group flex items-start gap-3 p-1.5 rounded transition-all border-l-2"
                     style={{ borderColor: `${primaryColor}40`, backgroundColor: `${cardBg}50` }}
                   >
-                    {/* 1. Page Number */}
-                    <div className="shrink-0">
+                    {/* 1. Page Number & Spread Badge */}
+                    <div className="shrink-0 flex flex-col items-center">
                       <span
-                        className="font-mono font-black text-sm px-2 py-0.5 rounded border block"
+                        className="font-mono font-black text-xs sm:text-sm px-2 py-0.5 rounded border block"
                         style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
                       >
-                        {paddedPage}
+                        {pageLabel}
                       </span>
+                      {isTwoPage && (
+                        <span className="font-mono text-[7px] font-black uppercase text-amber-500 mt-0.5">
+                          DUPLA
+                        </span>
+                      )}
                     </div>
 
                     {/* 2. Article Title, Category Tag, Author */}
@@ -132,6 +153,14 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
                         <span className="text-[8px] font-mono" style={{ color: textMutedColor }}>
                           {art.estimatedReadTime} MIN READ
                         </span>
+                        {isTwoPage && (
+                          <span
+                            className="text-[7.5px] font-mono font-bold px-1 rounded uppercase"
+                            style={{ backgroundColor: `${primaryColor}25`, color: primaryColor }}
+                          >
+                            2 PÁGINAS
+                          </span>
+                        )}
                       </div>
 
                       <h3

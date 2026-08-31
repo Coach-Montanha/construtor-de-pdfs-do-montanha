@@ -11,7 +11,9 @@ import { Button } from "../ui/button";
 import {
   Printer,
   FileDown,
+  FileText,
   AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 interface PdfExportModalProps {
@@ -19,6 +21,7 @@ interface PdfExportModalProps {
   onClose: () => void;
   project: MagazineProject;
   theme: MagazineTheme;
+  totalPages?: number;
 }
 
 export const PdfExportModal: React.FC<PdfExportModalProps> = ({
@@ -26,11 +29,35 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
   onClose,
   project,
   theme,
+  totalPages: customTotalPages,
 }) => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  // Total pages: Cover (1) + EditorLetter (1) + Contributors (1) + TOC (1) + Articles (N) + BackCover (1)
-  const totalPages = 4 + project.articles.length;
+  // Dynamic total pages calculation
+  const calculateTotalPages = (): number => {
+    const vis = {
+      showCover: true,
+      showEditorLetter: true,
+      showContributors: false,
+      showTableOfContents: true,
+      showBackCover: true,
+      ...project.pageVisibility,
+    };
+    let count = 0;
+    if (vis.showCover) count++;
+    if (vis.showEditorLetter) count++;
+    if (vis.showContributors) count++;
+    if (vis.showTableOfContents) count++;
+    project.articles
+      .filter((a) => a.enabled !== false)
+      .forEach((a) => {
+        count += a.pageSpan === 2 ? 2 : 1;
+      });
+    if (vis.showBackCover) count++;
+    return Math.max(1, count);
+  };
+
+  const totalPages = customTotalPages || calculateTotalPages();
 
   const handlePrintPdf = () => {
     setIsExporting(true);
@@ -50,6 +77,56 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
     downloadAnchor.setAttribute(
       "download",
       `${project.title.toLowerCase().replace(/\s+/g, "_")}_edicao_${project.editionNumber || "01"}.json`
+    );
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleExportCompiledMarkdown = () => {
+    let md = `# ${project.title.toUpperCase()}\n`;
+    md += `**Edição:** ${project.editionNumber || "01"} | **Volume:** ${project.volume || "01"} | **Data:** ${project.date}\n`;
+    md += `**Tema:** ${theme.name}\n\n`;
+    md += `---\n\n`;
+
+    if (project.editorialInfo) {
+      md += `## CARTA DO EDITOR\n\n`;
+      md += `**Editor:** ${project.editorialInfo.editorName} (${project.editorialInfo.editorRole})\n\n`;
+      md += `### ${project.editorialInfo.editorLetterTitle || "Manifesto de Abertura"}\n\n`;
+      md += `${project.editorialInfo.editorLetter}\n\n`;
+      if (project.editorialInfo.editorialNote) {
+        md += `> *"${project.editorialInfo.editorialNote}"* — ${project.editorialInfo.editorName}\n\n`;
+      }
+      md += `---\n\n`;
+    }
+
+    md += `## MATÉRIAS & ARTIGOS DA EDIÇÃO\n\n`;
+    project.articles
+      .filter((a) => a.enabled !== false)
+      .forEach((art, idx) => {
+        md += `### ${idx + 1}. ${art.title}\n\n`;
+        if (art.subtitle) md += `*${art.subtitle}*\n\n`;
+        md += `**Categoria:** ${art.category} | **Autor:** ${art.author} | **Tempo de Leitura:** ${art.estimatedReadTime} min\n\n`;
+        md += `${art.content}\n\n`;
+        if (art.pullQuotes && art.pullQuotes.length > 0) {
+          md += `> **Citação:** "${art.pullQuotes[0]}"\n\n`;
+        }
+        if (art.keyTakeaways && art.keyTakeaways.length > 0) {
+          md += `**Pontos-chave:**\n`;
+          art.keyTakeaways.forEach((t) => {
+            md += `- ${t}\n`;
+          });
+          md += `\n`;
+        }
+        md += `---\n\n`;
+      });
+
+    const dataStr = "data:text/markdown;charset=utf-8," + encodeURIComponent(md);
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute(
+      "download",
+      `${project.title.toLowerCase().replace(/\s+/g, "_")}_edicao_${project.editionNumber || "01"}_textos.md`
     );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
@@ -112,11 +189,11 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
           </div>
 
           {/* Actions Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
             <Button
               onClick={handlePrintPdf}
               disabled={isExporting}
-              className="h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm shadow-md border-2 border-black flex items-center justify-center gap-2"
+              className="h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md border-2 border-black flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>{isExporting ? "Preparando..." : "Gerar & Salvar PDF A4"}</span>
@@ -124,11 +201,21 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
 
             <Button
               variant="outline"
+              onClick={handleExportCompiledMarkdown}
+              className="h-11 border-2 border-current theme-app-card font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              title="Exportar todo o texto da revista em um arquivo Markdown formatado"
+            >
+              <FileText className="w-4 h-4 text-amber-500" />
+              <span>Baixar Textos (.MD)</span>
+            </Button>
+
+            <Button
+              variant="outline"
               onClick={handleDownloadBackupJson}
-              className="h-12 border-2 border-current theme-app-card font-bold text-xs flex items-center justify-center gap-2"
+              className="h-11 border-2 border-current theme-app-card font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <FileDown className="w-4 h-4 text-amber-500" />
-              <span>Baixar Backup (.JSON)</span>
+              <span>Backup Geral (.JSON)</span>
             </Button>
           </div>
         </div>

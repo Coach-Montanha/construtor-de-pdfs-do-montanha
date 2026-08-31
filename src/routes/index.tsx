@@ -48,6 +48,9 @@ import {
   Cloud,
   ArrowRightLeft,
   FolderOpen,
+  Copy,
+  Layers,
+  Eye,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -185,6 +188,36 @@ function Index() {
         updatedAt: new Date().toISOString(),
       });
     }
+  };
+
+  const handleDuplicateArticle = (sourceArticle: Article) => {
+    const cloned: Article = {
+      ...JSON.parse(JSON.stringify(sourceArticle)),
+      id: "art-" + Date.now(),
+      title: `${sourceArticle.title} (CÓPIA)`,
+    };
+    const idx = project.articles.findIndex((a) => a.id === sourceArticle.id);
+    const updatedArticles = [...project.articles];
+    if (idx >= 0) {
+      updatedArticles.splice(idx + 1, 0, cloned);
+    } else {
+      updatedArticles.push(cloned);
+    }
+    setProject({
+      ...project,
+      articles: updatedArticles,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const handleToggleArticleEnabled = (id: string) => {
+    setProject({
+      ...project,
+      articles: project.articles.map((a) =>
+        a.id === id ? { ...a, enabled: a.enabled === false ? true : false } : a
+      ),
+      updatedAt: new Date().toISOString(),
+    });
   };
 
   const handleMoveArticle = (idx: number, direction: "up" | "down") => {
@@ -638,15 +671,91 @@ function Index() {
               </div>
             </div>
 
+            {/* Editorial Overview Statistics Bar */}
+            {(() => {
+              const activeArts = project.articles.filter((a) => a.enabled !== false);
+              const totalWordsCount = activeArts.reduce(
+                (acc, a) => acc + (a.content ? a.content.split(/\s+/).filter(Boolean).length : 0),
+                0
+              );
+              const totalReadTime = activeArts.reduce(
+                (acc, a) => acc + (a.estimatedReadTime || 4),
+                0
+              );
+              const totalDoublePages = activeArts.filter((a) => a.pageSpan === 2).length;
+              const totalSinglePages = activeArts.filter((a) => a.pageSpan !== 2).length;
+
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase opacity-75 block">
+                      Total de Páginas Ativas
+                    </span>
+                    <div className="flex items-center gap-1.5 font-mono font-black text-base sm:text-lg text-amber-600">
+                      <Layers className="w-4 h-4" />
+                      <span>{totalPages} Páginas A4</span>
+                    </div>
+                    <span className="text-[9px] opacity-60 block">
+                      {totalSinglePages} simples + {totalDoublePages} duplas
+                    </span>
+                  </div>
+
+                  <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase opacity-75 block">
+                      Volume Editorial
+                    </span>
+                    <div className="flex items-center gap-1.5 font-mono font-black text-base sm:text-lg text-amber-600">
+                      <FileText className="w-4 h-4" />
+                      <span>{totalWordsCount.toLocaleString("pt-BR")} palavras</span>
+                    </div>
+                    <span className="text-[9px] opacity-60 block">
+                      Em {activeArts.length} matérias ativas
+                    </span>
+                  </div>
+
+                  <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase opacity-75 block">
+                      Tempo de Leitura
+                    </span>
+                    <div className="flex items-center gap-1.5 font-mono font-black text-base sm:text-lg text-amber-600">
+                      <Clock className="w-4 h-4" />
+                      <span>~{totalReadTime} min</span>
+                    </div>
+                    <span className="text-[9px] opacity-60 block">
+                      Edição completa compilada
+                    </span>
+                  </div>
+
+                  <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase opacity-75 block">
+                      Acervo de Rascunhos
+                    </span>
+                    <div className="flex items-center gap-1.5 font-mono font-black text-base sm:text-lg text-amber-600">
+                      <FolderOpen className="w-4 h-4" />
+                      <span>{project.contentRepository?.length || 0} textos</span>
+                    </div>
+                    <span className="text-[9px] opacity-60 block">
+                      Prontos para auto-diagramação
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Articles List */}
             <div className="space-y-3">
               {project.articles.map((art, idx) => {
-                const calculatedPageNum = activePages.findIndex((p) => p.id === art.id) + 1;
+                const calculatedPageNum = activePages.findIndex((p) => p.id === art.id || p.id === `${art.id}-part1`) + 1;
                 const pageNum = calculatedPageNum > 0 ? calculatedPageNum : idx + 4;
+                const isDouble = art.pageSpan === 2;
+                const isEnabled = art.enabled !== false;
+
                 return (
                   <div
                     key={art.id}
-                    className="theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group shadow-sm"
+                    className={`theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group shadow-sm ${
+                      !isEnabled ? "opacity-50 bg-slate-100 border-slate-300" : ""
+                    }`}
                   >
                     {/* Thumbnail & Info */}
                     <div className="flex items-center gap-4 flex-1">
@@ -663,13 +772,20 @@ function Index() {
                       )}
 
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="bg-amber-400 text-black text-[9px] font-mono font-black px-2 py-0.5 rounded border border-black uppercase">
                             {art.category}
                           </span>
                           <span className="text-[10px] font-mono font-black text-amber-600">
-                            PÁGINA {pageNum < 10 ? `0${pageNum}` : pageNum}
+                            {isDouble
+                              ? `PÁG. ${pageNum < 10 ? `0${pageNum}` : pageNum}-${pageNum + 1 < 10 ? `0${pageNum + 1}` : pageNum + 1}`
+                              : `PÁG. ${pageNum < 10 ? `0${pageNum}` : pageNum}`}
                           </span>
+                          {isDouble && (
+                            <span className="bg-black text-amber-400 font-mono text-[8px] font-black px-1.5 py-0.2 rounded border border-black uppercase">
+                              PÁGINA DUPLA
+                            </span>
+                          )}
                           <span className="text-[10px] opacity-75 font-semibold flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {art.estimatedReadTime} min
@@ -685,7 +801,7 @@ function Index() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-slate-300">
+                    <div className="flex flex-wrap items-center gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-slate-300">
                       {/* Move up / down */}
                       <button
                         type="button"
@@ -705,6 +821,18 @@ function Index() {
                       >
                         <MoveDown className="w-4 h-4" />
                       </button>
+
+                      {/* Duplicate Button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDuplicateArticle(art)}
+                        className="h-8 px-2.5 font-bold text-xs flex items-center gap-1 border-2 border-current cursor-pointer"
+                        title="Duplicar Matéria / Clonar Template"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="hidden lg:inline">Duplicar</span>
+                      </Button>
 
                       <Button
                         size="sm"
@@ -806,6 +934,7 @@ function Index() {
         onClose={() => setIsExportModalOpen(false)}
         project={project}
         theme={currentPublicationTheme}
+        totalPages={totalPages}
       />
 
       <CloudSyncDialog
