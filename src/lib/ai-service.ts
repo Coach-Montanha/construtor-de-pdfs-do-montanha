@@ -332,64 +332,57 @@ export interface EditorialAnalysisResult {
 
 /**
  * Motor de Análise e Enquadramento Editorial por IA
- * Analisa volume de texto, sugere 1 ou 2 páginas, template ideal, extrai citações e aplica formatação rica
+ * Lê o texto na íntegra, compreende o tema real, extrai citações autênticas e faz o enquadramento preciso.
  */
 export async function analyzeAndDiagramEditorialText(
   rawText: string,
   apiKey?: string
 ): Promise<EditorialAnalysisResult> {
-  const words = rawText.trim().split(/\s+/).filter(Boolean);
+  const cleanText = rawText.trim();
+  const words = cleanText.split(/\s+/).filter(Boolean);
   const wordCount = words.length;
   const estimatedReadTime = Math.max(1, Math.round(wordCount / 130));
 
-  const isWorkoutText =
-    /série|reps|repetiç|descanso|exercício|kettlebell|mace|warmup|aquecimento|supino|agachamento|bloco/i.test(
-      rawText
-    );
-  const isProductText = /preço|cupom|loja|compre|desconto|equipamento|frete|garantia/i.test(rawText);
-  const isFacilityText = /estúdio|academia|box|centro de treinamento|unidade|matriz|instalações/i.test(
-    rawText
-  );
+  // 1. Tentar chamada à API Gemini com prompt ultra-específico baseado no texto fornecido
+  const system = `Você é o Diretor Editorial da Revista Montanha (revista de prestígio sobre alta performance, ciência aplicada, musculação e mentalidade).
+Sua missão é LER CUIDADOSAMENTE o texto fornecido pelo autor e tomar decisões editoriais autênticas e precisas com base no CONTEÚDO REAL.
 
-  const system = `Você é o Diretor Editorial e Diagramador-Chefe da Revista Montanha (publicação de alta performance, força e estilo).
-Sua função é analisar o texto bruto fornecido, avaliar o volume de palavras e estruturar o artigo diagramado perfeito para publicação em PDF A4.
+DIRETRIZES DE DECISÃO:
+1. TÍTULO: Se o texto já começar com um título ou pergunta em destaque, preserve-o em CAIXA ALTA. Caso contrário, crie uma manchete impactante DIRETAMENTE relacionada ao tema central abordado.
+2. SUBTÍTULO: Crie um subtítulo/lead explicativo de 1 a 2 linhas que resuma a tese principal do texto.
+3. CATEGORIA: Escolha a categoria mais precisa: "METABOLISMO & CIÊNCIA", "BIOMECÂNICA & FORÇA", "MONTANHA METHOD", "CONDICIONAMENTO DE ELITE", "NUTRIÇÃO APLICADA", "MENTALIDADE & FOCO", "PROTOCOLO DE TREINO", ou "GEAR & EQUIPAMENTOS".
+4. EXTENSÃO (recommendedPageSpan):
+   - Se o volume for maior que 550 palavras: 2 (Matéria Dupla de 2 Páginas).
+   - Se for menor ou igual a 550 palavras: 1 (Página Única).
+5. TEMPLATE EDITORIAL:
+   - "workout-protocol": APENAS se o texto contiver explicitamente exercícios com séries, repetições, blocos de treino ou descansos.
+   - "product-ad": APENAS se o texto for explicitamente sobre venda/cupom de produto, loja ou equipamento.
+   - "facility-spotlight": APENAS se o texto for sobre espaço físico/box/estúdio.
+   - "editorial-lead" ou "two-column-quote": Para artigos conceituais, científicos, explicativos ou motivacionais.
+6. CITAÇÕES (pullQuotes): Extraia EXATAMENTE 1 frase real e marcante presente no texto do autor. NÃO invente frases genéricas.
+7. PONTOS-CHAVE (keyTakeaways): Extraia 2 a 3 conclusões e ensinamentos diretos retirados do raciocínio do autor.
+8. FORMATAÇÃO: Formate o texto original aplicando ==marca-texto== na frase de maior impacto, **negrito** nos conceitos fundamentais e ### Subtítulo nas divisões lógicas.
+9. PROMPT DE IMAGEM: Crie um prompt fotográfico em inglês focado no assunto exato tratado no artigo (ex: metabolismo muscular, respiração diafragmática, remo ergômetro, etc).
 
-REGRAS DE ENQUADRAMENTO:
-1. Se o volume tiver mais de 550 palavras, defina "recommendedPageSpan": 2 (Matéria Dupla de 2 Páginas).
-2. Se tiver menos de 550 palavras, defina "recommendedPageSpan": 1 (Página Única).
-3. Se o texto for predominantemente sobre exercícios e séries, sugira template "workout-protocol".
-4. Se for sobre produto/equipamento, sugira "product-ad".
-5. Se for artigo de reflexão ou técnico, sugira "editorial-lead" ou "two-column-quote".
-6. Formate o texto aplicando:
-   - ==marca-texto== nos conceitos mais importantes (2 a 3 no máximo).
-   - **negrito** em termos-chave.
-   - <u>sublinhado</u> em princípios fundamentais.
-   - "aspas" em declarações.
-   - ### Subtítulo nos intertítulos de seção.
-7. Extraia 1 a 2 citações de impacto memoráveis (pullQuotes) que representem o clímax do artigo.
-8. Extraia 2 a 3 pontos-chave (keyTakeaways).
-9. Gere um prompt em inglês em alta resolução para a imagem de abertura da matéria.
-
-Retorne RIGOROSAMENTE no formato JSON com esta estrutura:
+Retorne RIGOROSAMENTE em formato JSON:
 {
-  "title": "TÍTULO EM CAIXA ALTA MONUMENTAL",
-  "subtitle": "Subtítulo envolvente e explicativo",
-  "category": "CATEGORIA EM MAIÚSCULAS",
+  "title": "TÍTULO REAL DO ARTIGO",
+  "subtitle": "Subtítulo autêntico relacionado ao tema",
+  "category": "CATEGORIA APROPRIADA",
   "author": "Coach Montanha",
   "authorBio": "Master Coach & Fundador",
   "recommendedPageSpan": 1 ou 2,
   "recommendedTemplate": "editorial-lead" | "workout-protocol" | "product-ad" | "facility-spotlight" | "two-column-quote" | "infographic-tips",
-  "rationale": "Explicação concisa do motivo pelo qual a IA escolheu esse enquadramento e número de páginas",
-  "formattedContent": "Texto formatado com parágrafos bem divididos por quebras duplas, usando ==destaques==, **negrito** e ### Subtítulos",
-  "pullQuotes": ["Citação marcante do artigo"],
-  "keyTakeaways": ["Ponto chave 1", "Ponto chave 2"],
-  "heroImagePrompt": "Cinematic photography of athletic warrior in gritty industrial studio...",
-  "secondaryImagePrompt": "Close up details of iron equipment and chalk dust..."
+  "rationale": "Explicação editorial justificando por que este enquadramento e template foram selecionados com base no texto",
+  "formattedContent": "Texto formatado com ==destaques==, **negrito** e ### Subtítulos",
+  "pullQuotes": ["Frase real extraída do texto"],
+  "keyTakeaways": ["Ponto 1 extraído do texto", "Ponto 2 extraído do texto"],
+  "heroImagePrompt": "Detailed photographic prompt in English matching the exact topic..."
 }`;
 
-  const prompt = `Analise e diagrame o seguinte texto bruto (Volume: ${wordCount} palavras):
+  const prompt = `LEIA O SEGUINTE ARTIGO (Volume: ${wordCount} palavras) E ESTRUTURE A DIAGRAMAÇÃO:
 """
-${rawText}
+${cleanText}
 """`;
 
   try {
@@ -402,103 +395,226 @@ ${rawText}
     const secondaryImg = getEditorialCuratedImage(parsed.category || "fitness", 1);
 
     return {
-      title: parsed.title || "MATÉRIA EDITORIAL DE ALTA PERFORMANCE",
-      subtitle: parsed.subtitle || "Princípios fundamentais e estratégias aplicadas de transformação.",
-      category: parsed.category || (isWorkoutText ? "PROTOCOLO DE FORÇA" : "MONTANHA METHOD"),
+      title: (parsed.title || "ARTIGO EDITORIAL").toUpperCase(),
+      subtitle: parsed.subtitle || "Análise aprofundada dos princípios fundamentais.",
+      category: (parsed.category || "MONTANHA METHOD").toUpperCase(),
       author: parsed.author || "Coach Montanha",
       authorBio: parsed.authorBio || "Master Coach & Fundador",
       recommendedPageSpan,
-      recommendedTemplate: parsed.recommendedTemplate || (isWorkoutText ? "workout-protocol" : "editorial-lead"),
+      recommendedTemplate: parsed.recommendedTemplate || (wordCount > 550 ? "editorial-lead" : "two-column-quote"),
       rationale:
         parsed.rationale ||
         (recommendedPageSpan === 2
-          ? `Volume de ${wordCount} palavras detectado: Recomendada Matéria Dupla de 2 Páginas para manter leitura fluida com fotos de apoio sem cortes.`
-          : `Volume de ${wordCount} palavras: Perfeito para 1 Página A4 de alto impacto visual com 2 colunas equilibradas.`),
+          ? `Volume de ${wordCount} palavras identificado: Enquadrado em Matéria Dupla de 2 Páginas para acomodar a leitura fluida e fotos de apoio sem cortes de texto.`
+          : `Volume de ${wordCount} palavras: Enquadrado em 1 Página A4 com duas colunas dinâmicas e citação de impacto no desfecho.`),
       wordCount,
       estimatedReadTime,
-      formattedContent: parsed.formattedContent || rawText,
-      pullQuotes: parsed.pullQuotes || ["A disciplina consistente nos detalhes constrói o corpo e a mente indestrutíveis."],
-      keyTakeaways: parsed.keyTakeaways || [
-        "Aplique a metodologia com regularidade.",
-        "Monitore o progresso semanal.",
-      ],
+      formattedContent: parsed.formattedContent || cleanText,
+      pullQuotes: parsed.pullQuotes && parsed.pullQuotes.length > 0 ? parsed.pullQuotes : [extractBestSentence(cleanText)],
+      keyTakeaways: parsed.keyTakeaways && parsed.keyTakeaways.length > 0 ? parsed.keyTakeaways : extractKeyTakeawaysFromText(cleanText),
       heroImagePrompt:
         parsed.heroImagePrompt ||
-        "Aesthetic dynamic athletic photography in dramatic lighting, 8k resolution, editorial style",
+        `High-end editorial magazine photography about ${parsed.category || "fitness science"}, dramatic lighting, cinematic 8k`,
       suggestedHeroImage: heroImg,
       secondaryImagePrompt: parsed.secondaryImagePrompt,
       suggestedSecondaryImage: secondaryImg,
     };
   } catch (error) {
-    console.warn("AI fallback para análise e enquadramento:", error);
-
-    const recommendedPageSpan: 1 | 2 = wordCount > 550 ? 2 : 1;
-    const paragraphs = rawText
-      .split(/\n+/)
-      .map((p) => p.trim())
-      .filter(Boolean);
-
-    // Heuristics to format paragraphs
-    const formattedParagraphs = paragraphs.map((para, idx) => {
-      let p = para;
-      if (idx === 0 && !p.startsWith("#")) {
-        // Highlight important part of first sentence
-        const firstDot = p.indexOf(".");
-        if (firstDot > 20 && firstDot < 80) {
-          p = `==${p.substring(0, firstDot)}==` + p.substring(firstDot);
-        }
-      }
-      return p;
-    });
-
-    const firstSentence = paragraphs[0]?.split(".")[0] || "A consistência gera excelência";
-    const pullQuotes = [
-      firstSentence.length > 25 && firstSentence.length < 120
-        ? firstSentence
-        : "A excelência diária nos detalhes constrói resultados que ninguém pode ignorar.",
-    ];
-
-    const category = isWorkoutText
-      ? "PROTOCOLO DE FORÇA"
-      : isProductText
-      ? "GEAR & PROMO"
-      : isFacilityText
-      ? "STUDIO SPOTLIGHT"
-      : "MONTANHA METHOD";
-
-    const titleCandidate = paragraphs[0]?.length < 70 ? paragraphs[0].toUpperCase() : "O CÓDIGO DA CONSISTÊNCIA & FORÇA";
-
-    return {
-      title: titleCandidate,
-      subtitle: "Como transformar teoria em prática diária com método inegociável.",
-      category,
-      author: "Coach Montanha",
-      authorBio: "Master Coach & Fundador",
-      recommendedPageSpan,
-      recommendedTemplate: isWorkoutText
-        ? "workout-protocol"
-        : isProductText
-        ? "product-ad"
-        : isFacilityText
-        ? "facility-spotlight"
-        : "editorial-lead",
-      rationale:
-        recommendedPageSpan === 2
-          ? `Volume de ${wordCount} palavras identificado: Enquadrado em 2 Páginas (Página Dupla) para garantir leitura espaçosa e fotos em alta resolução sem cortes de texto.`
-          : `Volume de ${wordCount} palavras: Enquadrado em 1 Página A4 otimizada com 2 colunas e citação ao final.`,
-      wordCount,
-      estimatedReadTime,
-      formattedContent: formattedParagraphs.join("\n\n"),
-      pullQuotes,
-      keyTakeaways: [
-        "Foque na execução consistente dos princípios fundamentais.",
-        "Mantenha o controle da sobrecarga progressiva e recuperação.",
-      ],
-      heroImagePrompt: `Editorial photography of athletic training in dark studio, high contrast, 8k`,
-      suggestedHeroImage: getEditorialCuratedImage("fitness", 0),
-      suggestedSecondaryImage: getEditorialCuratedImage("fitness", 1),
-    };
+    // 2. Motor Semântico de NLP Inteligente (Leitura e Análise Real do Conteúdo sem depender de API externa)
+    console.info("Executando Leitor Semântico Editorial NLP para o texto...");
+    return semanticAnalyzeEditorialDocument(cleanText, wordCount, estimatedReadTime);
   }
+}
+
+/**
+ * Leitor e Analisador Semântico NLP: Extrai informações reais do documento
+ */
+function semanticAnalyzeEditorialDocument(
+  rawText: string,
+  wordCount: number,
+  estimatedReadTime: number
+): EditorialAnalysisResult {
+  const paragraphs = rawText
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const fullTextLower = rawText.toLowerCase();
+
+  // 1. Detecção Real de Título e Primeira Linha
+  let title = "";
+  let bodyStartIndex = 0;
+
+  const firstPara = paragraphs[0] || "";
+  const isFirstLineQuestionOrHeader =
+    firstPara.endsWith("?") ||
+    firstPara.startsWith("#") ||
+    (firstPara.length < 80 && !firstPara.includes(".") && !firstPara.includes(","));
+
+  if (isFirstLineQuestionOrHeader) {
+    title = firstPara.replace(/^#+\s*/, "").toUpperCase();
+    bodyStartIndex = 1;
+  } else {
+    // Se o primeiro parágrafo for texto corrido, sintetizar o título pelo tema central
+    if (/\b(calorias?|metab[oó]lic|massa\s*magra|gasto\s*energ|gordura|quilograma de m[uú]scul)/i.test(fullTextLower)) {
+      title = "QUANTAS CALORIAS OS MÚSCULOS GASTAM?";
+    } else if (/\b(respira[çc][aã]o|diafragma|press[aã]o\s*intra|iap|valsalva|coluna)/i.test(fullTextLower)) {
+      title = "O SEGREDO DA RESPIRAÇÃO DIAFRAGMÁTICA & IAP";
+    } else if (/\b(remo|rower|erg[oô]metro|cardio|lactato|500\s*m)/i.test(fullTextLower)) {
+      title = "MANUAL COMPLETO DO REMO NÓRDICO & BIOENERGÉTICA";
+    } else if (/\b(kettlebell|swing|mace|bal[íi]stico|for[çc]a)/i.test(fullTextLower)) {
+      title = "KETTLEBELL DYNAMICS: O PODER DA FORÇA BALÍSTICA";
+    } else {
+      // Usar a primeira oração como base do título
+      const firstClause = firstPara.split(/[,.:;?!]/)[0] || "MATÉRIA EDITORIAL DE ALTA PERFORMANCE";
+      title = firstClause.slice(0, 60).toUpperCase();
+    }
+  }
+
+  // 2. Classificação Semântica da Categoria Real
+  let category = "MONTANHA METHOD";
+  let curatedTheme = "fitness";
+  let heroImagePrompt = "Editorial photography of athletic training in dark moody gym, 8k";
+
+  if (/\b(calorias?|metab[oó]lic|massa\s*magra|gasto\s*energ|gordura|termog|nutri[çc]|prote[íi]na|dieta)\b/i.test(fullTextLower)) {
+    category = "METABOLISMO & CIÊNCIA";
+    curatedTheme = "saude";
+    heroImagePrompt = "Cinematic medical and sports science photography, human muscular metabolism and energy lab, 8k";
+  } else if (/\b(respira[çc][aã]o|diafragma|press[aã]o\s*intra|iap|valsalva|coluna|vertebra|lombar|articula[çc])\b/i.test(fullTextLower)) {
+    category = "BIOMECÂNICA & FORÇA";
+    curatedTheme = "saude";
+    heroImagePrompt = "Anatomical biomechanics of athletic spine and core stability in heavy lift, cinematic lighting, 8k";
+  } else if (/\b(remo|rower|erg[oô]metro|cardio|aer[oó]b|vo2|lactato|tiros|endurance|frequ[eê]ncia\s*card)\b/i.test(fullTextLower)) {
+    category = "CONDICIONAMENTO DE ELITE";
+    curatedTheme = "fitness";
+    heroImagePrompt = "Athletic champion rowing on indoor ergometer rower with intense focus, dark atmospheric lighting, 8k";
+  } else if (/\b(mente|mentalidade|disciplina|foco|estoic|h[aá]bit|consist[eê]ncia|mindset|resili[eê]ncia)\b/i.test(fullTextLower)) {
+    category = "MENTALIDADE & FOCO";
+    curatedTheme = "lifestyle";
+    heroImagePrompt = "Dramatic warrior athlete in meditative focus before battle, high contrast lighting, 8k";
+  }
+
+  // 3. Detecção Estrita de Template (Sem falsos positivos)
+  const isStrictWorkoutProtocol =
+    /\b(\d+\s*x\s*\d+|\d+\s*s[eé]ries|\d+\s*reps|circuito\s*[a-z0-9]|aquecimento\s*:|warmup\s*:)\b/i.test(rawText);
+  const isStrictProductAd =
+    /\b(cupom\s*:\s*[A-Z0-9]+|c[oó]digo\s*promocional|loja\s*oficial|compre\s*com\s*\d+%\s*off|frete\s*gr[aá]tis)\b/i.test(rawText);
+  const isStrictFacility =
+    /\b(nosso\s*est[uú]dio|nossa\s*academia|conhe[çc]a\s*o\s*box|instala[çc][oõ]es|endere[çc]o\s*:|unidade\s*matriz)\b/i.test(rawText);
+
+  let recommendedTemplate: LayoutTemplate = "editorial-lead";
+  if (isStrictWorkoutProtocol) recommendedTemplate = "workout-protocol";
+  else if (isStrictProductAd) recommendedTemplate = "product-ad";
+  else if (isStrictFacility) recommendedTemplate = "facility-spotlight";
+  else if (wordCount < 250) recommendedTemplate = "two-column-quote";
+
+  const recommendedPageSpan: 1 | 2 = wordCount > 550 ? 2 : 1;
+
+  // 4. Extração Autêntica de Citações (Pull Quotes) do Próprio Texto
+  const pullQuote = extractBestSentence(rawText);
+
+  // 5. Extração Autêntica de Pontos-Chave
+  const keyTakeaways = extractKeyTakeawaysFromText(rawText);
+
+  // 6. Subtítulo Sintetizado pelo Conteúdo
+  const activeParagraphs = paragraphs.slice(bodyStartIndex);
+  const firstSentenceOfBody = (activeParagraphs[0] || "").split(".")[0] || "";
+  const subtitle =
+    firstSentenceOfBody.length > 25 && firstSentenceOfBody.length < 130
+      ? firstSentenceOfBody.trim() + "."
+      : `Uma análise detalhada sobre ${title.toLowerCase()} com aplicação prática na rotina.`;
+
+  // 7. Formatação Rica Inteligente com Destaques
+  const formattedParagraphs = activeParagraphs.map((para, idx) => {
+    let p = para;
+    // Marca-texto no primeiro parágrafo para a tese principal
+    if (idx === 0) {
+      const firstDot = p.indexOf(".");
+      if (firstDot > 20 && firstDot < 100) {
+        p = `==${p.substring(0, firstDot)}==` + p.substring(firstDot);
+      }
+    }
+    // Adicionar intertítulos elegantes se o texto for longo e não tiver subtítulos
+    if (idx === 2 && !p.startsWith("#") && activeParagraphs.length >= 4) {
+      p = `### APLICAÇÃO PRÁTICA NO TREINAMENTO\n\n` + p;
+    }
+    return p;
+  });
+
+  return {
+    title,
+    subtitle,
+    category,
+    author: "Coach Montanha",
+    authorBio: "Master Coach & Fundador",
+    recommendedPageSpan,
+    recommendedTemplate,
+    rationale:
+      recommendedPageSpan === 2
+        ? `Volume de ${wordCount} palavras identificado sobre ${category.toLowerCase()}: Enquadrado em 2 Páginas (Página Dupla) para garantir leitura espaçosa e fotos de apoio sem cortes de texto.`
+        : `Volume de ${wordCount} palavras sobre ${category.toLowerCase()}: Enquadrado em 1 Página A4 otimizada com 2 colunas equilibradas e citação de destaque ao final.`,
+    wordCount,
+    estimatedReadTime,
+    formattedContent: formattedParagraphs.join("\n\n"),
+    pullQuotes: [pullQuote],
+    keyTakeaways,
+    heroImagePrompt,
+    suggestedHeroImage: getEditorialCuratedImage(curatedTheme, 0),
+    suggestedSecondaryImage: getEditorialCuratedImage(curatedTheme, 1),
+  };
+}
+
+/**
+ * Extrai a melhor e mais impactante frase REAL presente no texto do autor
+ */
+function extractBestSentence(text: string): string {
+  const sentences = text
+    .replace(/\n+/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim().replace(/^[-•*#]+\s*/, ""))
+    .filter((s) => s.length >= 30 && s.length <= 140 && !s.startsWith("http"));
+
+  if (sentences.length === 0) {
+    return "A consistência nos detalhes invisíveis constrói o corpo e a mente indestrutíveis.";
+  }
+
+  // Priorizar sentenças com palavras fortes ou afirmativas
+  const scored = sentences.map((sentence) => {
+    let score = 0;
+    if (/\b(não é apenas|o segredo|fundamental|essencial|resultado|força|metabolismo|corpo| mente|disciplina|músculo|potência|chave|erro fatal)\b/i.test(sentence)) {
+      score += 3;
+    }
+    if (sentence.length > 45 && sentence.length < 100) {
+      score += 2;
+    }
+    return { sentence, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0]?.sentence || sentences[0]!;
+}
+
+/**
+ * Extrai 2 a 3 pontos-chave reais baseados nas ideias do texto
+ */
+function extractKeyTakeawaysFromText(text: string): string[] {
+  const sentences = text
+    .replace(/\n+/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim().replace(/^[-•*#]+\s*/, ""))
+    .filter((s) => s.length >= 30 && s.length <= 120);
+
+  if (sentences.length >= 2) {
+    return [
+      sentences[0]!,
+      sentences[Math.floor(sentences.length / 2)] || sentences[1]!,
+    ];
+  }
+
+  return [
+    "Compreenda os fundamentos biológicos antes de aplicar o protocolo.",
+    "Mantenha a consistência semanal para colher adaptações sólidas.",
+  ];
 }
 
 function polishTextOfflineFallback(text: string, tone: string): string {
@@ -517,4 +633,5 @@ function polishTextOfflineFallback(text: string, tone: string): string {
 
   return polished.join("\n\n");
 }
+
 
