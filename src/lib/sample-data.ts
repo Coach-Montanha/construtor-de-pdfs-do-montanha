@@ -405,6 +405,7 @@ Cada página que você ler nesta edição foi cuidadosamente diagramada para ent
         facility: "TACTICAL COMBAT LAB",
       },
     ],
+    tocHeadline: "SUMÁRIO",
     tocSpotlightImage:
       "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",
     tocSpotlightTitle: "TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA",

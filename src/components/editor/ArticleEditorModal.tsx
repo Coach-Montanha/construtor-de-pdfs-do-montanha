@@ -115,10 +115,15 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     }, 40);
   };
 
+  const [polishSuccess, setPolishSuccess] = useState<string | null>(null);
+
   useEffect(() => {
     if (article) {
       setFormData({
         ...article,
+        pullQuotes: Array.isArray(article.pullQuotes) ? article.pullQuotes : [],
+        keyTakeaways: Array.isArray(article.keyTakeaways) ? article.keyTakeaways : [],
+        tags: Array.isArray(article.tags) ? article.tags : [],
         enabled: article.enabled !== false,
       });
     } else {
@@ -159,18 +164,20 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
 
   const handleAddQuote = () => {
     if (!newQuoteInput.trim()) return;
-    setFormData({
-      ...formData,
-      pullQuotes: [...formData.pullQuotes, newQuoteInput.trim()],
-    });
+    const current = Array.isArray(formData.pullQuotes) ? formData.pullQuotes : [];
+    setFormData((prev) => ({
+      ...prev,
+      pullQuotes: [...current, newQuoteInput.trim()],
+    }));
     setNewQuoteInput("");
   };
 
   const handleRemoveQuote = (idx: number) => {
-    setFormData({
-      ...formData,
-      pullQuotes: formData.pullQuotes.filter((_, i) => i !== idx),
-    });
+    const current = Array.isArray(formData.pullQuotes) ? formData.pullQuotes : [];
+    setFormData((prev) => ({
+      ...prev,
+      pullQuotes: current.filter((_, i) => i !== idx),
+    }));
   };
 
   const handleAddTakeaway = () => {
@@ -209,12 +216,15 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   const handlePolishText = async (tone: "motivational" | "journalistic" | "scientific" = "journalistic") => {
     if (!formData.content) return;
     setIsAiLoading(true);
-    setAiStatusMsg("Polindo texto com linguagem editorial de revista...");
+    setPolishSuccess(null);
+    setAiStatusMsg("Polindo texto com linguagem editorial rica (negrito, itálico, destaques)...");
     try {
       const polished = await polishEditorialText(formData.content, tone);
       setFormData((prev) => ({ ...prev, content: polished }));
+      setPolishSuccess(`✓ Texto aprimorado com sucesso em tom ${tone === "motivational" ? "Motivacional" : "Jornalístico"}! Formatação rica aplicada.`);
+      setTimeout(() => setPolishSuccess(null), 5000);
     } catch (err: any) {
-      alert("Erro na IA: " + err.message);
+      alert("Erro no polimento: " + err.message);
     } finally {
       setIsAiLoading(false);
     }
@@ -611,7 +621,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </div>
 
               <div className="space-y-1.5 max-h-24 overflow-y-auto">
-                {formData.pullQuotes.map((q, idx) => (
+                {(formData.pullQuotes || []).map((q, idx) => (
                   <div
                     key={idx}
                     className="flex items-center justify-between gap-2 theme-app-card px-2.5 py-1.5 rounded text-xs border"
@@ -932,6 +942,13 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </button>
             </div>
           </div>
+
+          {polishSuccess && (
+            <div className="p-2 rounded bg-emerald-500/15 border border-emerald-500 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-1.5 animate-fadeIn">
+              <Check className="w-3.5 h-3.5" />
+              <span>{polishSuccess}</span>
+            </div>
+          )}
 
           {/* Quick Formatting Toolbar */}
           <div className="flex flex-wrap items-center gap-1 p-1.5 rounded-lg border-2 theme-app-card-subtle text-xs">

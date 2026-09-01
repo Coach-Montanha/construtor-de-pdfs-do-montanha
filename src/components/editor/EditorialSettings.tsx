@@ -422,9 +422,21 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
               <span>Destaque Visual do Sumário (Visual Spotlight)</span>
             </h3>
             <p className="text-xs opacity-75 mt-0.5">
-              Escolha uma foto exclusiva para estampar a lateral do sumário, sem repetir fotos dos artigos.
+              Escolha o título da página e uma foto exclusiva para estampar a lateral do sumário, sem repetir fotos dos artigos.
             </p>
           </div>
+        </div>
+
+        <div>
+          <Label className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400">
+            TÍTULO PRINCIPAL DO SUMÁRIO (SUBSTITUI "CONTENTS // SUMÁRIO")
+          </Label>
+          <Input
+            value={project.editorialInfo.tocHeadline || ""}
+            onChange={(e) => updateEditorial("tocHeadline", e.target.value.toUpperCase())}
+            placeholder="Padrão: SUMÁRIO (ou ÍNDICE, NESTA EDIÇÃO, etc.)"
+            className="theme-app-input text-xs font-bold mt-1 border-2"
+          />
         </div>
 
         <ImagePicker

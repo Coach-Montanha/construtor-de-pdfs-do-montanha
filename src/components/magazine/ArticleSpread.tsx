@@ -52,6 +52,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const primaryColor = theme.primaryColor;
   const accentColor = theme.accentColor;
   const borderColor = theme.borderColor;
+  const brandTitle = project.editorialInfo?.headerBrandTitle || project.title;
 
   // Dynamic Text Density / Font Sizing
   const density = article.textDensity || "normal";
@@ -271,7 +272,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       >
         <div className="flex items-center gap-2">
           <span className="font-black uppercase tracking-widest" style={{ color: primaryColor }}>
-            {project.title}
+            {brandTitle}
           </span>
           <span className="opacity-40">/</span>
           <span
@@ -289,7 +290,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         <div className="flex items-center gap-3 font-bold uppercase" style={{ color: textMutedColor }}>
           <span className="flex items-center gap-1">
             <Clock className="w-3 h-3" style={{ color: primaryColor }} />
-            {article.estimatedReadTime} MIN READ
+            {article.estimatedReadTime} MIN DE LEITURA
           </span>
           <span>•</span>
           <span>{project.date}</span>
@@ -685,7 +686,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                     <span className="font-bold uppercase" style={{ color: textColor }}>{article.author}</span>
                     {article.authorBio && <span>• {article.authorBio}</span>}
                   </div>
-                  <span className="font-bold uppercase" style={{ color: primaryColor }}>{project.title} EDITORIAL</span>
+                  <span className="font-bold uppercase" style={{ color: primaryColor }}>{brandTitle} EDITORIAL</span>
                 </div>
               </div>
             ) : (

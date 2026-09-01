@@ -84,14 +84,14 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
               {project.volume} // {coverConfig.editionNumber ? `ED. #${coverConfig.editionNumber}` : "ED. #01"}
             </span>
             <span className="text-[10px] font-mono font-bold tracking-widest uppercase" style={{ color: textMutedColor }}>
-              {project.title}
+              {project.editorialInfo?.headerBrandTitle || project.title}
             </span>
           </div>
           <h1
             className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter uppercase leading-none ${headlineFontClass}`}
             style={{ color: textColor }}
           >
-            CONTENTS <span className="font-mono text-2xl sm:text-3xl" style={{ color: primaryColor }}>// SUMÁRIO</span>
+            {project.editorialInfo?.tocHeadline || "SUMÁRIO"}
           </h1>
         </div>
 
@@ -152,7 +152,7 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
                           // {art.category}
                         </span>
                         <span className="text-[8px] font-mono" style={{ color: textMutedColor }}>
-                          {art.estimatedReadTime} MIN READ
+                          {art.estimatedReadTime} MIN DE LEITURA
                         </span>
                         {isTwoPage && (
                           <span

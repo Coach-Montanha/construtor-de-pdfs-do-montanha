@@ -52,23 +52,20 @@ export async function polishEditorialText(
   tone: "motivational" | "journalistic" | "scientific" | "lifestyle" | "executive" = "journalistic",
   apiKey?: string
 ): Promise<string> {
-  const system = `Você é um renomado editor-chefe de grandes revistas como Vogue, Men's Health, Forbes, Harvard Business Review e Time.
-Sua missão é transformar rascunhos de artigos em textos editoriais impecáveis para publicação impressa.
-Mantenha a essência do autor, mas torne os parágrafos fluidos, ricos, dinâmicos e divididos em seções claras com subtítulos elegantes.
-Responda em Português do Brasil diretamente com o texto formatado.`;
+  const system = `Você é um editor-chefe sênior de grandes revistas impressas de prestígio (como Vogue, Men's Health, Iron Man e Time).
+Sua missão é aprimorar a leitura e o ritmo do artigo aplicando diagramação tipográfica de revista (negrito, itálico, destaques e subtítulos) mantendo o tom ${tone}.
 
-  const toneMap = {
-    motivational: "enérgico, inspirador, focado em alta performance e superação",
-    journalistic: "preciso, cativante, elegante, com ritmo narrativo dinâmico e tom de autoridade",
-    scientific: "embasado, claro, com rigor técnico traduzido para linguagem acessível",
-    lifestyle: "descontraído, sofisticado, moderno e com apelo sensorial",
-    executive: "estratégico, conciso, focado em liderança e visão de futuro",
-  };
+DIRETRIZES OBRIGATÓRIAS:
+1. PRESERVE AO MÁXIMO O TEXTO, O VOCABULÁRIO E A AUTORIA ORIGINAL DO AUTOR. Não faça reescritas radicais, não altere o significado e não apague passagens.
+2. APLIQUE FORMATAÇÃO TIPOGRÁFICA RICA DE REVISTA (MARKDOWN):
+   - **negrito**: Aplique em palavras-chave estratégicas, conceitos biomecânicos, fisiológicos, musculares ou números de destaque para guiar o olhar do leitor (1 a 2 termos por parágrafo).
+   - *itálico*: Aplique em termos técnicos estrangeiros, expressões em inglês ou reflexões subjetivas (ex: *mindset*, *core*, *clean & press*, *deficit*).
+   - ==destaque==: Envolva a frase de maior impacto ou tese central em marca-texto ==frase de impacto== (1 ou 2 no máximo no artigo todo).
+   - ### SUBTÍTULO: Insira de 1 a 2 subtítulos em caixa alta entre seções do texto para enriquecer a diagramação de revista.
+3. Organize o texto em parágrafos bem estruturados com quebras de linha duplas.
+4. Responda DIRETAMENTE com o texto formatado em Português do Brasil, sem introduções e sem explicações.`;
 
-  const prompt = `Reescreva o seguinte artigo aplicando um tom ${toneMap[tone]}.
-Divida em 3 a 5 parágrafos coesos e insira de 1 a 2 subtítulos chamativos se for relevante.
-
-Texto original:
+  const prompt = `Artigo a ser formatado e polido com tipografia de revista:
 """
 ${text}
 """`;
@@ -76,7 +73,6 @@ ${text}
   try {
     return await callGeminiApi(prompt, apiKey, system);
   } catch (error) {
-    // Fallback inteligente offline
     console.warn("AI fallback ativado para polimento:", error);
     return polishTextOfflineFallback(text, tone);
   }
@@ -751,20 +747,114 @@ function extractKeyTakeawaysFromText(text: string, title: string, excludeSentenc
 }
 
 function polishTextOfflineFallback(text: string, tone: string): string {
-  const paragraphs = text
-    .split(/\n+/)
+  if (!text || !text.trim()) return text;
+
+  // Quebrar em parágrafos preservando o conteúdo integral
+  const rawParagraphs = text
+    .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean);
 
-  if (paragraphs.length === 0) return text;
+  if (rawParagraphs.length === 0) return text;
 
-  const polished = paragraphs.map((para) => {
-    let p = para.charAt(0).toUpperCase() + para.slice(1);
-    if (!p.endsWith(".")) p += ".";
+  // Termos técnicos e biomecânicos para aplicar negrito
+  const boldPatterns = [
+    /\b(alta performance)\b/gi,
+    /\b(resiliência inabalável)\b/gi,
+    /\b(sobrecarga progressiva)\b/gi,
+    /\b(composição corporal)\b/gi,
+    /\b(taxa metabólica)\b/gi,
+    /\b(gasto energético)\b/gi,
+    /\b(massa magra|massa muscular)\b/gi,
+    /\b(hipertrofia)\b/gi,
+    /\b(recuperação celular)\b/gi,
+    /\b(densidade muscular)\b/gi,
+    /\b(potência de quadril)\b/gi,
+    /\b(cadeia posterior)\b/gi,
+    /\b(sono profundo)\b/gi,
+    /\b(disciplina diária)\b/gi,
+    /\b(princípios fundamentais)\b/gi,
+    /\b(consistência)\b/gi,
+    /\b(pressão intra-abdominal)\b/gi,
+    /\b(respiração diafragmática)\b/gi,
+    /\b(\d+[\s-]*(?:%|kg|minutos|min|kcal|calorias|repetições|reps|séries))\b/gi,
+  ];
+
+  // Termos estrangeiros e de alta performance para itálico
+  const italicPatterns = [
+    /\b(mindset)\b/gi,
+    /\b(core)\b/gi,
+    /\b(clean & press|clean and press)\b/gi,
+    /\b(kettlebell|kettlebells)\b/gi,
+    /\b(steel mace)\b/gi,
+    /\b(clubbell|clubbells)\b/gi,
+    /\b(lockout)\b/gi,
+    /\b(swing|swings)\b/gi,
+    /\b(snatch|snatches)\b/gi,
+    /\b(farmer carry)\b/gi,
+    /\b(biohacking)\b/gi,
+    /\b(finisher)\b/gi,
+    /\b(warm-up|warmup)\b/gi,
+    /\b(deficit|déficit)\b/gi,
+    /\b(status quo)\b/gi,
+    /\b(feedback)\b/gi,
+    /\b(t-spine)\b/gi,
+  ];
+
+  let appliedHighlight = false;
+
+  const processedParagraphs = rawParagraphs.map((para, pIdx) => {
+    if (para.startsWith("#")) return para;
+
+    let p = para;
+
+    // 1. Aplicar negrito em palavras-chave estratégicas
+    boldPatterns.forEach((regex) => {
+      p = p.replace(regex, (match) => {
+        if (p.includes(`**${match}**`) || p.includes(`==${match}==`)) return match;
+        return `**${match}**`;
+      });
+    });
+
+    // 2. Aplicar itálico em termos técnicos estrangeiros
+    italicPatterns.forEach((regex) => {
+      p = p.replace(regex, (match) => {
+        if (p.includes(`*${match}*`) || p.includes(`**${match}**`)) return match;
+        return `*${match}*`;
+      });
+    });
+
+    // 3. Aplicar destaque marca-texto (==...==) na frase mais forte do primeiro ou segundo parágrafo
+    if (!appliedHighlight && (pIdx === 0 || pIdx === 1) && !p.includes("==")) {
+      const sentences = p.split(/(?<=[.!?])\s+/);
+      if (sentences.length >= 2) {
+        const targetSentence = sentences.find((s) => s.length >= 35 && s.length <= 120);
+        if (targetSentence) {
+          p = p.replace(targetSentence, `==${targetSentence}==`);
+          appliedHighlight = true;
+        }
+      }
+    }
+
     return p;
   });
 
-  return polished.join("\n\n");
+  // 4. Inserir subtítulos editoriais dinâmicos se o texto tiver 3 ou mais parágrafos e nenhum subtítulo
+  const hasSubtitles = processedParagraphs.some((p) => p.startsWith("###"));
+  if (!hasSubtitles && processedParagraphs.length >= 3) {
+    const subtitle1 = tone === "motivational" ? "### A FORJA DA MENTALIDADE" : "### ANÁLISE FUNDAMENTAL & IMPACTO";
+    const subtitle2 = tone === "motivational" ? "### EXECUÇÃO SEM DESCULPAS" : "### DIRETRIZ PRÁTICA E APLICAÇÃO";
+
+    const midpoint = Math.floor(processedParagraphs.length / 2);
+    processedParagraphs.splice(midpoint, 0, subtitle1);
+
+    if (processedParagraphs.length >= 6) {
+      const secondPoint = Math.floor(processedParagraphs.length * 0.75);
+      processedParagraphs.splice(secondPoint, 0, subtitle2);
+    }
+  }
+
+  return processedParagraphs.join("\n\n");
 }
 
 /**

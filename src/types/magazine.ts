@@ -141,7 +141,8 @@ export interface EditorialInfo {
   catalogingData?: string;
   publisherInfo?: string;
   contributors: Contributor[];
-  // Visual Spotlights (Sumário & Carta do Editor)
+  // Sumário Customizável
+  tocHeadline?: string;
   tocSpotlightImage?: string;
   tocSpotlightTitle?: string;
   tocSpotlightCategory?: string;

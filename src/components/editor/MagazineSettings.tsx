@@ -228,6 +228,78 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
       {/* PWA INSTALLATION CARD */}
       <PwaInstallPrompt variant="card" />
 
+      {/* 0. IDENTIDADE & TÍTULOS GERAIS DA REVISTA */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+              <Book className="w-4 h-4 text-amber-500" />
+              <span>Identidade da Revista (Nome, Subtítulo & Edição)</span>
+            </h3>
+            <p className="text-xs opacity-75 mt-0.5">
+              Altere o nome da revista que aparece no topo das páginas (artigos, sumário e rodapés), o subtítulo oficial e a data da edição.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-xs font-bold uppercase">Nome da Revista (Cabeçalho Geral das Páginas)</Label>
+            <Input
+              value={project.title}
+              onChange={(e) => onChange({ ...project, title: e.target.value.toUpperCase() })}
+              placeholder="Ex: MONTANHA ou REVISTA MONTANHA"
+              className="theme-app-input font-black text-xs mt-1 border-2"
+            />
+            <p className="text-[10px] opacity-75 mt-1">
+              Este é o nome exibido na barra superior dos artigos, no sumário e nos dados da revista.
+            </p>
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold uppercase">Subtítulo / Slogan da Revista</Label>
+            <Input
+              value={project.subtitle || ""}
+              onChange={(e) => onChange({ ...project, subtitle: e.target.value })}
+              placeholder="Ex: UNCONVENTIONAL STRENGTH & HIGH PERFORMANCE"
+              className="theme-app-input font-semibold text-xs mt-1 border-2"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 border-t border-slate-200 dark:border-slate-800">
+          <div>
+            <Label className="text-xs font-bold uppercase">Número da Edição</Label>
+            <Input
+              value={project.editionNumber || ""}
+              onChange={(e) => onChange({ ...project, editionNumber: e.target.value })}
+              placeholder="Ex: 01"
+              className="theme-app-input font-mono font-bold text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold uppercase">Volume</Label>
+            <Input
+              value={project.volume || ""}
+              onChange={(e) => onChange({ ...project, volume: e.target.value })}
+              placeholder="Ex: VOL. 01"
+              className="theme-app-input font-mono font-bold text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold uppercase">Mês e Ano da Edição</Label>
+            <Input
+              value={project.date || ""}
+              onChange={(e) => onChange({ ...project, date: e.target.value.toUpperCase() })}
+              placeholder="Ex: SETEMBRO 2026"
+              className="theme-app-input font-mono font-bold text-xs mt-1 border-2"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* 0. GERENCIADOR DE PÁGINAS ATIVAS & ESTRUTURA DO PDF */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
         <div className="flex items-center justify-between">
