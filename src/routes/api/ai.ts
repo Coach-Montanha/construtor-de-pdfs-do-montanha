@@ -20,10 +20,52 @@ interface GeminiResponse {
   };
 }
 
+// In-memory sliding window rate limiter (max 20 requests per minute per client)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 20;
+
+function checkRateLimit(clientKey: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(clientKey);
+
+  // Clean up expired records occasionally
+  if (rateLimitMap.size > 500) {
+    for (const [k, v] of rateLimitMap.entries()) {
+      if (now > v.resetTime) rateLimitMap.delete(k);
+    }
+  }
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(clientKey, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
 export const Route = createFileRoute("/api/ai")({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
+        const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
+        if (!checkRateLimit(clientIp)) {
+          return new Response(
+            JSON.stringify({
+              error: "Limite de requisições excedido. Aguarde um minuto antes de solicitar nova geração com IA.",
+            }),
+            {
+              status: 429,
+              headers: { "Content-Type": "application/json", "Retry-After": "60" },
+            }
+          );
+        }
+
         const apiKey = process.env['GEMINI_API_KEY'];
         if (!apiKey) {
           return new Response(

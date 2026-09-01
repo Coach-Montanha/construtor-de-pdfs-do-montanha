@@ -20,6 +20,15 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+
+# Playwright Test Results & Reports
+playwright-report/
+test-results/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
