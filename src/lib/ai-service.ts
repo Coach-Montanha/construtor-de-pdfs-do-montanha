@@ -319,6 +319,7 @@ export async function analyzeAndDiagramEditorialText(
   rawText: string,
   apiKey?: string
 ): Promise<EditorialAnalysisResult> {
+  const cleanText = rawText.trim();
   const wordCount = countWords(rawText);
   const estimatedReadTime = Math.max(1, Math.round(wordCount / 130));
 
