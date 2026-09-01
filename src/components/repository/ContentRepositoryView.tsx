@@ -201,7 +201,10 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     setSelectedSourceDoc(doc);
 
     try {
-      const result = await analyzeAndDiagramEditorialText(doc.rawContent);
+      const result = await analyzeAndDiagramEditorialText(doc.rawContent, {
+        originalTitle: doc.title,
+        originalCategory: doc.category,
+      });
       setAnalysisResult(result);
       setIsApprovalModalOpen(true);
     } catch (err: any) {

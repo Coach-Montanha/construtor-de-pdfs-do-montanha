@@ -315,47 +315,74 @@ export interface EditorialAnalysisResult {
  * Motor de Análise e Enquadramento Editorial por IA
  * Lê o texto na íntegra, compreende o tema real, extrai citações autênticas e faz o enquadramento preciso.
  */
+export interface EditorialAnalysisOptions {
+  originalTitle?: string;
+  originalCategory?: string;
+  apiKey?: string;
+}
+
+/**
+ * Motor de Análise e Enquadramento Editorial por IA
+ * Lê o texto na íntegra, compreende o tema real, extrai citações autênticas e faz o enquadramento preciso.
+ */
 export async function analyzeAndDiagramEditorialText(
   rawText: string,
-  apiKey?: string
+  optionsOrKey?: string | EditorialAnalysisOptions,
+  legacyApiKey?: string
 ): Promise<EditorialAnalysisResult> {
+  const options: EditorialAnalysisOptions =
+    typeof optionsOrKey === "string"
+      ? { apiKey: optionsOrKey || legacyApiKey }
+      : optionsOrKey || {};
+
   const cleanText = rawText.trim();
   const wordCount = countWords(rawText);
   const estimatedReadTime = Math.max(1, Math.round(wordCount / 130));
 
+  const originalTitle = options.originalTitle?.trim() || "";
+  const originalCategory = options.originalCategory?.trim() || "";
+  const apiKey = options.apiKey;
+
   // 1. Tentar chamada à API Gemini com prompt ultra-específico baseado no texto fornecido
-  const system = `Você é o Diretor Editorial da Revista Montanha (revista de prestígio sobre alta performance, ciência aplicada, musculação e mentalidade).
+  const system = `Você é o Diretor Editorial da Revista Montanha (revista de prestígio sobre alta performance, ciência aplicada, musculação e mentalidade do Coach Montanha).
 Sua missão é LER CUIDADOSAMENTE o texto fornecido pelo autor e tomar decisões editoriais autênticas e precisas com base no CONTEÚDO REAL.
 
-DIRETRIZES DE DECISÃO:
-1. TÍTULO: Se o texto já começar com um título ou pergunta em destaque, preserve-o em CAIXA ALTA. Caso contrário, crie uma manchete impactante DIRETAMENTE relacionada ao tema central abordado.
-2. SUBTÍTULO: Crie um subtítulo/lead explicativo de 1 a 2 linhas que resuma a tese principal do texto.
-3. CATEGORIA: Escolha a categoria mais precisa: "METABOLISMO & CIÊNCIA", "BIOMECÂNICA & FORÇA", "MONTANHA METHOD", "CONDICIONAMENTO DE ELITE", "NUTRIÇÃO APLICADA", "MENTALIDADE & FOCO", "PROTOCOLO DE TREINO", ou "GEAR & EQUIPAMENTOS".
-4. EXTENSÃO (recommendedPageSpan):
+DIRETRIZES DE DECISÃO MANDATÓRIAS:
+1. TÍTULO: ${
+    originalTitle
+      ? `O autor já definiu o título deste artigo como: "${originalTitle}". PRESERVE RIGOROSAMENTE este título em CAIXA ALTA. NUNCA invente outro título e NUNCA use a primeira frase do texto como título.`
+      : `Crie uma manchete impactante em CAIXA ALTA diretamente relacionada ao tema central abordado. NUNCA corte a primeira frase no meio.`
+  }
+2. CATEGORIA: ${
+    originalCategory
+      ? `O autor já classificou este artigo na categoria: "${originalCategory}". PRESERVE rigorosamente esta categoria.`
+      : `Escolha a categoria mais precisa: "METABOLISMO & CIÊNCIA", "BIOMECÂNICA & FORÇA", "MONTANHA METHOD", "CONDICIONAMENTO DE ELITE", "NUTRIÇÃO APLICADA", "MENTALIDADE & FOCO", "PROTOCOLO DE TREINO", ou "GEAR & EQUIPAMENTOS".`
+  }
+3. SUBTÍTULO: Crie um subtítulo/lead editorial explicativo de 1 a 2 linhas que resuma a tese principal do texto.
+4. CITAÇÃO DE IMPACTO (pullQuotes): Extraia EXATAMENTE 1 frase marcante presente no MEIO ou CONCLUSÃO do texto. IMPORTANTE: A citação de destaque NUNCA PODE SER IGUAL AO SUBTÍTULO ou ao título. Deve ser uma frase diferente.
+5. PONTOS-CHAVE & CONCLUSÕES (keyTakeaways): Extraia 2 a 3 conclusões e ensinamentos diretos retirados do raciocínio do autor. NUNCA use frases genéricas de biologia se o texto for sobre mentalidade ou superação.
+6. EXTENSÃO (recommendedPageSpan):
    - Se o volume for maior que 550 palavras: 2 (Matéria Dupla de 2 Páginas).
    - Se for menor ou igual a 550 palavras: 1 (Página Única).
-5. TEMPLATE EDITORIAL:
+7. TEMPLATE EDITORIAL:
    - "workout-protocol": APENAS se o texto contiver explicitamente exercícios com séries, repetições, blocos de treino ou descansos.
    - "product-ad": APENAS se o texto for explicitamente sobre venda/cupom de produto, loja ou equipamento.
    - "facility-spotlight": APENAS se o texto for sobre espaço físico/box/estúdio.
    - "editorial-lead" ou "two-column-quote": Para artigos conceituais, científicos, explicativos ou motivacionais.
-6. CITAÇÕES (pullQuotes): Extraia EXATAMENTE 1 frase real e marcante presente no texto do autor. NÃO invente frases genéricas.
-7. PONTOS-CHAVE (keyTakeaways): Extraia 2 a 3 conclusões e ensinamentos diretos retirados do raciocínio do autor.
 8. FORMATAÇÃO: Formate o texto original aplicando ==marca-texto== na frase de maior impacto, **negrito** nos conceitos fundamentais e ### Subtítulo nas divisões lógicas.
-9. PROMPT DE IMAGEM: Crie um prompt fotográfico em inglês focado no assunto exato tratado no artigo (ex: metabolismo muscular, respiração diafragmática, remo ergômetro, etc).
 
 Retorne RIGOROSAMENTE em formato JSON:
 {
-  "title": "TÍTULO REAL DO ARTIGO",
+  "title": "${originalTitle ? originalTitle.toUpperCase() : "TÍTULO REAL DO ARTIGO"}",
   "subtitle": "Subtítulo autêntico relacionado ao tema",
-  "category": "CATEGORIA APROPRIADA",
+  "category": "${originalCategory ? originalCategory.toUpperCase() : "CATEGORIA APROPRIADA"}",
   "author": "Coach Montanha",
   "authorBio": "Master Coach & Fundador",
   "recommendedPageSpan": 1 ou 2,
   "recommendedTemplate": "editorial-lead" | "workout-protocol" | "product-ad" | "facility-spotlight" | "two-column-quote" | "infographic-tips",
   "rationale": "Explicação editorial justificando por que este enquadramento e template foram selecionados com base no texto",
   "formattedContent": "Texto formatado com ==destaques==, **negrito** e ### Subtítulos",
-  "pullQuotes": ["Frase real extraída do texto"],
+  "pullQuotes": ["Frase real e diferente do subtítulo extraída do texto"],
   "keyTakeaways": ["Ponto 1 extraído do texto", "Ponto 2 extraído do texto"],
   "heroImagePrompt": "Detailed photographic prompt in English matching the exact topic..."
 }`;
@@ -370,14 +397,29 @@ ${cleanText}
     const cleanJson = rawResponse.replace(/```json/g, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(cleanJson);
 
+    const resolvedTitle = (originalTitle || parsed.title || "ARTIGO EDITORIAL").toUpperCase();
+    const resolvedCategory = (originalCategory || parsed.category || "MONTANHA METHOD").toUpperCase();
     const recommendedPageSpan: 1 | 2 = parsed.recommendedPageSpan === 2 || wordCount > 550 ? 2 : 1;
-    const heroImg = getEditorialCuratedImage(parsed.category || "fitness", 0);
-    const secondaryImg = getEditorialCuratedImage(parsed.category || "fitness", 1);
+    const heroImg = getEditorialCuratedImage(resolvedCategory, 0);
+    const secondaryImg = getEditorialCuratedImage(resolvedCategory, 1);
+
+    const resolvedSubtitle = parsed.subtitle || "Análise aprofundada dos princípios fundamentais e aplicação prática.";
+    
+    // Garantir que pullQuote nunca seja idêntico ao subtítulo ou título
+    let pullQuotes = parsed.pullQuotes && parsed.pullQuotes.length > 0 ? parsed.pullQuotes : [];
+    if (pullQuotes.length === 0 || pullQuotes[0] === resolvedSubtitle || pullQuotes[0] === resolvedTitle) {
+      pullQuotes = [extractBestPullQuote(cleanText, [resolvedTitle, resolvedSubtitle])];
+    }
+
+    let keyTakeaways = parsed.keyTakeaways && parsed.keyTakeaways.length > 0 ? parsed.keyTakeaways : [];
+    if (keyTakeaways.length === 0) {
+      keyTakeaways = extractKeyTakeawaysFromText(cleanText, resolvedTitle, [resolvedTitle, resolvedSubtitle, pullQuotes[0] || ""]);
+    }
 
     return {
-      title: (parsed.title || "ARTIGO EDITORIAL").toUpperCase(),
-      subtitle: parsed.subtitle || "Análise aprofundada dos princípios fundamentais.",
-      category: (parsed.category || "MONTANHA METHOD").toUpperCase(),
+      title: resolvedTitle,
+      subtitle: resolvedSubtitle,
+      category: resolvedCategory,
       author: parsed.author || "Coach Montanha",
       authorBio: parsed.authorBio || "Master Coach & Fundador",
       recommendedPageSpan,
@@ -390,19 +432,18 @@ ${cleanText}
       wordCount,
       estimatedReadTime,
       formattedContent: parsed.formattedContent || cleanText,
-      pullQuotes: parsed.pullQuotes && parsed.pullQuotes.length > 0 ? parsed.pullQuotes : [extractBestSentence(cleanText)],
-      keyTakeaways: parsed.keyTakeaways && parsed.keyTakeaways.length > 0 ? parsed.keyTakeaways : extractKeyTakeawaysFromText(cleanText),
+      pullQuotes,
+      keyTakeaways,
       heroImagePrompt:
         parsed.heroImagePrompt ||
-        `High-end editorial magazine photography about ${parsed.category || "fitness science"}, dramatic lighting, cinematic 8k`,
+        `High-end editorial magazine photography about ${resolvedCategory}, dramatic lighting, cinematic 8k`,
       suggestedHeroImage: heroImg,
       secondaryImagePrompt: parsed.secondaryImagePrompt,
       suggestedSecondaryImage: secondaryImg,
     };
   } catch (error) {
-    // 2. Motor Semântico de NLP Inteligente (Leitura e Análise Real do Conteúdo sem depender de API externa)
-    console.info("Executando Leitor Semântico Editorial NLP para o texto...");
-    return semanticAnalyzeEditorialDocument(cleanText, wordCount, estimatedReadTime);
+    // 2. Motor Semântico de NLP Inteligente Offline
+    return semanticAnalyzeEditorialDocument(cleanText, wordCount, estimatedReadTime, options);
   }
 }
 
@@ -412,7 +453,8 @@ ${cleanText}
 function semanticAnalyzeEditorialDocument(
   rawText: string,
   wordCount: number,
-  estimatedReadTime: number
+  estimatedReadTime: number,
+  options?: EditorialAnalysisOptions
 ): EditorialAnalysisResult {
   const paragraphs = rawText
     .split(/\n+/)
@@ -421,60 +463,85 @@ function semanticAnalyzeEditorialDocument(
 
   const fullTextLower = rawText.toLowerCase();
 
-  // 1. Detecção Real de Título e Primeira Linha
+  // 1. Detecção Real de Título: PRESERVAR o título original do documento se fornecido!
   let title = "";
   let bodyStartIndex = 0;
 
-  const firstPara = paragraphs[0] || "";
-  const isFirstLineQuestionOrHeader =
-    firstPara.endsWith("?") ||
-    firstPara.startsWith("#") ||
-    (firstPara.length < 80 && !firstPara.includes(".") && !firstPara.includes(","));
-
-  if (isFirstLineQuestionOrHeader) {
-    title = firstPara.replace(/^#+\s*/, "").toUpperCase();
-    bodyStartIndex = 1;
+  if (options?.originalTitle && options.originalTitle.trim().length > 0) {
+    title = options.originalTitle.trim().toUpperCase();
   } else {
-    // Se o primeiro parágrafo for texto corrido, sintetizar o título pelo tema central
-    if (/\b(calorias?|metab[oó]lic|massa\s*magra|gasto\s*energ|gordura|quilograma de m[uú]scul)/i.test(fullTextLower)) {
-      title = "QUANTAS CALORIAS OS MÚSCULOS GASTAM?";
-    } else if (/\b(respira[çc][aã]o|diafragma|press[aã]o\s*intra|iap|valsalva|coluna)/i.test(fullTextLower)) {
-      title = "O SEGREDO DA RESPIRAÇÃO DIAFRAGMÁTICA & IAP";
-    } else if (/\b(remo|rower|erg[oô]metro|cardio|lactato|500\s*m)/i.test(fullTextLower)) {
-      title = "MANUAL COMPLETO DO REMO NÓRDICO & BIOENERGÉTICA";
-    } else if (/\b(kettlebell|swing|mace|bal[íi]stico|for[çc]a)/i.test(fullTextLower)) {
-      title = "KETTLEBELL DYNAMICS: O PODER DA FORÇA BALÍSTICA";
+    const firstPara = paragraphs[0] || "";
+    const isFirstLineQuestionOrHeader =
+      firstPara.startsWith("#") ||
+      firstPara.endsWith("?") ||
+      (firstPara.length < 80 && !firstPara.includes(".") && !firstPara.includes(","));
+
+    if (isFirstLineQuestionOrHeader) {
+      title = firstPara.replace(/^#+\s*/, "").toUpperCase();
+      bodyStartIndex = 1;
     } else {
-      // Usar a primeira oração como base do título
-      const firstClause = firstPara.split(/[,.:;?!]/)[0] || "MATÉRIA EDITORIAL DE ALTA PERFORMANCE";
-      title = firstClause.slice(0, 60).toUpperCase();
+      // Sintetizar título autêntico de acordo com o tema, sem truncar a primeira oração no meio
+      title = synthesizeHeadlineFromContent(rawText, fullTextLower);
     }
   }
 
-  // 2. Classificação Semântica da Categoria Real
+  // 2. Classificação Semântica da Categoria Real: PRESERVAR categoria registrada se fornecida!
   let category = "MONTANHA METHOD";
   let curatedTheme = "fitness";
   let heroImagePrompt = "Editorial photography of athletic training in dark moody gym, 8k";
 
-  if (/\b(calorias?|metab[oó]lic|massa\s*magra|gasto\s*energ|gordura|termog|nutri[çc]|prote[íi]na|dieta)\b/i.test(fullTextLower)) {
-    category = "METABOLISMO & CIÊNCIA";
-    curatedTheme = "saude";
-    heroImagePrompt = "Cinematic medical and sports science photography, human muscular metabolism and energy lab, 8k";
-  } else if (/\b(respira[çc][aã]o|diafragma|press[aã]o\s*intra|iap|valsalva|coluna|vertebra|lombar|articula[çc])\b/i.test(fullTextLower)) {
-    category = "BIOMECÂNICA & FORÇA";
-    curatedTheme = "saude";
-    heroImagePrompt = "Anatomical biomechanics of athletic spine and core stability in heavy lift, cinematic lighting, 8k";
-  } else if (/\b(remo|rower|erg[oô]metro|cardio|aer[oó]b|vo2|lactato|tiros|endurance|frequ[eê]ncia\s*card)\b/i.test(fullTextLower)) {
-    category = "CONDICIONAMENTO DE ELITE";
-    curatedTheme = "fitness";
-    heroImagePrompt = "Athletic champion rowing on indoor ergometer rower with intense focus, dark atmospheric lighting, 8k";
-  } else if (/\b(mente|mentalidade|disciplina|foco|estoic|h[aá]bit|consist[eê]ncia|mindset|resili[eê]ncia)\b/i.test(fullTextLower)) {
-    category = "MENTALIDADE & FOCO";
-    curatedTheme = "lifestyle";
-    heroImagePrompt = "Dramatic warrior athlete in meditative focus before battle, high contrast lighting, 8k";
+  if (options?.originalCategory && options.originalCategory.trim().length > 0) {
+    category = options.originalCategory.trim().toUpperCase();
+    const catLower = category.toLowerCase();
+    if (catLower.includes("ciência") || catLower.includes("metabolismo") || catLower.includes("saúde") || catLower.includes("nutri")) {
+      curatedTheme = "saude";
+      heroImagePrompt = "Cinematic sports science and muscular metabolism lab, 8k";
+    } else if (catLower.includes("mente") || catLower.includes("mindset") || catLower.includes("foco") || catLower.includes("motiva")) {
+      curatedTheme = "lifestyle";
+      heroImagePrompt = "Dramatic warrior athlete in meditative focus and iron mindset, cinematic lighting, 8k";
+    }
+  } else {
+    if (/\b(calorias?|metab[oó]lic|massa\s*magra|gasto\s*energ|gordura|termog|nutri[çc]|prote[íi]na|dieta)\b/i.test(fullTextLower)) {
+      category = "METABOLISMO & CIÊNCIA";
+      curatedTheme = "saude";
+      heroImagePrompt = "Cinematic medical and sports science photography, human muscular metabolism and energy lab, 8k";
+    } else if (/\b(respira[çc][aã]o|diafragma|press[aã]o\s*intra|iap|valsalva|coluna|vertebra|lombar|articula[çc])\b/i.test(fullTextLower)) {
+      category = "BIOMECÂNICA & FORÇA";
+      curatedTheme = "saude";
+      heroImagePrompt = "Anatomical biomechanics of athletic spine and core stability in heavy lift, cinematic lighting, 8k";
+    } else if (/\b(remo|rower|erg[oô]metro|cardio|aer[oó]b|vo2|lactato|tiros|endurance|frequ[eê]ncia\s*card)\b/i.test(fullTextLower)) {
+      category = "CONDICIONAMENTO DE ELITE";
+      curatedTheme = "fitness";
+      heroImagePrompt = "Athletic champion rowing on indoor ergometer rower with intense focus, dark atmospheric lighting, 8k";
+    } else if (/\b(mente|mentalidade|disciplina|foco|estoic|h[aá]bit|consist[eê]ncia|mindset|resili[eê]ncia|mar\s*revolto|sucesso)\b/i.test(fullTextLower)) {
+      category = "MENTALIDADE & FOCO";
+      curatedTheme = "lifestyle";
+      heroImagePrompt = "Dramatic warrior athlete in meditative focus before battle, high contrast lighting, 8k";
+    }
   }
 
-  // 3. Detecção Estrita de Template (Sem falsos positivos)
+  // 3. Subtítulo Sintetizado pelo Conteúdo
+  const activeParagraphs = paragraphs.slice(bodyStartIndex);
+  const firstParaClean = activeParagraphs[0] || "";
+  const firstSentence = firstParaClean.split(/(?<=[.!?])\s+/)[0] || "";
+  
+  let subtitle = "";
+  if (firstSentence.length >= 35 && firstSentence.length <= 150) {
+    subtitle = firstSentence.trim();
+  } else if (firstSentence.length > 150) {
+    const firstClause = firstSentence.split(/[,:;]/)[0] || "";
+    subtitle = (firstClause.length >= 30 ? firstClause.trim() : firstSentence.slice(0, 130).trim()) + "...";
+  } else {
+    subtitle = `Uma análise aprofundada dos princípios fundamentais e aplicação prática na alta performance.`;
+  }
+
+  // 4. Extração Autêntica de Citação (Pull Quote) - NUNCA IDÊNTICA AO SUBTÍTULO OU AO TÍTULO!
+  const pullQuote = extractBestPullQuote(rawText, [title, subtitle]);
+
+  // 5. Extração Autêntica de Pontos-Chave & Conclusões - NUNCA GENÉRICO E SEM REPETIÇÕES
+  const keyTakeaways = extractKeyTakeawaysFromText(rawText, title, [title, subtitle, pullQuote]);
+
+  // 6. Detecção Estrita de Template
   const isStrictWorkoutProtocol =
     /\b(\d+\s*x\s*\d+|\d+\s*s[eé]ries|\d+\s*reps|circuito\s*[a-z0-9]|aquecimento\s*:|warmup\s*:)\b/i.test(rawText);
   const isStrictProductAd =
@@ -490,31 +557,15 @@ function semanticAnalyzeEditorialDocument(
 
   const recommendedPageSpan: 1 | 2 = wordCount > 550 ? 2 : 1;
 
-  // 4. Extração Autêntica de Citações (Pull Quotes) do Próprio Texto
-  const pullQuote = extractBestSentence(rawText);
-
-  // 5. Extração Autêntica de Pontos-Chave
-  const keyTakeaways = extractKeyTakeawaysFromText(rawText);
-
-  // 6. Subtítulo Sintetizado pelo Conteúdo
-  const activeParagraphs = paragraphs.slice(bodyStartIndex);
-  const firstSentenceOfBody = (activeParagraphs[0] || "").split(".")[0] || "";
-  const subtitle =
-    firstSentenceOfBody.length > 25 && firstSentenceOfBody.length < 130
-      ? firstSentenceOfBody.trim() + "."
-      : `Uma análise detalhada sobre ${title.toLowerCase()} com aplicação prática na rotina.`;
-
   // 7. Formatação Rica Inteligente com Destaques
   const formattedParagraphs = activeParagraphs.map((para, idx) => {
     let p = para;
-    // Marca-texto no primeiro parágrafo para a tese principal
     if (idx === 0) {
       const firstDot = p.indexOf(".");
       if (firstDot > 20 && firstDot < 100) {
         p = `==${p.substring(0, firstDot)}==` + p.substring(firstDot);
       }
     }
-    // Adicionar intertítulos elegantes se o texto for longo e não tiver subtítulos
     if (idx === 2 && !p.startsWith("#") && activeParagraphs.length >= 4) {
       p = `### APLICAÇÃO PRÁTICA NO TREINAMENTO\n\n` + p;
     }
@@ -545,55 +596,154 @@ function semanticAnalyzeEditorialDocument(
 }
 
 /**
- * Extrai a melhor e mais impactante frase REAL presente no texto do autor
+ * Sintetiza uma manchete forte a partir do tema central caso nenhum título seja fornecido
  */
-function extractBestSentence(text: string): string {
+function synthesizeHeadlineFromContent(rawText: string, fullTextLower: string): string {
+  if (/\b(mar\s*revolto|tempest|sincero|sucesso|atravessar|conquist)\b/i.test(fullTextLower)) {
+    return "NENHUM SUCESSO REAL EXISTE SEM CRUZAR O MAR REVOLTO";
+  } else if (/\b(calorias?|metab[oó]lic|massa\s*magra|gasto\s*energ|gordura|quilograma)/i.test(fullTextLower)) {
+    return "QUANTAS CALORIAS OS MÚSCULOS GASTAM?";
+  } else if (/\b(respira[çc][aã]o|diafragma|press[aã]o\s*intra|iap|valsalva|coluna)/i.test(fullTextLower)) {
+    return "O SEGREDO DA RESPIRAÇÃO DIAFRAGMÁTICA & IAP";
+  } else if (/\b(remo|rower|erg[oô]metro|cardio|lactato|500\s*m)/i.test(fullTextLower)) {
+    return "MANUAL COMPLETO DO REMO NÓRDICO & BIOENERGÉTICA";
+  } else if (/\b(kettlebell|swing|mace|bal[íi]stico|for[çc]a)/i.test(fullTextLower)) {
+    return "KETTLEBELL DYNAMICS: O PODER DA FORÇA BALÍSTICA";
+  }
+
+  const firstSentence = rawText.split(/[.!?\n]/)[0]?.trim() || "MATÉRIA EDITORIAL DE ALTA PERFORMANCE";
+  if (firstSentence.length <= 60) {
+    return firstSentence.toUpperCase();
+  }
+  const words = firstSentence.split(/\s+/);
+  return words.slice(0, 8).join(" ").toUpperCase();
+}
+
+/**
+ * Extrai uma citação de impacto forte do texto que seja RIGOROSAMENTE DIFERENTE do título e subtítulo
+ */
+function extractBestPullQuote(text: string, excludeSentences: string[]): string {
+  const normalizedExcludes = excludeSentences
+    .filter(Boolean)
+    .map((s) => s.toLowerCase().replace(/[^a-záàâãéèêíïóôõöúç0-9]/gi, "").slice(0, 30));
+
   const sentences = text
     .replace(/\n+/g, " ")
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim().replace(/^[-•*#]+\s*/, ""))
-    .filter((s) => s.length >= 30 && s.length <= 140 && !s.startsWith("http"));
+    .filter((s) => s.length >= 25 && s.length <= 160 && !s.startsWith("http"));
 
-  if (sentences.length === 0) {
-    return "A consistência nos detalhes invisíveis constrói o corpo e a mente indestrutíveis.";
+  // Filtrar frases que coincidam com o título ou subtítulo
+  const candidateSentences = sentences.filter((s) => {
+    const sNorm = s.toLowerCase().replace(/[^a-záàâãéèêíïóôõöúç0-9]/gi, "").slice(0, 30);
+    return !normalizedExcludes.some((ex) => ex.length > 12 && (sNorm.includes(ex) || ex.includes(sNorm)));
+  });
+
+  if (candidateSentences.length === 0) {
+    return "A consistência na travessia das maiores adversidades é o que constrói o resultado duradouro.";
   }
 
-  // Priorizar sentenças com palavras fortes ou afirmativas
-  const scored = sentences.map((sentence) => {
+  // Pontuar sentenças preferindo do meio ou desfecho do texto com palavras de impacto
+  const scored = candidateSentences.map((sentence, idx) => {
     let score = 0;
-    if (/\b(não é apenas|o segredo|fundamental|essencial|resultado|força|metabolismo|corpo| mente|disciplina|músculo|potência|chave|erro fatal)\b/i.test(sentence)) {
-      score += 3;
+    if (idx > 0) score += 2;
+    if (idx >= Math.floor(candidateSentences.length / 2)) score += 3;
+
+    if (/\b(não acredito|não existe|sucesso|resultado|mar revolto|tempestuoso|vitória|força|preço|pagar|disciplina|verdade|essencial|consistência|foco|mentalidade|superação)\b/i.test(sentence)) {
+      score += 6;
     }
-    if (sentence.length > 45 && sentence.length < 100) {
-      score += 2;
+    if (sentence.length >= 40 && sentence.length <= 110) {
+      score += 3;
     }
     return { sentence, score };
   });
 
   scored.sort((a, b) => b.score - a.score);
-  return scored[0]?.sentence || sentences[0]!;
+  return scored[0]?.sentence || candidateSentences[0]!;
 }
 
 /**
- * Extrai 2 a 3 pontos-chave reais baseados nas ideias do texto
+ * Extrai 2 a 3 pontos-chave reais e conclusões do próprio texto, contextuais e autênticos
  */
-function extractKeyTakeawaysFromText(text: string): string[] {
-  const sentences = text
+function extractKeyTakeawaysFromText(text: string, title: string, excludeSentences: string[]): string[] {
+  const normalizedExcludes = excludeSentences
+    .filter(Boolean)
+    .map((s) => s.toLowerCase().replace(/[^a-záàâãéèêíïóôõöúç0-9]/gi, "").slice(0, 30));
+
+  // 1. Se o autor escreveu listas ou marcadores no texto, usar esses pontos reais!
+  const bulletLines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter((line) => /^([-•*]|\d+[.)])\s+/.test(line))
+    .map((line) => line.replace(/^([-•*]|\d+[.)])\s+/, "").trim())
+    .filter((line) => line.length >= 20 && line.length <= 140);
+
+  if (bulletLines.length >= 2) {
+    return bulletLines.slice(0, 3);
+  }
+
+  // 2. Procurar orações de conclusão ou ensinamento no texto
+  const allSentences = text
     .replace(/\n+/g, " ")
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim().replace(/^[-•*#]+\s*/, ""))
-    .filter((s) => s.length >= 30 && s.length <= 120);
+    .filter((s) => s.length >= 25 && s.length <= 140);
 
-  if (sentences.length >= 2) {
+  const availableSentences = allSentences.filter((s) => {
+    const sNorm = s.toLowerCase().replace(/[^a-záàâãéèêíïóôõöúç0-9]/gi, "").slice(0, 30);
+    return !normalizedExcludes.some((ex) => ex.length > 12 && (sNorm.includes(ex) || ex.includes(sNorm)));
+  });
+
+  if (availableSentences.length >= 2) {
+    const scored = availableSentences.map((sentence, idx) => {
+      let score = 0;
+      if (idx >= Math.floor(availableSentences.length / 2)) score += 3;
+      if (idx === availableSentences.length - 1) score += 2;
+
+      if (/\b(entenda|lembre-se|portanto|preciso|necessário|cruzar|enfrentar|construir|consistência|trabalho|processo|objetivo|foco|essencial|resultado|vitória)\b/i.test(sentence)) {
+        score += 4;
+      }
+      return { sentence, score, idx };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    const first = scored[0]!.sentence;
+    const secondObj = scored.find((item) => item.sentence !== first && Math.abs(item.idx - scored[0]!.idx) > 0);
+    const second = secondObj?.sentence || scored[1]?.sentence;
+
+    if (first && second && first !== second) {
+      return [first, second];
+    }
+    if (first) {
+      return [
+        first,
+        "A verdadeira maestria exige consistência contínua na execução dos fundamentos sem buscar atalhos.",
+      ];
+    }
+  }
+
+  // 3. Conclusões contextuais autênticas baseadas no tema real (NUNCA biologia genérica quando o tema for mindset/força!)
+  const textLower = text.toLowerCase();
+  if (/\b(mente|mindset|sucesso|mar\s*revolto|tempest|mentalidade|disciplina|sincero|vitória)\b/i.test(textLower)) {
     return [
-      sentences[0]!,
-      sentences[Math.floor(sentences.length / 2)] || sentences[1]!,
+      "O resultado sólido não é fruto do acaso: exige atravessar as maiores adversidades com resiliência inabalável.",
+      "A rejeição de atalhos e a disciplina diária são o único caminho verdadeiro para conquistas duradouras.",
+    ];
+  } else if (/\b(caloria|metab|gasto|gordura|m[uú]scul|dieta|nutri)\b/i.test(textLower)) {
+    return [
+      "A taxa metabólica basal e a queima energética respondem diretamente à densidade muscular ativa.",
+      "Alinhe o aporte calórico e a qualidade dos macronutrientes para sustentar a recuperação e hipertrofia.",
+    ];
+  } else if (/\b(respira|diafragma|coluna|iap|lombar|estabil)\b/i.test(textLower)) {
+    return [
+      "A correta pressão intra-abdominal (IAP) e ativação diafragmática criam um cilindro de proteção para a coluna.",
+      "Consolide o padrão respiratório antes de elevar sobrecargas máximas nos levantamentos fundamentais.",
     ];
   }
 
   return [
-    "Compreenda os fundamentos biológicos antes de aplicar o protocolo.",
-    "Mantenha a consistência semanal para colher adaptações sólidas.",
+    "Foque na execução disciplinada dos princípios fundamentais para garantir resultados permanentes.",
+    "A consistência a longo prazo supera qualquer solução rápida ou atalho ilusório.",
   ];
 }
 

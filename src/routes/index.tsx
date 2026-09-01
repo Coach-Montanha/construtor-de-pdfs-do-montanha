@@ -278,7 +278,10 @@ function Index() {
     setIsRepoAnalyzing(true);
     setSelectedRepoDoc(doc);
     try {
-      const result = await analyzeAndDiagramEditorialText(doc.rawContent);
+      const result = await analyzeAndDiagramEditorialText(doc.rawContent, {
+        originalTitle: doc.title,
+        originalCategory: doc.category,
+      });
       setRepoAnalysisResult(result);
       setIsRepoApprovalOpen(true);
     } catch (err: any) {

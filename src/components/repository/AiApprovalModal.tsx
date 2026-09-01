@@ -51,9 +51,16 @@ export const AiApprovalModal: React.FC<AiApprovalModalProps> = ({
 }) => {
   if (!analysis) return null;
 
-  const [title, setTitle] = useState<string>(analysis.title);
+  const initialTitle = sourceDoc?.title?.trim()
+    ? sourceDoc.title.trim().toUpperCase()
+    : analysis.title;
+  const initialCategory = sourceDoc?.category?.trim()
+    ? sourceDoc.category.trim().toUpperCase()
+    : analysis.category;
+
+  const [title, setTitle] = useState<string>(initialTitle);
   const [subtitle, setSubtitle] = useState<string>(analysis.subtitle);
-  const [category, setCategory] = useState<string>(analysis.category);
+  const [category, setCategory] = useState<string>(initialCategory);
   const [author, setAuthor] = useState<string>(analysis.author);
   const [authorBio, setAuthorBio] = useState<string>(analysis.authorBio);
   const [pageSpan, setPageSpan] = useState<1 | 2>(analysis.recommendedPageSpan);
@@ -70,12 +77,19 @@ export const AiApprovalModal: React.FC<AiApprovalModalProps> = ({
   const [pullQuotes, setPullQuotes] = useState<string[]>(analysis.pullQuotes);
   const [keyTakeaways, setKeyTakeaways] = useState<string[]>(analysis.keyTakeaways);
 
-  // Synchronize when analysis changes
+  // Synchronize when analysis or sourceDoc changes
   React.useEffect(() => {
     if (analysis) {
-      setTitle(analysis.title);
+      const resolvedTitle = sourceDoc?.title?.trim()
+        ? sourceDoc.title.trim().toUpperCase()
+        : analysis.title;
+      const resolvedCategory = sourceDoc?.category?.trim()
+        ? sourceDoc.category.trim().toUpperCase()
+        : analysis.category;
+
+      setTitle(resolvedTitle);
       setSubtitle(analysis.subtitle);
-      setCategory(analysis.category);
+      setCategory(resolvedCategory);
       setAuthor(analysis.author);
       setAuthorBio(analysis.authorBio);
       setPageSpan(analysis.recommendedPageSpan);
@@ -86,7 +100,7 @@ export const AiApprovalModal: React.FC<AiApprovalModalProps> = ({
       setPullQuotes(analysis.pullQuotes);
       setKeyTakeaways(analysis.keyTakeaways);
     }
-  }, [analysis]);
+  }, [analysis, sourceDoc]);
 
   const handleCreateArticle = (): Article => {
     return {
