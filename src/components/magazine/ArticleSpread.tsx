@@ -699,7 +699,9 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             {showHeroImage && (
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-xs ${
-                  heroLayout === "compact"
+                  isTwoPage
+                    ? "h-48 sm:h-56 md:h-64"
+                    : heroLayout === "compact"
                     ? "h-20 sm:h-24"
                     : heroLayout === "contain"
                     ? "h-36 sm:h-44 bg-black/60"
@@ -725,7 +727,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             {/* Secondary Image (Part 2 if available) */}
             {showSecondaryImage && (
               <div
-                className="relative w-full h-28 sm:h-36 rounded-md overflow-hidden border shrink-0 shadow-xs"
+                className="relative w-full h-44 sm:h-52 md:h-60 rounded-md overflow-hidden border shrink-0 shadow-xs"
                 style={{ borderColor: `${primaryColor}40` }}
               >
                 <img

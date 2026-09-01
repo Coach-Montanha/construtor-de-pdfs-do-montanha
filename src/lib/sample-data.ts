@@ -313,6 +313,7 @@ export const INITIAL_MAGAZINE_PROJECT: MagazineProject = {
         tag: "HIPERTROFIA & CIÊNCIA",
         title: "Os 3 Pilares Ocultos do Ganho de Massa que a Maioria Ignora",
         authorCallout: "Coach Montanha",
+        teaser: "O método científico definitivo para romper o platô muscular sem depender de atalhos.",
         pageTarget: 3,
       },
       {
@@ -320,6 +321,7 @@ export const INITIAL_MAGAZINE_PROJECT: MagazineProject = {
         tag: "BIOHACKING",
         title: "Sono Profundo: A Janela de Recuperação Celular e Hormonal",
         authorCallout: "Dra. Helena Vasconcelos",
+        teaser: "Como otimizar a restauração hormonal e a regeneração celular durante a noite.",
         pageTarget: 4,
       },
       {
@@ -327,6 +329,7 @@ export const INITIAL_MAGAZINE_PROJECT: MagazineProject = {
         tag: "MINDSET",
         title: "A Psicologia do Vencedor: Blindando sua Mente contra a Procrastinação",
         authorCallout: "Coach Montanha",
+        teaser: "A ciência prática para blindar a mente e manter consistência diária inegociável.",
         pageTarget: 5,
       },
     ],
@@ -402,6 +405,14 @@ Cada página que você ler nesta edição foi cuidadosamente diagramada para ent
         facility: "TACTICAL COMBAT LAB",
       },
     ],
+    tocSpotlightImage:
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",
+    tocSpotlightTitle: "TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA",
+    tocSpotlightCategory: "LABORATÓRIO DE PERFORMANCE",
+    editorLetterSpotlightImage:
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+    editorLetterSpotlightCaption:
+      "A consistência nos detalhes invisíveis constrói o corpo e a mente indestrutíveis.",
   },
   articles: [
     {

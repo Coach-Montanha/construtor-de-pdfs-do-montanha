@@ -33,7 +33,9 @@ import {
   Instagram,
   Youtube,
   Mail,
+  Loader2,
 } from "lucide-react";
+import { generateCoverTeasers } from "../../lib/ai-service";
 
 interface CoverCustomizerProps {
   coverConfig: CoverConfig;
@@ -59,6 +61,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
   pageVisibility,
 }) => {
   const [activeSection, setActiveSection] = useState<"cover" | "backCover">("cover");
+  const [isGeneratingTeasers, setIsGeneratingTeasers] = useState<boolean>(false);
 
   const updateBackCover = <K extends keyof BackCoverConfig>(
     field: K,
@@ -116,6 +119,23 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
     return artIndex >= 0 ? page + artIndex : page;
   };
 
+  const handleGenerateAiTeasers = async () => {
+    if (coverConfig.highlights.length === 0) return;
+    setIsGeneratingTeasers(true);
+    try {
+      const generated = await generateCoverTeasers(coverConfig.highlights, articles);
+      const updated = coverConfig.highlights.map((hl) => {
+        const match = generated.find((g) => g.id === hl.id);
+        return match ? { ...hl, teaser: match.teaser } : hl;
+      });
+      updateField("highlights", updated);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setIsGeneratingTeasers(false);
+    }
+  };
+
   // Auto-Index Highlights directly from project articles
   const handleAutoIndexAllArticles = () => {
     const activeArticles = articles.filter((a) => a.enabled !== false);
@@ -126,12 +146,20 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
 
     const indexedHighlights: CoverHighlight[] = activeArticles.slice(0, 4).map((art, idx) => {
       const pageNum = getArticlePageNumber(art.id);
+      const initialTeaser =
+        art.subtitle && art.subtitle.length >= 25 && art.subtitle.length <= 95
+          ? art.subtitle.endsWith(".") ? art.subtitle : `${art.subtitle}.`
+          : art.content
+          ? art.content.slice(0, 80).trim() + "..."
+          : undefined;
+
       return {
         id: "hl-" + Date.now() + "-" + idx,
         tag: art.category ? `// 0${idx + 1}. ${art.category}` : `// 0${idx + 1}. MATÉRIA`,
         title: art.title,
         authorCallout: art.author,
         pageTarget: pageNum,
+        teaser: initialTeaser,
       };
     });
 
@@ -146,6 +174,10 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
     const pageNum = getArticlePageNumber(art.id);
     const currentHlIndex = coverConfig.highlights.findIndex((h) => h.id === highlightId);
     const numPrefix = currentHlIndex >= 0 ? `// 0${currentHlIndex + 1}. ` : "";
+    const teaser =
+      art.subtitle && art.subtitle.length >= 25 && art.subtitle.length <= 95
+        ? art.subtitle.endsWith(".") ? art.subtitle : `${art.subtitle}.`
+        : undefined;
 
     const updated = coverConfig.highlights.map((h) =>
       h.id === highlightId
@@ -155,6 +187,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
             title: art.title,
             authorCallout: art.author,
             pageTarget: pageNum,
+            teaser: teaser || h.teaser,
           }
         : h
     );
@@ -578,17 +611,34 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             {articles.length > 0 && (
-              <Button
-                size="sm"
-                onClick={handleAutoIndexAllArticles}
-                className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs flex items-center gap-1 border-2 border-black shadow-xs cursor-pointer"
-                title="Puxa todas as matérias cadastradas e calcula as páginas automaticamente"
-              >
-                <Zap className="w-3.5 h-3.5 text-black" />
-                <span>⚡ Auto-Indexar Matérias</span>
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  onClick={handleAutoIndexAllArticles}
+                  className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs flex items-center gap-1 border-2 border-black shadow-xs cursor-pointer"
+                  title="Puxa todas as matérias cadastradas e calcula as páginas automaticamente"
+                >
+                  <Zap className="w-3.5 h-3.5 text-black" />
+                  <span>Auto-Indexar</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  onClick={handleGenerateAiTeasers}
+                  disabled={isGeneratingTeasers || coverConfig.highlights.length === 0}
+                  className="h-8 bg-black hover:bg-neutral-800 text-amber-400 font-black text-xs flex items-center gap-1 border-2 border-amber-400 shadow-xs cursor-pointer"
+                  title="Gera ganchos curtos de impacto com base no texto dos artigos para estampar a capa"
+                >
+                  {isGeneratingTeasers ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  )}
+                  <span>{isGeneratingTeasers ? "Gerando..." : "⚡ Gerar Chamadas IA"}</span>
+                </Button>
+              </>
             )}
 
             <Button
@@ -598,7 +648,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
               className="h-8 font-black text-xs flex items-center gap-1 border-2 border-current shadow-xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Adicionar Manual</span>
+              <span>Adicionar</span>
             </Button>
           </div>
         </div>
@@ -688,6 +738,19 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                     className="theme-app-input text-xs font-mono font-bold mt-1 border-2"
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center justify-between">
+                  <span>CHAMADA CURTA DE IMPACTO (SUBSTITUI AUTOR/PÁGINA NA CAPA)</span>
+                  <span className="text-[9px] font-normal opacity-70">Ganchos instigantes de 8 a 15 palavras</span>
+                </Label>
+                <Input
+                  value={hl.teaser || ""}
+                  onChange={(e) => handleUpdateHighlight(hl.id, "teaser", e.target.value)}
+                  placeholder="Ex: O método científico definitivo para romper o platô sem atalhos."
+                  className="theme-app-input text-xs italic font-medium mt-1 border-2 border-amber-500/40"
+                />
               </div>
             </div>
           ))}

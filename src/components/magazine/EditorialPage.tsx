@@ -214,37 +214,60 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
         </div>
 
         {/* Right Column: Visual Features (5 cols) */}
-        <div className="md:col-span-5 flex flex-col justify-between space-y-3">
+        <div className="md:col-span-5 flex flex-col justify-between space-y-2">
           <div
-            className="flex items-center gap-1.5 text-[10px] font-mono font-black tracking-widest uppercase pb-1 border-b"
+            className="flex items-center gap-1.5 text-[10px] font-mono font-black tracking-widest uppercase pb-1 border-b shrink-0"
             style={{ color: primaryColor, borderColor: `${primaryColor}30` }}
           >
             <Feather className="w-3 h-3" />
-            <span>VISUAL SPOTLIGHTS</span>
+            <span>VISUAL SPOTLIGHT</span>
           </div>
 
-          <div className="space-y-3 flex-1 flex flex-col justify-between">
-            {visualArticles.map((art, idx) => (
+          <div className="flex-1 flex flex-col justify-between overflow-hidden">
+            {project.editorialInfo?.tocSpotlightImage ? (
               <div
-                key={art.id}
-                className="relative rounded-lg overflow-hidden border flex-1 min-h-[75px] group shadow-sm"
-                style={{ borderColor: `${primaryColor}40` }}
+                className="relative rounded-lg overflow-hidden border flex-1 w-full min-h-[160px] group shadow-md"
+                style={{ borderColor: `${primaryColor}50` }}
               >
                 <img
-                  src={art.heroImage}
-                  alt={art.title}
-                  className="w-full h-full object-cover filter contrast-125 brightness-90 group-hover:scale-105 transition-transform"
+                  src={project.editorialInfo.tocSpotlightImage}
+                  alt={project.editorialInfo.tocSpotlightTitle || "Visual Spotlight"}
+                  className="w-full h-full object-cover object-center filter contrast-125 brightness-95 group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-2">
-                  <span className="text-[7.5px] font-mono font-bold uppercase" style={{ color: primaryColor }}>
-                    // {art.category}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3">
+                  <span className="text-[8px] font-mono font-black uppercase tracking-wider" style={{ color: primaryColor }}>
+                    // {project.editorialInfo.tocSpotlightCategory || "FOTOGRAFIA EDITORIAL"}
                   </span>
-                  <h4 className={`text-[11px] font-black uppercase text-white leading-tight line-clamp-1 ${headlineFontClass}`}>
-                    {art.title}
+                  <h4 className={`text-xs sm:text-sm font-black uppercase text-white leading-tight drop-shadow-md mt-0.5 ${headlineFontClass}`}>
+                    {project.editorialInfo.tocSpotlightTitle || "TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA"}
                   </h4>
                 </div>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-2 flex-1 flex flex-col justify-between">
+                {visualArticles.map((art) => (
+                  <div
+                    key={art.id}
+                    className="relative rounded-lg overflow-hidden border flex-1 min-h-[75px] group shadow-sm"
+                    style={{ borderColor: `${primaryColor}40` }}
+                  >
+                    <img
+                      src={art.heroImage}
+                      alt={art.title}
+                      className="w-full h-full object-cover filter contrast-125 brightness-90 group-hover:scale-105 transition-transform"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-2">
+                      <span className="text-[7.5px] font-mono font-bold uppercase" style={{ color: primaryColor }}>
+                        // {art.category}
+                      </span>
+                      <h4 className={`text-[11px] font-black uppercase text-white leading-tight line-clamp-1 ${headlineFontClass}`}>
+                        {art.title}
+                      </h4>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

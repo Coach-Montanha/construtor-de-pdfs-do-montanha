@@ -764,4 +764,95 @@ function polishTextOfflineFallback(text: string, tone: string): string {
   return polished.join("\n\n");
 }
 
+/**
+ * Gera chamadas curtas e impactantes (teasers) para os destaques da capa com base no conteúdo dos artigos
+ */
+export async function generateCoverTeasers(
+  highlights: { id: string; tag: string; title: string; teaser?: string }[],
+  articles: { id: string; title: string; subtitle?: string; content?: string; category?: string }[],
+  apiKey?: string
+): Promise<{ id: string; teaser: string }[]> {
+  const results: { id: string; teaser: string }[] = [];
+
+  for (const hl of highlights) {
+    const linkedArt = articles.find(
+      (a) =>
+        a.title.toLowerCase().trim() === hl.title.toLowerCase().trim() ||
+        a.id === hl.id ||
+        (a.category && hl.tag.toLowerCase().includes(a.category.toLowerCase()))
+    );
+
+    const title = hl.title;
+    const content = linkedArt?.content || "";
+    const subtitle = linkedArt?.subtitle || "";
+
+    if (apiKey) {
+      try {
+        const system = `Você é um editor sênior de capa da revista Montanha Magazine. Sua missão é criar uma CHAMADA CURTA E IMPACTANTE (teaser de capa de 8 a 15 palavras) para chamar a atenção do leitor para a matéria. Responda APENAS com a frase da chamada, sem aspas, sem introdução, sem marcadores.`;
+        const prompt = `Matéria: "${title}"\nSubtítulo: "${subtitle}"\nTrecho: "${content.slice(0, 400)}"\n\nGere uma única chamada instigante, direta e com autoridade para estampar a capa:`;
+
+        const resp = await callGeminiApi(prompt, apiKey, system);
+        const cleanTeaser = resp.replace(/["“”]/g, "").trim();
+        if (cleanTeaser && cleanTeaser.length >= 20 && cleanTeaser.length <= 110) {
+          results.push({ id: hl.id, teaser: cleanTeaser });
+          continue;
+        }
+      } catch (e) {
+        // Fallback local abaixo
+      }
+    }
+
+    const fallbackTeaser = synthesizeCoverTeaserLocally(title, subtitle, content, hl.tag);
+    results.push({ id: hl.id, teaser: fallbackTeaser });
+  }
+
+  return results;
+}
+
+function synthesizeCoverTeaserLocally(
+  title: string,
+  subtitle: string,
+  content: string,
+  tag: string
+): string {
+  if (subtitle && subtitle.length >= 25 && subtitle.length <= 95) {
+    return subtitle.endsWith(".") ? subtitle : `${subtitle}.`;
+  }
+
+  const combined = `${title} ${subtitle} ${content} ${tag}`.toLowerCase();
+
+  if (/\b(mulher|femin|estrog|osteopor|composição)\b/i.test(combined)) {
+    return "Como a sobrecarga progressiva transforma a saúde metabólica e quebra mitos históricos.";
+  }
+  if (/\b(remo|rower|ergômetro|cardio|aerób|pulmão)\b/i.test(combined)) {
+    return "O protocolo de tração nórdica que desenvolve potência aeróbica e queima lipídica extrema.";
+  }
+  if (/\b(disciplina|mente|mindset|hábito|vencedor|foco)\b/i.test(combined)) {
+    return "A ciência prática para eliminar a hesitação e executar seus protocolos com foco inabalável.";
+  }
+  if (/\b(caloria|músculo|metab|gasto|gordura|densidade)\b/i.test(combined)) {
+    return "O impacto real da massa muscular no gasto energético de repouso e longevidade.";
+  }
+  if (/\b(respira|diafragma|coluna|iap|pressão)\b/i.test(combined)) {
+    return "A mecânica do cilindro intra-abdominal para blindar a coluna em cargas máximas.";
+  }
+  if (/\b(kettlebell|swing|mace|balístico|força)\b/i.test(combined)) {
+    return "O recrutamento neuromuscular explosivo do treinamento balístico com pesos livres.";
+  }
+
+  if (content) {
+    const sentences = content
+      .replace(/\n+/g, " ")
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 30 && s.length <= 90 && !s.startsWith("http"));
+    if (sentences.length > 0) {
+      return sentences[0]!;
+    }
+  }
+
+  return "Princípios fundamentais e metodologia aplicada para elevar seu teto de performance.";
+}
+
+
 

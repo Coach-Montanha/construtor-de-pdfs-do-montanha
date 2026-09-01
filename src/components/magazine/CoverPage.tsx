@@ -132,11 +132,18 @@ export const CoverPage: React.FC<CoverPageProps> = ({
               >
                 {hl.title}
               </p>
-              {hl.authorCallout && (
+              {hl.teaser ? (
+                <span
+                  className="font-sans italic text-slate-200 block mt-1 leading-snug font-medium"
+                  style={{ fontSize: `${8 * scale}pt` }}
+                >
+                  "{hl.teaser}"
+                </span>
+              ) : hl.authorCallout ? (
                 <span className="text-[8pt] font-mono text-slate-300 block mt-1">
                   POR: {hl.authorCallout.toUpperCase()}
                 </span>
-              )}
+              ) : null}
             </div>
           ))}
         </div>
@@ -346,7 +353,16 @@ export const CoverPage: React.FC<CoverPageProps> = ({
               >
                 {hl.title}
               </h3>
-              {hl.authorCallout && (
+              {hl.teaser ? (
+                <span
+                  className="font-sans italic block text-slate-200 mt-1 leading-snug font-medium"
+                  style={{
+                    fontSize: `${8 * scale}pt`,
+                  }}
+                >
+                  "{hl.teaser}"
+                </span>
+              ) : hl.authorCallout ? (
                 <span
                   className="font-mono uppercase block text-slate-300 mt-1"
                   style={{
@@ -355,7 +371,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
                 >
                   AUTOR: {hl.authorCallout.toUpperCase()} {hl.pageTarget ? `// PÁG. 0${hl.pageTarget}` : ""}
                 </span>
-              )}
+              ) : null}
             </div>
           ))}
         </div>

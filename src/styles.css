@@ -322,9 +322,8 @@
 
   .magazine-print-page {
     width: 210mm !important;
-    height: 297mm !important;
-    min-height: 297mm !important;
-    max-height: 297mm !important;
+    height: 296.5mm !important;
+    max-height: 296.5mm !important;
     page-break-after: always !important;
     break-after: page !important;
     page-break-inside: avoid !important;
@@ -337,10 +336,20 @@
     background: #0B0F19 !important;
   }
 
+  .magazine-print-page:last-child,
+  .magazine-print-page:last-of-type {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
   .magazine-print-page .magazine-page {
     width: 210mm !important;
-    height: 297mm !important;
+    height: 296.5mm !important;
+    max-height: 296.5mm !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }

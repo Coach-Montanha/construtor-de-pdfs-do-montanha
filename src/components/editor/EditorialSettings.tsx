@@ -379,6 +379,31 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Spotlight Fotográfico da Carta do Editor */}
+            <div className="pt-3 border-t border-slate-300 space-y-3">
+              <Label className="text-xs font-bold flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <FileText className="w-3.5 h-3.5" />
+                <span>FOTOGRAFIA VISUAL SPOTLIGHT (PREENCHE A PARTE INFERIOR DA CARTA DO EDITOR)</span>
+              </Label>
+              <ImagePicker
+                label="Foto Panorâmica Inferior da Carta do Editor"
+                value={project.editorialInfo.editorLetterSpotlightImage || ""}
+                onChange={(url) => updateEditorial("editorLetterSpotlightImage", url)}
+                aspectRatio="landscape"
+                placeholderPrompt="Foto cinematográfica de barra com anilhas de ferro pesadas em chão de borracha, iluminação de alto contraste..."
+                helperText="Aproveita com imponência o terço inferior da Carta do Editor"
+              />
+              <div>
+                <Label className="text-[10px] font-bold">LEGENDA EDITORIAL DA FOTO INFERIOR</Label>
+                <Input
+                  value={project.editorialInfo.editorLetterSpotlightCaption || ""}
+                  onChange={(e) => updateEditorial("editorLetterSpotlightCaption", e.target.value)}
+                  placeholder="Ex: A consistência nos detalhes invisíveis constrói o atleta inabalável."
+                  className="theme-app-input text-xs mt-1 border-2"
+                />
+              </div>
+            </div>
           </>
         ) : (
           <div className="p-4 rounded-lg bg-amber-500/10 border-2 border-amber-500/30 text-xs font-medium flex items-center gap-2">
@@ -386,6 +411,51 @@ export const EditorialSettings: React.FC<EditorialSettingsProps> = ({
             <span>A página da Carta do Editor está desativada e não aparecerá na revista nem no PDF final.</span>
           </div>
         )}
+      </div>
+
+      {/* 2.1 Visual Spotlight do Sumário (Table of Contents) */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between border-b pb-3">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+              <Award className="w-4 h-4 text-amber-500" />
+              <span>Destaque Visual do Sumário (Visual Spotlight)</span>
+            </h3>
+            <p className="text-xs opacity-75 mt-0.5">
+              Escolha uma foto exclusiva para estampar a lateral do sumário, sem repetir fotos dos artigos.
+            </p>
+          </div>
+        </div>
+
+        <ImagePicker
+          label="Foto do Visual Spotlight do Sumário"
+          value={project.editorialInfo.tocSpotlightImage || ""}
+          onChange={(url) => updateEditorial("tocSpotlightImage", url)}
+          aspectRatio="landscape"
+          placeholderPrompt="Atleta de costas executando tração intensa em argolas de aço, iluminação lateral amarela e dramática..."
+          helperText="Foto panorâmica que estampa o espaço de destaque no sumário da revista"
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-[10px] font-bold">TÍTULO / ETIQUETA DO DESTAQUE</Label>
+            <Input
+              value={project.editorialInfo.tocSpotlightTitle || ""}
+              onChange={(e) => updateEditorial("tocSpotlightTitle", e.target.value)}
+              placeholder="Ex: TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA"
+              className="theme-app-input text-xs font-bold mt-1 border-2"
+            />
+          </div>
+          <div>
+            <Label className="text-[10px] font-bold">CATEGORIA / TAG</Label>
+            <Input
+              value={project.editorialInfo.tocSpotlightCategory || ""}
+              onChange={(e) => updateEditorial("tocSpotlightCategory", e.target.value.toUpperCase())}
+              placeholder="Ex: LABORATÓRIO DE PERFORMANCE"
+              className="theme-app-input text-xs font-mono font-bold mt-1 border-2"
+            />
+          </div>
+        </div>
       </div>
 
       {/* 3. Page 3: Contributors Grid Settings with ON/OFF Toggle */}

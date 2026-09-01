@@ -52,6 +52,7 @@ export interface CoverHighlight {
   title: string;
   authorCallout?: string;
   pageTarget?: number;
+  teaser?: string; // Chamada curta e impactante baseada no texto para chamar atenção
 }
 
 export type CoverStyleVariant =
@@ -140,6 +141,12 @@ export interface EditorialInfo {
   catalogingData?: string;
   publisherInfo?: string;
   contributors: Contributor[];
+  // Visual Spotlights (Sumário & Carta do Editor)
+  tocSpotlightImage?: string;
+  tocSpotlightTitle?: string;
+  tocSpotlightCategory?: string;
+  editorLetterSpotlightImage?: string;
+  editorLetterSpotlightCaption?: string;
 }
 
 

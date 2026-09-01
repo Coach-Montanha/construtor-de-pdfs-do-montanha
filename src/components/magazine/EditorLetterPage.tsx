@@ -234,7 +234,32 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
               </div>
             );
           })()}
-        </div>
+        {/* Editor Letter Visual Spotlight Banner (Fills bottom space with power and elegance) */}
+        {editorialInfo.editorLetterSpotlightImage && (
+          <div
+            className="relative w-full rounded-lg overflow-hidden border shrink-0 mt-2 mb-1 shadow-sm"
+            style={{
+              height: "115px",
+              borderColor: `${primaryColor}40`,
+            }}
+          >
+            <img
+              src={editorialInfo.editorLetterSpotlightImage}
+              alt="Destaque Carta do Editor"
+              className="w-full h-full object-cover object-center filter contrast-125 brightness-95"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end justify-between p-2.5">
+              <span className="text-[8px] font-mono font-black uppercase tracking-wider" style={{ color: primaryColor }}>
+                // MANIFESTO VISUAL // {project.title}
+              </span>
+              {editorialInfo.editorLetterSpotlightCaption && (
+                <span className="text-[8px] font-mono italic text-slate-200 hidden sm:inline max-w-md truncate">
+                  "{editorialInfo.editorLetterSpotlightCaption}"
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Bottom Signature & Sign-off */}
         <div className="pt-2 border-t flex items-center justify-between shrink-0" style={{ borderColor: `${primaryColor}40` }}>
