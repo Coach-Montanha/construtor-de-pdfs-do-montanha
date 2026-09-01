@@ -299,7 +299,7 @@ function Index() {
     try {
       const result = await analyzeAndDiagramEditorialText(doc.rawContent, {
         originalTitle: doc.title,
-        originalCategory: doc.category,
+        ...(doc.category ? { originalCategory: doc.category } : {}),
       });
       setRepoAnalysisResult(result);
       setIsRepoApprovalOpen(true);

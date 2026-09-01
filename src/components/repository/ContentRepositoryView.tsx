@@ -208,7 +208,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     try {
       const result = await analyzeAndDiagramEditorialText(doc.rawContent, {
         originalTitle: doc.title,
-        originalCategory: doc.category,
+        ...(doc.category ? { originalCategory: doc.category } : {}),
       });
       setAnalysisResult(result);
       setIsApprovalModalOpen(true);

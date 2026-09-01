@@ -332,7 +332,9 @@ export async function analyzeAndDiagramEditorialText(
 ): Promise<EditorialAnalysisResult> {
   const options: EditorialAnalysisOptions =
     typeof optionsOrKey === "string"
-      ? { apiKey: optionsOrKey || legacyApiKey }
+      ? optionsOrKey || legacyApiKey
+        ? { apiKey: optionsOrKey || legacyApiKey }
+        : {}
       : optionsOrKey || {};
 
   const cleanText = rawText.trim();
