@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   MagazineProject,
   MagazineThemeId,
-  BackCoverConfig,
   HeadlineFontOption,
   BodyFontOption,
 } from "../../types/magazine";
@@ -19,15 +18,11 @@ import {
   Palette,
   Key,
   CheckCircle2,
-  Share2,
   Eye,
   Sun,
   Moon,
   Zap,
   Book,
-  Instagram,
-  Youtube,
-  Mail,
   Sparkles,
   Layers,
   Type,
@@ -105,32 +100,6 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     onChange({
       ...project,
       themeId,
-    });
-  };
-
-  const updateBackCover = <K extends keyof BackCoverConfig>(
-    field: K,
-    value: BackCoverConfig[K]
-  ) => {
-    onChange({
-      ...project,
-      backCoverConfig: {
-        ...project.backCoverConfig,
-        [field]: value,
-      },
-    });
-  };
-
-  const updateSocialHandles = (network: "instagram" | "youtube" | "email", value: string) => {
-    onChange({
-      ...project,
-      backCoverConfig: {
-        ...project.backCoverConfig,
-        socialHandles: {
-          ...project.backCoverConfig.socialHandles,
-          [network]: value,
-        },
-      },
     });
   };
 
@@ -591,93 +560,6 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-xs font-semibold text-emerald-800">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>Chamadas de IA protegidas e roteadas via servidor seguro (/api/ai).</span>
-        </div>
-      </div>
-
-      {/* 5. BACK COVER CONFIGURATION WITH IMAGEPICKER */}
-      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
-        <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-          <Share2 className="w-4 h-4 text-amber-500" />
-          <span>5. Contracapa & Fechamento da Edição</span>
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs font-bold">MANCHETE DA CONTRACAPA</Label>
-            <Input
-              value={project.backCoverConfig.headline}
-              onChange={(e) => updateBackCover("headline", e.target.value.toUpperCase())}
-              className="theme-app-input font-bold text-xs mt-1 border-2"
-            />
-          </div>
-
-          <div>
-            <Label className="text-xs font-bold">SUBTÍTULO / SLOGAN FINAL</Label>
-            <Input
-              value={project.backCoverConfig.subheadline}
-              onChange={(e) => updateBackCover("subheadline", e.target.value)}
-              className="theme-app-input text-xs mt-1 border-2"
-            />
-          </div>
-        </div>
-
-        <ImagePicker
-          label="Fotografia de Fundo da Contracapa"
-          value={project.backCoverConfig.backgroundImage}
-          onChange={(url) => updateBackCover("backgroundImage", url)}
-          aspectRatio="portrait"
-          placeholderPrompt="Atleta em silhueta segurando kettlebell pesado ao pôr do sol, cinematográfico..."
-          helperText="Upload do PC, IA ou URL"
-        />
-
-        <div>
-          <Label className="text-xs font-bold">MENSAGEM INSTITUCIONAL DE FECHAMENTO</Label>
-          <Textarea
-            value={project.backCoverConfig.message}
-            onChange={(e) => updateBackCover("message", e.target.value)}
-            className="theme-app-input text-xs mt-1 h-20 border-2"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-          <div>
-            <Label className="text-[11px] font-bold flex items-center gap-1">
-              <Instagram className="w-3 h-3 text-amber-500" />
-              <span>INSTAGRAM</span>
-            </Label>
-            <Input
-              value={project.backCoverConfig.socialHandles?.instagram || ""}
-              onChange={(e) => updateSocialHandles("instagram", e.target.value)}
-              placeholder="@coachmontanha"
-              className="theme-app-input font-mono text-xs mt-1 border-2"
-            />
-          </div>
-
-          <div>
-            <Label className="text-[11px] font-bold flex items-center gap-1">
-              <Youtube className="w-3 h-3 text-red-500" />
-              <span>YOUTUBE</span>
-            </Label>
-            <Input
-              value={project.backCoverConfig.socialHandles?.youtube || ""}
-              onChange={(e) => updateSocialHandles("youtube", e.target.value)}
-              placeholder="Canal Oficial"
-              className="theme-app-input font-mono text-xs mt-1 border-2"
-            />
-          </div>
-
-          <div>
-            <Label className="text-[11px] font-bold flex items-center gap-1">
-              <Mail className="w-3 h-3 text-amber-500" />
-              <span>E-MAIL</span>
-            </Label>
-            <Input
-              value={project.backCoverConfig.socialHandles?.email || ""}
-              onChange={(e) => updateSocialHandles("email", e.target.value)}
-              placeholder="contato@coachmontanha.com.br"
-              className="theme-app-input font-mono text-xs mt-1 border-2"
-            />
-          </div>
         </div>
       </div>
     </div>

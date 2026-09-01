@@ -651,7 +651,7 @@ function Index() {
             }`}
           >
             <Palette className="w-3.5 h-3.5" />
-            <span>Capa da Revista</span>
+            <span>Capa & Contracapa da Revista</span>
           </button>
 
           <button
@@ -961,15 +961,19 @@ function Index() {
           </div>
         )}
 
-        {/* Tab 3: Cover Customizer */}
+        {/* Tab 3: Cover & Back Cover Customizer */}
         {activeTab === "cover" && (
           <div className="max-w-4xl mx-auto">
             <CoverCustomizer
               coverConfig={project.coverConfig}
+              backCoverConfig={project.backCoverConfig}
               articles={project.articles}
               pageVisibility={project.pageVisibility ?? {}}
               onChange={(updatedCover) =>
                 setProject({ ...project, coverConfig: updatedCover, updatedAt: new Date().toISOString() })
+              }
+              onBackCoverChange={(updatedBackCover) =>
+                setProject({ ...project, backCoverConfig: updatedBackCover, updatedAt: new Date().toISOString() })
               }
             />
           </div>

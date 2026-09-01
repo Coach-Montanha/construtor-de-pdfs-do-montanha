@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Article,
   CoverConfig,
   CoverHighlight,
   CoverStyleVariant,
   TextScalePreset,
+  BackCoverConfig,
 } from "../../types/magazine";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
@@ -26,11 +28,18 @@ import {
   Sliders,
   Maximize2,
   Zap,
+  Palette,
+  BookOpen,
+  Instagram,
+  Youtube,
+  Mail,
 } from "lucide-react";
 
 interface CoverCustomizerProps {
   coverConfig: CoverConfig;
   onChange: (updated: CoverConfig) => void;
+  backCoverConfig?: BackCoverConfig;
+  onBackCoverChange?: (updated: BackCoverConfig) => void;
   articles?: Article[];
   pageVisibility?: {
     showCover?: boolean;
@@ -44,9 +53,37 @@ interface CoverCustomizerProps {
 export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
   coverConfig,
   onChange,
+  backCoverConfig,
+  onBackCoverChange,
   articles = [],
   pageVisibility,
 }) => {
+  const [activeSection, setActiveSection] = useState<"cover" | "backCover">("cover");
+
+  const updateBackCover = <K extends keyof BackCoverConfig>(
+    field: K,
+    value: BackCoverConfig[K]
+  ) => {
+    if (onBackCoverChange && backCoverConfig) {
+      onBackCoverChange({
+        ...backCoverConfig,
+        [field]: value,
+      });
+    }
+  };
+
+  const updateSocialHandles = (network: "instagram" | "youtube" | "email", value: string) => {
+    if (onBackCoverChange && backCoverConfig) {
+      onBackCoverChange({
+        ...backCoverConfig,
+        socialHandles: {
+          ...backCoverConfig.socialHandles,
+          [network]: value,
+        },
+      });
+    }
+  };
+
   const updateField = <K extends keyof CoverConfig>(field: K, value: CoverConfig[K]) => {
     onChange({
       ...coverConfig,
@@ -221,6 +258,38 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
 
   return (
     <div className="space-y-6 font-sans">
+      {/* Subheader Switcher: Capa vs Contracapa */}
+      <div className="theme-app-card p-1.5 sm:p-2 rounded-xl border-2 flex items-center gap-1.5 sm:gap-2 shadow-xs bg-amber-400/5">
+        <button
+          type="button"
+          onClick={() => setActiveSection("cover")}
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-lg font-black text-xs uppercase flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            activeSection === "cover"
+              ? "bg-amber-400 text-slate-950 border-2 border-black shadow-xs"
+              : "opacity-75 hover:opacity-100 hover:bg-black/5 border-2 border-transparent"
+          }`}
+        >
+          <Palette className="w-4 h-4 text-amber-600" />
+          <span>Capa da Revista</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection("backCover")}
+          className={`flex-1 py-2.5 px-3 sm:px-4 rounded-lg font-black text-xs uppercase flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            activeSection === "backCover"
+              ? "bg-amber-400 text-slate-950 border-2 border-black shadow-xs"
+              : "opacity-75 hover:opacity-100 hover:bg-black/5 border-2 border-transparent"
+          }`}
+        >
+          <BookOpen className="w-4 h-4 text-amber-600" />
+          <span>Contracapa da Revista</span>
+        </button>
+      </div>
+
+      {/* SEÇÃO 1: CAPA PRINCIPAL */}
+      {activeSection === "cover" && (
+        <div className="space-y-6">
       {/* 1. Typography Size & Legibility Manager */}
       <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm bg-amber-400/5">
         <div className="flex items-center justify-between">
@@ -744,6 +813,156 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Advance to Back Cover Banner */}
+      <div className="theme-app-card-subtle p-4 rounded-xl border-2 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+        <div>
+          <h4 className="font-black text-xs uppercase flex items-center gap-1.5">
+            <BookOpen className="w-4 h-4 text-amber-500" />
+            <span>Próximo Passo: Contracapa da Revista</span>
+          </h4>
+          <p className="text-[11px] opacity-75 mt-0.5">Configure o fechamento da edição, slogan final, fotografia e canais oficiais.</p>
+        </div>
+        <Button
+          size="sm"
+          onClick={() => setActiveSection("backCover")}
+          className="bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black shrink-0 cursor-pointer"
+        >
+          Configurar Contracapa ▸
+        </Button>
+      </div>
+    </div>
+  )}
+
+  {/* SEÇÃO 2: CONTRACAPA & FECHAMENTO DA EDIÇÃO */}
+  {activeSection === "backCover" && backCoverConfig && (
+    <div className="space-y-6">
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-current pb-3">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-amber-500" />
+            <div>
+              <h3 className="text-base font-black uppercase tracking-wide">
+                Contracapa & Fechamento da Edição
+              </h3>
+              <p className="text-xs opacity-75">
+                Página final da revista impressa e digital: manifesto de encerramento, fotografia marcante e redes oficiais.
+              </p>
+            </div>
+          </div>
+          <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase shrink-0 self-start sm:self-auto">
+            ÚLTIMA PÁGINA A4
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label className="text-xs font-bold">MANCHETE DA CONTRACAPA</Label>
+            <Input
+              value={backCoverConfig.headline}
+              onChange={(e) => updateBackCover("headline", e.target.value.toUpperCase())}
+              placeholder="TRANSFORME SEU CORPO. CONQUISTE SUA VIDA."
+              className="theme-app-input font-bold text-xs mt-1 border-2"
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">SUBTÍTULO / SLOGAN FINAL</Label>
+            <Input
+              value={backCoverConfig.subheadline}
+              onChange={(e) => updateBackCover("subheadline", e.target.value)}
+              placeholder="Junte-se à comunidade oficial do Coach Montanha..."
+              className="theme-app-input text-xs mt-1 border-2"
+            />
+          </div>
+        </div>
+
+        <ImagePicker
+          label="Fotografia de Fundo da Contracapa"
+          value={backCoverConfig.backgroundImage}
+          onChange={(url) => updateBackCover("backgroundImage", url)}
+          aspectRatio="portrait"
+          placeholderPrompt="Atleta em silhueta segurando kettlebell pesado ao pôr do sol, cinematográfico..."
+          helperText="Upload do PC, IA ou URL"
+        />
+
+        <div>
+          <Label className="text-xs font-bold">MENSAGEM INSTITUCIONAL DE FECHAMENTO</Label>
+          <Textarea
+            value={backCoverConfig.message}
+            onChange={(e) => updateBackCover("message", e.target.value)}
+            placeholder="A consistência é o único atalho real para a grandeza..."
+            className="theme-app-input text-xs mt-1 h-24 border-2 leading-relaxed"
+          />
+        </div>
+
+        <div className="pt-2 border-t space-y-3">
+          <Label className="text-xs font-black uppercase tracking-wider block">
+            CANAIS DE CONTATO & COMUNIDADE OFICIAL
+          </Label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <Label className="text-[11px] font-bold flex items-center gap-1">
+                <Instagram className="w-3.5 h-3.5 text-amber-500" />
+                <span>INSTAGRAM</span>
+              </Label>
+              <Input
+                value={backCoverConfig.socialHandles?.instagram || ""}
+                onChange={(e) => updateSocialHandles("instagram", e.target.value)}
+                placeholder="@coachmontanha"
+                className="theme-app-input font-mono text-xs mt-1 border-2"
+              />
+            </div>
+
+            <div>
+              <Label className="text-[11px] font-bold flex items-center gap-1">
+                <Youtube className="w-3.5 h-3.5 text-red-500" />
+                <span>YOUTUBE</span>
+              </Label>
+              <Input
+                value={backCoverConfig.socialHandles?.youtube || ""}
+                onChange={(e) => updateSocialHandles("youtube", e.target.value)}
+                placeholder="Canal Oficial"
+                className="theme-app-input font-mono text-xs mt-1 border-2"
+              />
+            </div>
+
+            <div>
+              <Label className="text-[11px] font-bold flex items-center gap-1">
+                <Mail className="w-3.5 h-3.5 text-amber-500" />
+                <span>E-MAIL</span>
+              </Label>
+              <Input
+                value={backCoverConfig.socialHandles?.email || ""}
+                onChange={(e) => updateSocialHandles("email", e.target.value)}
+                placeholder="contato@coachmontanha.com.br"
+                className="theme-app-input font-mono text-xs mt-1 border-2"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Return to Front Cover banner */}
+      <div className="theme-app-card-subtle p-4 rounded-xl border-2 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+        <div>
+          <h4 className="font-black text-xs uppercase flex items-center gap-1.5">
+            <Palette className="w-4 h-4 text-amber-500" />
+            <span>Voltar para a Capa Principal</span>
+          </h4>
+          <p className="text-[11px] opacity-75 mt-0.5">Alterne para ajustar a manchete principal, fotografia de capa e chamadas da edição.</p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setActiveSection("cover")}
+          className="font-black text-xs border-2 shrink-0 cursor-pointer"
+        >
+          ◂ Voltar para Capa
+        </Button>
+      </div>
+    </div>
+  )}
     </div>
   );
 };
