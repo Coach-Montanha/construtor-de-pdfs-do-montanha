@@ -281,6 +281,7 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
           </div>
         </div>
       </div>
+      </div>
 
       {/* ---------------- 4. BOTTOM FOOTER & PAGE NUMBERING ---------------- */}
       <div

@@ -159,7 +159,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
         title: art.title,
         authorCallout: art.author,
         pageTarget: pageNum,
-        teaser: initialTeaser,
+        ...(initialTeaser ? { teaser: initialTeaser } : {}),
       };
     });
 
@@ -187,7 +187,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
             title: art.title,
             authorCallout: art.author,
             pageTarget: pageNum,
-            teaser: teaser || h.teaser,
+            ...(teaser || h.teaser ? { teaser: teaser || h.teaser } : {}),
           }
         : h
     );
