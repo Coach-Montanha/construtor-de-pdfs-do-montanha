@@ -42,6 +42,7 @@ interface ContentRepositoryViewProps {
   onUpdateProject: (updated: MagazineProject) => void;
   onOpenArticleEditor: (article: Article) => void;
   onNavigateToViewer: () => void;
+  onNavigateToArticles?: () => void;
 }
 
 export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
@@ -49,6 +50,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
   onUpdateProject,
   onOpenArticleEditor,
   onNavigateToViewer,
+  onNavigateToArticles,
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "published">("all");
@@ -232,7 +234,11 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
       updatedAt: new Date().toISOString(),
     });
 
-    alert(`✓ Matéria "${newArticle.title}" diagramada e inserida com sucesso na revista!`);
+    if (onNavigateToArticles) {
+      onNavigateToArticles();
+    } else if (onNavigateToViewer) {
+      onNavigateToViewer();
+    }
   };
 
   return (
@@ -614,6 +620,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
         sourceDoc={selectedSourceDoc}
         onApprove={handleApproveArticle}
         onOpenAdvancedEditor={(draftArticle) => {
+          handleApproveArticle(draftArticle, selectedSourceDoc?.id);
           onOpenArticleEditor(draftArticle);
         }}
       />

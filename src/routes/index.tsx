@@ -51,8 +51,14 @@ import {
   FolderArchive,
   Copy,
   Layers,
-} from "lucide-react";
 import { Button } from "../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../components/ui/dialog";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -80,6 +86,7 @@ function Index() {
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
+  const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
 
   // Editions Archive Count State
   const [archivedEditionsCount, setArchivedEditionsCount] = useState<number>(() => {
@@ -208,13 +215,24 @@ function Index() {
   };
 
   const handleDeleteArticle = (id: string) => {
-    if (window.confirm("Tem certeza que deseja excluir esta matéria?")) {
-      setProject({
-        ...project,
-        articles: project.articles.filter((a) => a.id !== id),
-        updatedAt: new Date().toISOString(),
-      });
+    const art = project.articles.find((a) => a.id === id);
+    if (art) {
+      setArticleToDelete(art);
     }
+  };
+
+  const handleConfirmDeleteArticle = () => {
+    if (!articleToDelete) return;
+    const targetId = articleToDelete.id;
+    const updatedArticles = project.articles.filter((a) => a.id !== targetId);
+    const updatedProj: MagazineProject = {
+      ...project,
+      articles: updatedArticles,
+      updatedAt: new Date().toISOString(),
+    };
+    setProject(updatedProj);
+    syncProjectToCloud(updatedProj);
+    setArticleToDelete(null);
   };
 
   const handleDuplicateArticle = (sourceArticle: Article) => {
@@ -295,7 +313,7 @@ function Index() {
     const newArt: Article = {
       id: "art-" + Date.now(),
       title: doc.title,
-      subtitle: "Artigo importado do acervo editorial.",
+      subtitle: `Artigo importado do acervo editorial // ${doc.category || "Alta Performance"}.`,
       category: doc.category || "MONTANHA METHOD",
       author: "Coach Montanha",
       authorBio: "Master Coach & Fundador",
@@ -314,8 +332,22 @@ function Index() {
       featuredOnCover: false,
       enabled: true,
     };
-    setEditingArticle(newArt);
-    setIsArticleModalOpen(true);
+
+    const updatedArticles = [...project.articles, newArt];
+    const updatedDocs = project.contentRepository
+      ? project.contentRepository.map((d) => (d.id === doc.id ? { ...d, status: "published" as const } : d))
+      : [];
+
+    const updatedProj: MagazineProject = {
+      ...project,
+      articles: updatedArticles,
+      contentRepository: updatedDocs,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setProject(updatedProj);
+    syncProjectToCloud(updatedProj);
+    setActiveTab("articles");
   };
 
   const handleApproveRepoArticle = (approvedArt: Article, sourceDocId?: string) => {
@@ -324,13 +356,16 @@ function Index() {
       ? project.contentRepository.map((d) => (d.id === sourceDocId ? { ...d, status: "published" as const } : d))
       : project.contentRepository;
 
-    setProject({
+    const updatedProj: MagazineProject = {
       ...project,
       articles: updatedArticles,
       contentRepository: updatedDocs ?? [],
       updatedAt: new Date().toISOString(),
-    });
-    alert(`✓ Matéria "${approvedArt.title}" importada e diagramada com sucesso na revista!`);
+    };
+
+    setProject(updatedProj);
+    syncProjectToCloud(updatedProj);
+    setActiveTab("articles");
   };
 
   // Dynamic active page visibility calculation
@@ -878,9 +913,16 @@ function Index() {
           <div className="max-w-6xl mx-auto">
             <ContentRepositoryView
               project={project}
-              onUpdateProject={(updated) => setProject(updated)}
-              onOpenArticleEditor={(art) => handleEditArticle(art)}
+              onUpdateProject={(updated) => {
+                setProject(updated);
+                syncProjectToCloud(updated);
+              }}
+              onOpenArticleEditor={(art) => {
+                handleEditArticle(art);
+                setActiveTab("articles");
+              }}
               onNavigateToViewer={() => setActiveTab("viewer")}
+              onNavigateToArticles={() => setActiveTab("articles")}
             />
           </div>
         )}
@@ -1003,10 +1045,50 @@ function Index() {
         sourceDoc={selectedRepoDoc}
         onApprove={handleApproveRepoArticle}
         onOpenAdvancedEditor={(draftArt) => {
+          handleApproveRepoArticle(draftArt, selectedRepoDoc?.id);
           setEditingArticle(draftArt);
           setIsArticleModalOpen(true);
         }}
       />
+
+      {/* Dialog de Confirmação de Exclusão de Matéria */}
+      <Dialog open={Boolean(articleToDelete)} onOpenChange={() => setArticleToDelete(null)}>
+        <DialogContent className="theme-app-card max-w-md p-5 font-sans border-2 border-black shadow-2xl">
+          <DialogHeader className="border-b-2 pb-2.5">
+            <DialogTitle className="text-base font-black flex items-center gap-2 text-red-600 uppercase">
+              <Trash2 className="w-5 h-5" />
+              <span>Excluir Matéria da Edição</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="py-3 text-xs space-y-2">
+            <p className="opacity-90 leading-relaxed">
+              Tem certeza que deseja excluir a matéria <strong>"{articleToDelete?.title}"</strong> da revista?
+            </p>
+            <div className="p-2.5 rounded bg-red-500/10 border border-red-500/20 text-[11px] text-red-700 dark:text-red-300 font-medium">
+              Esta ação removerá a matéria e suas páginas diagramadas da edição atual. O texto original no acervo (se houver) permanecerá preservado.
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 border-t pt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setArticleToDelete(null)}
+              className="h-8 font-bold text-xs cursor-pointer"
+            >
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleConfirmDeleteArticle}
+              className="h-8 bg-red-600 hover:bg-red-700 text-white font-black text-xs cursor-pointer shadow-xs"
+            >
+              Sim, Excluir Matéria
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Print-Only Container (Render ONLY active pages without blank sheets) */}
       <div className="print-only-container">
