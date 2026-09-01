@@ -195,7 +195,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
                         />
                       </div>
                       <span className="font-bold text-xs uppercase leading-tight">
-                        {theme.name.split("(")[0].trim()}
+                        {theme.name.split("(")[0]?.trim() ?? theme.name}
                       </span>
                     </div>
                     {isSelected && (

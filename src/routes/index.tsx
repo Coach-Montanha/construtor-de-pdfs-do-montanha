@@ -51,6 +51,7 @@ import {
   FolderArchive,
   Copy,
   Layers,
+} from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
   Dialog,
@@ -298,7 +299,7 @@ function Index() {
     try {
       const result = await analyzeAndDiagramEditorialText(doc.rawContent, {
         originalTitle: doc.title,
-        originalCategory: doc.category,
+        ...(doc.category ? { originalCategory: doc.category } : {}),
       });
       setRepoAnalysisResult(result);
       setIsRepoApprovalOpen(true);

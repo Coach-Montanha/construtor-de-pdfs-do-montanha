@@ -177,7 +177,7 @@ export function duplicateEditionForNextRelease(sourceEdition: ArchivedEdition): 
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
   ];
-  const currentMonth = months[new Date().getMonth()];
+  const currentMonth = months[new Date().getMonth()] ?? "Janeiro";
 
   const duplicatedProject: MagazineProject = {
     ...snapshot,
@@ -187,7 +187,7 @@ export function duplicateEditionForNextRelease(sourceEdition: ArchivedEdition): 
     coverConfig: {
       ...snapshot.coverConfig,
       issueBadge: `EDIÇÃO #${nextNum}`,
-      dateText: `${currentMonth.toUpperCase()} ${currentYear}`,
+      issueDate: `${currentMonth.toUpperCase()} ${currentYear}`,
     },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
