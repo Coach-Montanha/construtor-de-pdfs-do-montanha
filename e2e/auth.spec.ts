@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/auth.fixture";
 
-test.describe("Jornadas de Autenticação (Cadastro, Login, Logout)", () => {
+test.describe.skip("Jornadas de Autenticação (Cadastro, Login, Logout) - [DESATIVADO VISUALMENTE PARA USO DIRETO]", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to homepage without pre-seeded user
     await page.goto("/");

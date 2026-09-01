@@ -52,9 +52,6 @@ import {
   FolderOpen,
   Copy,
   Layers,
-  Crown,
-  User as UserIcon,
-  LogOut,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -506,67 +503,6 @@ function Index() {
               </button>
             ))}
           </div>
-
-          {/* PRO Subscription Button / Badge */}
-          {currentUser?.isPro ? (
-            <span
-              data-testid="badge-pro-status"
-              className="h-8 sm:h-9 px-2.5 sm:px-3 bg-amber-400 text-black border-2 border-black font-black text-xs rounded-md flex items-center gap-1.5 shadow-xs"
-              title="Plano Montanha Magazine PRO Ativo"
-            >
-              <Crown className="w-3.5 h-3.5 text-black" />
-              <span>PRO</span>
-            </span>
-          ) : (
-            <Button
-              size="sm"
-              data-testid="btn-upgrade-pro"
-              onClick={() => setIsSubscriptionModalOpen(true)}
-              className="h-8 sm:h-9 bg-amber-400 hover:bg-amber-500 text-black border-2 border-black font-black text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
-              title="Assinar o Plano PRO da Revista"
-            >
-              <Crown className="w-3.5 h-3.5 text-black" />
-              <span>Assinar PRO</span>
-            </Button>
-          )}
-
-          {/* User Auth Profile / Login Button */}
-          {currentUser ? (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div
-                data-testid="user-profile-badge"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border-2 border-current theme-app-card-subtle font-black text-xs"
-              >
-                <UserIcon className="w-3.5 h-3.5 text-amber-500" />
-                <span className="hidden md:inline">{currentUser.name}</span>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                data-testid="btn-logout"
-                onClick={() => {
-                  logoutUser();
-                  setCurrentUser(null);
-                }}
-                className="h-8 sm:h-9 px-2.5 text-red-600 hover:text-red-700 hover:bg-red-500/10 border-2 border-current font-bold text-xs flex items-center gap-1 cursor-pointer"
-                title="Encerrar Sessão"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
-            </div>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              data-testid="btn-auth-trigger"
-              onClick={() => setIsAuthModalOpen(true)}
-              className="h-8 sm:h-9 theme-app-card hover:opacity-90 border-2 border-current font-black text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
-            >
-              <UserIcon className="w-3.5 h-3.5 text-amber-500" />
-              <span>Entrar / Cadastrar</span>
-            </Button>
-          )}
 
           <Button
             size="sm"

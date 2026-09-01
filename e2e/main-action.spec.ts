@@ -2,8 +2,8 @@ import { test, expect } from "./fixtures/auth.fixture";
 
 test.describe("Jornada Crítica: Ação Principal (Criação, Edição de Matérias & Exportação de PDF)", () => {
   test.beforeEach(async ({ authenticatedPage }) => {
-    // Acessa o aplicativo já com usuário autenticado
-    await expect(authenticatedPage.getByTestId("user-profile-badge")).toBeVisible();
+    // Acessa o aplicativo diretamente sem barreiras de autenticação
+    await expect(authenticatedPage.getByTestId("tab-viewer")).toBeVisible();
   });
 
   test("Fluxo Feliz: Deve criar uma nova matéria editorial e exibi-la na revista", async ({ authenticatedPage }) => {

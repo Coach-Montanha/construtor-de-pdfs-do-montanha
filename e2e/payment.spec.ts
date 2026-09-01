@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/auth.fixture";
 
-test.describe("Jornada Crítica: Pagamento & Upgrade de Assinatura PRO", () => {
+test.describe.skip("Jornada Crítica: Pagamento & Upgrade de Assinatura PRO - [DESATIVADO VISUALMENTE PARA USO DIRETO]", () => {
   test.beforeEach(async ({ authenticatedPage }) => {
     // Começa autenticado com usuário comum (não-PRO)
     await expect(authenticatedPage.getByTestId("btn-upgrade-pro")).toBeVisible();
