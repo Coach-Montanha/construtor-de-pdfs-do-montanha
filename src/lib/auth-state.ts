@@ -120,17 +120,18 @@ export function loginUser(email: string, password: string): { success: boolean; 
     return { success: false, error: "Senha incorreta. Verifique suas credenciais." };
   }
 
-  data.currentUser = {
+  const currentUser: UserProfile = {
     id: matched.id,
     name: matched.name,
     email: matched.email,
     isPro: matched.isPro,
-    proSince: matched.proSince,
+    ...(matched.proSince ? { proSince: matched.proSince } : {}),
     createdAt: matched.createdAt,
   };
+  data.currentUser = currentUser;
 
   saveStoredAuthData(data);
-  return { success: true, user: data.currentUser };
+  return { success: true, user: currentUser };
 }
 
 export function logoutUser(): void {
