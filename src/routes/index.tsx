@@ -22,6 +22,9 @@ import { PwaInstallPrompt } from "../components/pwa/PwaInstallPrompt";
 import { ContentRepositoryView } from "../components/repository/ContentRepositoryView";
 import { ImportFromRepositoryModal } from "../components/repository/ImportFromRepositoryModal";
 import { AiApprovalModal } from "../components/repository/AiApprovalModal";
+import { AuthModal } from "../components/auth/AuthModal";
+import { SubscriptionModal } from "../components/subscription/SubscriptionModal";
+import { getCurrentUser, logoutUser, UserProfile } from "../lib/auth-state";
 import { analyzeAndDiagramEditorialText, EditorialAnalysisResult } from "../lib/ai-service";
 import { RepositoryDocument } from "../types/magazine";
 import {
@@ -51,6 +54,9 @@ import {
   Copy,
   Layers,
   Eye,
+  Crown,
+  User as UserIcon,
+  LogOut,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 
@@ -80,6 +86,19 @@ function Index() {
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
+
+  // User Auth & PRO Subscription State
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => getCurrentUser());
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleAuthSync = () => {
+      setCurrentUser(getCurrentUser());
+    };
+    window.addEventListener("montanha-auth-changed", handleAuthSync);
+    return () => window.removeEventListener("montanha-auth-changed", handleAuthSync);
+  }, []);
 
   // Repository Import State
   const [isImportFromRepoOpen, setIsImportFromRepoOpen] = useState<boolean>(false);
@@ -490,6 +509,67 @@ function Index() {
             ))}
           </div>
 
+          {/* PRO Subscription Button / Badge */}
+          {currentUser?.isPro ? (
+            <span
+              data-testid="badge-pro-status"
+              className="h-8 sm:h-9 px-2.5 sm:px-3 bg-amber-400 text-black border-2 border-black font-black text-xs rounded-md flex items-center gap-1.5 shadow-xs"
+              title="Plano Montanha Magazine PRO Ativo"
+            >
+              <Crown className="w-3.5 h-3.5 text-black" />
+              <span>PRO</span>
+            </span>
+          ) : (
+            <Button
+              size="sm"
+              data-testid="btn-upgrade-pro"
+              onClick={() => setIsSubscriptionModalOpen(true)}
+              className="h-8 sm:h-9 bg-amber-400 hover:bg-amber-500 text-black border-2 border-black font-black text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+              title="Assinar o Plano PRO da Revista"
+            >
+              <Crown className="w-3.5 h-3.5 text-black" />
+              <span>Assinar PRO</span>
+            </Button>
+          )}
+
+          {/* User Auth Profile / Login Button */}
+          {currentUser ? (
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div
+                data-testid="user-profile-badge"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border-2 border-current theme-app-card-subtle font-black text-xs"
+              >
+                <UserIcon className="w-3.5 h-3.5 text-amber-500" />
+                <span className="hidden md:inline">{currentUser.name}</span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                data-testid="btn-logout"
+                onClick={() => {
+                  logoutUser();
+                  setCurrentUser(null);
+                }}
+                className="h-8 sm:h-9 px-2.5 text-red-600 hover:text-red-700 hover:bg-red-500/10 border-2 border-current font-bold text-xs flex items-center gap-1 cursor-pointer"
+                title="Encerrar Sessão"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Sair</span>
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              data-testid="btn-auth-trigger"
+              onClick={() => setIsAuthModalOpen(true)}
+              className="h-8 sm:h-9 theme-app-card hover:opacity-90 border-2 border-current font-black text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+            >
+              <UserIcon className="w-3.5 h-3.5 text-amber-500" />
+              <span>Entrar / Cadastrar</span>
+            </Button>
+          )}
+
           <Button
             size="sm"
             onClick={() => setIsAiStudioOpen(true)}
@@ -501,6 +581,7 @@ function Index() {
 
           <Button
             size="sm"
+            data-testid="btn-new-article"
             onClick={handleOpenNewArticle}
             className="h-8 sm:h-9 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
@@ -510,6 +591,7 @@ function Index() {
 
           <Button
             size="sm"
+            data-testid="btn-export-pdf"
             onClick={() => setIsExportModalOpen(true)}
             className="h-8 sm:h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md border-2 border-black flex items-center gap-1.5 cursor-pointer"
           >
@@ -523,6 +605,7 @@ function Index() {
       <div className="no-print px-4 sm:px-6 flex items-center justify-between overflow-x-auto custom-scrollbar transition-colors theme-app-subnav border-b-2 shadow-xs">
         <div className="flex items-center gap-1 sm:gap-2 py-1.5">
           <button
+            data-testid="tab-viewer"
             onClick={() => setActiveTab("viewer")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "viewer"
@@ -535,6 +618,7 @@ function Index() {
           </button>
 
           <button
+            data-testid="tab-articles"
             onClick={() => setActiveTab("articles")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "articles"
@@ -547,6 +631,7 @@ function Index() {
           </button>
 
           <button
+            data-testid="tab-repository"
             onClick={() => setActiveTab("repository")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "repository"
@@ -559,6 +644,7 @@ function Index() {
           </button>
 
           <button
+            data-testid="tab-cover"
             onClick={() => setActiveTab("cover")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "cover"
@@ -571,6 +657,7 @@ function Index() {
           </button>
 
           <button
+            data-testid="tab-editorial"
             onClick={() => setActiveTab("editorial")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "editorial"
@@ -583,6 +670,7 @@ function Index() {
           </button>
 
           <button
+            data-testid="tab-settings"
             onClick={() => setActiveTab("settings")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
               activeTab === "settings"
@@ -753,6 +841,7 @@ function Index() {
                 return (
                   <div
                     key={art.id}
+                    data-testid="article-card"
                     className={`theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group shadow-sm ${
                       !isEnabled ? "opacity-50 bg-slate-100 border-slate-300" : ""
                     }`}
@@ -791,7 +880,7 @@ function Index() {
                             {art.estimatedReadTime} min
                           </span>
                         </div>
-                        <h3 className="font-black text-sm sm:text-base leading-tight">
+                        <h3 data-testid="article-card-title" className="font-black text-sm sm:text-base leading-tight">
                           {art.title}
                         </h3>
                         <p className="text-xs opacity-75 line-clamp-1 font-medium">
@@ -837,6 +926,7 @@ function Index() {
                       <Button
                         size="sm"
                         variant="outline"
+                        data-testid="btn-edit-article"
                         onClick={() => handleEditArticle(art)}
                         className="h-8 px-3 font-bold text-xs flex items-center gap-1 border-2 border-current cursor-pointer"
                       >
@@ -846,6 +936,7 @@ function Index() {
 
                       <button
                         type="button"
+                        data-testid="btn-delete-article"
                         onClick={() => handleDeleteArticle(art.id)}
                         className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
                         title="Excluir Matéria"
@@ -914,6 +1005,18 @@ function Index() {
       </main>
 
       {/* Modals & Dialogs */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={(u) => setCurrentUser(u)}
+      />
+
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
+        onSuccess={() => setCurrentUser(getCurrentUser())}
+      />
+
       <ArticleEditorModal
         isOpen={isArticleModalOpen}
         onClose={() => setIsArticleModalOpen(false)}

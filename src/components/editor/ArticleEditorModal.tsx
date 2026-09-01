@@ -146,13 +146,17 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
         enabled: true,
       });
     }
+    setSaveError(null);
   }, [article, isOpen]);
+
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleSave = () => {
     if (!formData.title.trim()) {
-      alert("Por favor, preencha o título do artigo.");
+      setSaveError("Por favor, preencha o título da matéria.");
       return;
     }
+    setSaveError(null);
     onSave(formData);
     onClose();
   };
@@ -361,13 +365,27 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="theme-app-card max-w-4xl max-h-[90vh] overflow-y-auto p-6 custom-scrollbar font-sans border-2 shadow-2xl">
+      <DialogContent
+        data-testid="article-modal"
+        className="theme-app-card max-w-4xl max-h-[90vh] overflow-y-auto p-6 custom-scrollbar font-sans border-2 shadow-2xl"
+      >
         <DialogHeader className="border-b-2 border-current pb-3">
           <DialogTitle className="text-xl font-black flex items-center gap-2 uppercase">
             <Wand2 className="w-5 h-5 text-amber-500" />
             <span>Editor Editorial de Artigos, Treinos & Anúncios</span>
           </DialogTitle>
         </DialogHeader>
+
+        {/* Validation Error Alert */}
+        {saveError && (
+          <div
+            data-testid="article-error-msg"
+            className="p-3 rounded-lg bg-red-500/10 border-2 border-red-500 text-red-700 text-xs font-bold flex items-center gap-2"
+          >
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{saveError}</span>
+          </div>
+        )}
 
         {/* AI Loading Banner */}
         {isAiLoading && (
@@ -404,6 +422,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 </button>
               </div>
               <Input
+                data-testid="input-article-title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value.toUpperCase() })}
                 placeholder="Título impactante em caixa alta"
@@ -414,6 +433,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             <div>
               <Label className="text-xs font-bold mb-1 block">SUBTÍTULO / DECK EDITORIAL</Label>
               <Textarea
+                data-testid="input-article-subtitle"
                 value={formData.subtitle}
                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                 placeholder="Resumo de 1 a 2 frases que sintetiza o takeaway da matéria..."
@@ -993,6 +1013,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           {!previewFormatted ? (
             <Textarea
               ref={textareaRef}
+              data-testid="textarea-article-content"
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               placeholder="Escreva os parágrafos da matéria aqui. Use a barra de ferramentas acima para destacar, sublinhar, aplicar aspas e subtítulos..."
@@ -1048,11 +1069,17 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} className="h-9 font-bold text-xs border-2">
+            <Button
+              variant="outline"
+              data-testid="btn-cancel-article"
+              onClick={onClose}
+              className="h-9 font-bold text-xs border-2"
+            >
               Cancelar
             </Button>
             <Button
               onClick={handleSave}
+              data-testid="btn-save-article"
               className="h-9 bg-amber-500 hover:bg-amber-600 text-black font-black text-xs px-5 border-2 border-black shadow-md cursor-pointer flex items-center gap-1.5"
             >
               <Check className="w-4 h-4" />

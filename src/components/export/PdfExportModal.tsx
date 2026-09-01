@@ -135,7 +135,7 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="theme-app-card max-w-2xl p-6 custom-scrollbar font-sans border-2 shadow-2xl">
+      <DialogContent data-testid="export-modal" className="theme-app-card max-w-2xl p-6 custom-scrollbar font-sans border-2 shadow-2xl">
         <DialogHeader className="border-b-2 border-current pb-3">
           <DialogTitle className="text-xl font-black flex items-center gap-2 uppercase">
             <Printer className="w-5 h-5 text-amber-500" />
