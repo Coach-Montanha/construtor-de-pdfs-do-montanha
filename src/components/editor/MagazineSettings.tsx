@@ -146,6 +146,85 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
+      {/* SELETOR DE ESQUEMA DE CORES DO APLICATIVO */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-current pb-3">
+          <div className="flex items-center gap-2">
+            <Palette className="w-5 h-5 text-amber-500" />
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-widest">
+                Esquema de Cores & Interface do Aplicativo
+              </h3>
+              <p className="text-xs opacity-75">
+                Escolha o modo de contraste e visualização da plataforma no seu dispositivo.
+              </p>
+            </div>
+          </div>
+          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase shrink-0 self-start sm:self-auto">
+            {APP_UI_THEMES.length} MODOS DISPONÍVEIS
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {APP_UI_THEMES.map((theme) => {
+            const isSelected = currentUiTheme === theme.id;
+            return (
+              <button
+                key={theme.id}
+                type="button"
+                onClick={() => onSelectUiTheme(theme.id)}
+                className={`p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer relative flex flex-col justify-between gap-3 ${
+                  isSelected
+                    ? "theme-app-card border-amber-400 ring-2 ring-amber-400 shadow-sm"
+                    : "theme-app-card-subtle opacity-75 hover:opacity-100 hover:border-current"
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
+                        style={{
+                          backgroundColor: theme.previewBg,
+                          borderColor: theme.previewBorder,
+                        }}
+                      >
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: theme.previewAccent }}
+                        />
+                      </div>
+                      <span className="font-bold text-xs uppercase leading-tight">
+                        {theme.name.split("(")[0].trim()}
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <span className="bg-amber-400 text-black text-[9px] font-black font-mono px-1.5 py-0.5 rounded border border-black uppercase shrink-0">
+                        ATIVO
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] opacity-75 leading-snug line-clamp-2">
+                    {theme.subtitle}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1.5 pt-1 border-t border-current/10">
+                  {theme.icon === "contrast" && <Sparkles className="w-3.5 h-3.5 text-amber-500" />}
+                  {theme.icon === "sun" && <Sun className="w-3.5 h-3.5 text-amber-500" />}
+                  {theme.icon === "moon" && <Moon className="w-3.5 h-3.5 text-amber-500" />}
+                  {theme.icon === "book" && <Book className="w-3.5 h-3.5 text-amber-500" />}
+                  {theme.icon === "zap" && <Zap className="w-3.5 h-3.5 text-amber-500" />}
+                  <span className="text-[10px] font-mono font-semibold opacity-80">
+                    {theme.id}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* PWA INSTALLATION CARD */}
       <PwaInstallPrompt variant="card" />
 

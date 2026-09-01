@@ -44,10 +44,6 @@ import {
   MoveDown,
   Clock,
   Settings,
-  Sun,
-  Moon,
-  Book,
-  Zap,
   Cloud,
   FolderOpen,
   Copy,
@@ -468,49 +464,17 @@ function Index() {
           </div>
         </div>
 
-        {/* Action Buttons & Quick Theme Switcher */}
+        {/* Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Cloud Sync Status & Modal Button */}
+          {/* Cloud Sync Status (Only cloud icon) */}
           <Button
             size="sm"
             onClick={() => setIsCloudSyncOpen(true)}
-            className="h-8 sm:h-9 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
-            title="Sincronização em Nuvem & Abrir no Celular"
+            className="h-8 sm:h-9 px-2.5 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer"
+            title={saveStatus ? `Sincronização em Nuvem: ${saveStatus}` : "Sincronização em Nuvem & Compartilhamento"}
+            aria-label="Sincronização em Nuvem"
           >
-            <Cloud className="w-3.5 h-3.5 text-amber-500" />
-            <span className="hidden xl:inline">{saveStatus}</span>
-            <span className="xl:hidden">Sync</span>
-          </Button>
-
-          {/* Quick UI Theme Switcher Selector */}
-          <div className="flex items-center p-0.5 rounded-lg border-2 border-current theme-app-card-subtle" title="Trocar Esquema de Cores do App">
-            {APP_UI_THEMES.map((theme) => (
-              <button
-                key={theme.id}
-                onClick={() => handleSelectUiTheme(theme.id)}
-                className={`p-1.5 rounded-md text-xs transition-all flex items-center gap-1 cursor-pointer ${
-                  uiThemeMode === theme.id
-                    ? "bg-amber-500 text-slate-950 font-black shadow-sm border border-black"
-                    : "opacity-60 hover:opacity-100"
-                }`}
-                title={theme.name}
-              >
-                {theme.icon === "contrast" && <Sparkles className="w-3.5 h-3.5 text-black" />}
-                {theme.icon === "sun" && <Sun className="w-3.5 h-3.5" />}
-                {theme.icon === "moon" && <Moon className="w-3.5 h-3.5" />}
-                {theme.icon === "book" && <Book className="w-3.5 h-3.5" />}
-                {theme.icon === "zap" && <Zap className="w-3.5 h-3.5" />}
-              </button>
-            ))}
-          </div>
-
-          <Button
-            size="sm"
-            onClick={() => setIsAiStudioOpen(true)}
-            className="h-8 sm:h-9 bg-amber-400 hover:bg-amber-500 text-black border-2 border-black font-black text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-black animate-pulse" />
-            <span className="hidden md:inline">Escrever com IA</span>
+            <Cloud className="w-4 h-4 text-amber-500" />
           </Button>
 
           <Button
