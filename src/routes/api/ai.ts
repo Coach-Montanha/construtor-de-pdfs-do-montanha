@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/ai")({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = process.env['GEMINI_API_KEY'];
         if (!apiKey) {
           return new Response(
             JSON.stringify({

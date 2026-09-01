@@ -1,3 +1,4 @@
+import type { LayoutTemplate } from "../types/magazine";
 /**
  * AI Service for Magazine Production (Google Gemini API + Smart Editorial Heuristics)
  */
