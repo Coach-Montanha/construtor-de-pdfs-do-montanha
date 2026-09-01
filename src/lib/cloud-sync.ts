@@ -3,8 +3,6 @@ import { INITIAL_MAGAZINE_PROJECT } from "./sample-data";
 
 const LOCAL_STORAGE_KEY = "montanha_magazine_project";
 const LOCAL_STORAGE_TIMESTAMP_KEY = "montanha_last_saved_at";
-const LOCAL_STORAGE_KEY = "montanha_magazine_project";
-const LOCAL_STORAGE_TIMESTAMP_KEY = "montanha_last_saved_at";
 
 /**
  * Salva o projeto localmente no navegador com segurança (Local-First)

@@ -297,7 +297,7 @@ function Index() {
     setProject({
       ...project,
       articles: updatedArticles,
-      contentRepository: updatedDocs,
+      contentRepository: updatedDocs ?? [],
       updatedAt: new Date().toISOString(),
     });
     alert(`✓ Matéria "${approvedArt.title}" importada e diagramada com sucesso na revista!`);
