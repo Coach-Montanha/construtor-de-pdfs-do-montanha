@@ -1,7 +1,8 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
-import { Feather, Award, ShieldAlert, Scale, FileText } from "lucide-react";
+import { formatPageNumber } from "../../lib/magazine-utils";
+import { Feather, Award, Scale, FileText } from "lucide-react";
 
 interface EditorLetterPageProps {
   project: MagazineProject;
@@ -266,7 +267,7 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
           className="px-2 py-0.5 rounded border"
           style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
         >
-          PÁGINA {pageNumber < 10 ? `0${pageNumber}` : pageNumber}
+          PÁGINA {formatPageNumber(pageNumber)}
         </span>
       </div>
     </div>

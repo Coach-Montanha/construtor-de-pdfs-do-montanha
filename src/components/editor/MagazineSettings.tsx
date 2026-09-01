@@ -12,7 +12,6 @@ import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { ImagePicker } from "../ui/image-picker";
 import { PwaInstallPrompt } from "../pwa/PwaInstallPrompt";
@@ -20,9 +19,7 @@ import {
   Palette,
   Key,
   CheckCircle2,
-  Sliders,
   Share2,
-  BookOpen,
   Eye,
   Sun,
   Moon,

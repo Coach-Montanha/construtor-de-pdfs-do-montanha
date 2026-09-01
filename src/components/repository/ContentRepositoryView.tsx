@@ -20,6 +20,7 @@ import {
   EditorialAnalysisResult,
 } from "../../lib/ai-service";
 import { AiApprovalModal } from "./AiApprovalModal";
+import { countWords } from "../../lib/magazine-utils";
 import {
   FolderOpen,
   Upload,
@@ -28,19 +29,12 @@ import {
   Trash2,
   Edit3,
   Wand2,
-  Sparkles,
   Search,
   CheckCircle2,
   Check,
   Eye,
   Clock,
-  Layers,
-  FileUp,
   Loader2,
-  AlertCircle,
-  FileCheck,
-  Tag,
-  BookOpen,
 } from "lucide-react";
 
 interface ContentRepositoryViewProps {
@@ -98,7 +92,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
         const textContent = (event.target?.result as string) || "";
         if (!textContent.trim()) return;
 
-        const words = textContent.trim().split(/\s+/).filter(Boolean);
+        const wordCount = countWords(textContent);
         const autoTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").toUpperCase();
 
         const newDoc: RepositoryDocument = {
@@ -107,7 +101,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
           rawContent: textContent,
           category: "GERAL",
           sourceFileName: file.name,
-          wordCount: words.length,
+          wordCount,
           status: "draft",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -149,7 +143,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
       return;
     }
 
-    const words = draftContent.trim().split(/\s+/).filter(Boolean);
+    const wordCount = countWords(draftContent);
     const now = new Date().toISOString();
 
     let updatedList: RepositoryDocument[];
@@ -159,9 +153,9 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
           ? {
               ...d,
               title: draftTitle,
-              rawContent: draftContent,
               category: draftCategory,
-              wordCount: words.length,
+              rawContent: draftContent,
+              wordCount,
               updatedAt: now,
             }
           : d
@@ -170,9 +164,9 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
       const newDoc: RepositoryDocument = {
         id: "doc-" + Date.now(),
         title: draftTitle,
-        rawContent: draftContent,
         category: draftCategory,
-        wordCount: words.length,
+        rawContent: draftContent,
+        wordCount,
         status: "draft",
         createdAt: now,
         updatedAt: now,
@@ -331,7 +325,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
 
           <div className="flex items-center justify-between pt-2 border-t">
             <span className="text-[11px] font-mono font-bold opacity-75">
-              Volume: {draftContent.trim().split(/\s+/).filter(Boolean).length} palavras
+              Volume: {countWords(draftContent)} palavras
             </span>
 
             <div className="flex gap-2">

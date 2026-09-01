@@ -21,18 +21,12 @@ import { Button } from "../ui/button";
 import { ImagePicker } from "../ui/image-picker";
 import {
   Sparkles,
-  Check,
   CheckCircle2,
-  AlertCircle,
   Layout,
-  BookOpen,
   Quote,
   Lightbulb,
-  Clock,
   Layers,
   FileText,
-  Tag,
-  User,
   Wand2,
   Edit3,
   Sliders,

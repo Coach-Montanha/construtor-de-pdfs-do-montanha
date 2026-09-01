@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import { Switch } from "../ui/switch";
 import { ImagePicker } from "../ui/image-picker";
+import { formatPageNumber } from "../../lib/magazine-utils";
 import {
   Sparkles,
   Plus,
@@ -24,11 +25,7 @@ import {
   CheckCircle2,
   Sliders,
   Maximize2,
-  RefreshCw,
   Zap,
-  Bookmark,
-  FileText,
-  ArrowRight,
 } from "lucide-react";
 
 interface CoverCustomizerProps {
@@ -550,7 +547,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                   </span>
                   {hl.pageTarget ? (
                     <span className="bg-black text-amber-400 font-mono text-[9px] font-black px-2 py-0.5 rounded border border-black uppercase">
-                      PÁG. {hl.pageTarget < 10 ? `0${hl.pageTarget}` : hl.pageTarget}
+                      PÁG. {formatPageNumber(hl.pageTarget)}
                     </span>
                   ) : null}
                 </div>
@@ -561,7 +558,7 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                     <select
                       onChange={(e) => {
                         if (e.target.value) {
-                          handleLinkHighlightToArticle(hl.id, e.target.value);
+                           handleLinkHighlightToArticle(hl.id, e.target.value);
                           e.target.value = "";
                         }
                       }}
@@ -575,10 +572,12 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                         const pageNum = getArticlePageNumber(art.id);
                         return (
                           <option key={art.id} value={art.id}>
-                            [Pág {pageNum < 10 ? `0${pageNum}` : pageNum}] {art.title}
+                            [Pág {formatPageNumber(pageNum)}] {art.title}
                           </option>
                         );
                       })}
+                    </select>
+                  )}
                     </select>
                   )}
 

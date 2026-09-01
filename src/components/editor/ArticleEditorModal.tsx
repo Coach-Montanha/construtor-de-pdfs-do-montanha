@@ -27,8 +27,6 @@ import {
   Wand2,
   Image as ImageIcon,
   Quote,
-  CheckCircle2,
-  Clock,
   Layout,
   Tag,
   Dumbbell,
@@ -39,7 +37,6 @@ import {
   Italic,
   Underline,
   Highlighter,
-  Heading2,
   Heading3,
   List,
   Eye,
@@ -49,8 +46,6 @@ import {
   polishEditorialText,
   generateEditorialHeadlines,
   extractPullQuotes,
-  getEditorialCuratedImage,
-  generateAiImageUrl,
 } from "../../lib/ai-service";
 
 interface ArticleEditorModalProps {

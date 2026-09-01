@@ -26,6 +26,7 @@ import { AuthModal } from "../components/auth/AuthModal";
 import { SubscriptionModal } from "../components/subscription/SubscriptionModal";
 import { getCurrentUser, logoutUser, UserProfile } from "../lib/auth-state";
 import { analyzeAndDiagramEditorialText, EditorialAnalysisResult } from "../lib/ai-service";
+import { formatPageNumber, countWords } from "../lib/magazine-utils";
 import { RepositoryDocument } from "../types/magazine";
 import {
   Sparkles,
@@ -43,17 +44,14 @@ import {
   MoveDown,
   Clock,
   Settings,
-  CheckCircle2,
   Sun,
   Moon,
   Book,
   Zap,
   Cloud,
-  ArrowRightLeft,
   FolderOpen,
   Copy,
   Layers,
-  Eye,
   Crown,
   User as UserIcon,
   LogOut,
@@ -763,7 +761,7 @@ function Index() {
             {(() => {
               const activeArts = project.articles.filter((a) => a.enabled !== false);
               const totalWordsCount = activeArts.reduce(
-                (acc, a) => acc + (a.content ? a.content.split(/\s+/).filter(Boolean).length : 0),
+                (acc, a) => acc + countWords(a.content),
                 0
               );
               const totalReadTime = activeArts.reduce(
@@ -867,8 +865,8 @@ function Index() {
                           </span>
                           <span className="text-[10px] font-mono font-black text-amber-600">
                             {isDouble
-                              ? `PÁG. ${pageNum < 10 ? `0${pageNum}` : pageNum}-${pageNum + 1 < 10 ? `0${pageNum + 1}` : pageNum + 1}`
-                              : `PÁG. ${pageNum < 10 ? `0${pageNum}` : pageNum}`}
+                              ? `PÁG. ${formatPageNumber(pageNum)}-${formatPageNumber(pageNum + 1)}`
+                              : `PÁG. ${formatPageNumber(pageNum)}`}
                           </span>
                           {isDouble && (
                             <span className="bg-black text-amber-400 font-mono text-[8px] font-black px-1.5 py-0.2 rounded border border-black uppercase">

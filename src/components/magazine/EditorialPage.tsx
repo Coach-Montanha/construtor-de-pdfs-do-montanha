@@ -1,7 +1,8 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
-import { ArrowRight, Zap, Users, Building, Feather, Award } from "lucide-react";
+import { formatPageNumber } from "../../lib/magazine-utils";
+import { Zap, Feather, Award } from "lucide-react";
 
 interface EditorialPageProps {
   project: MagazineProject;
@@ -116,8 +117,8 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
 
             <div className="space-y-3">
               {activeArticlesWithPages.map(({ article: art, startPage, endPage, isTwoPage }) => {
-                const startPadded = startPage < 10 ? `0${startPage}` : `${startPage}`;
-                const endPadded = endPage < 10 ? `0${endPage}` : `${endPage}`;
+                const startPadded = formatPageNumber(startPage);
+                const endPadded = formatPageNumber(endPage);
                 const pageLabel = isTwoPage ? `${startPadded}-${endPadded}` : startPadded;
 
                 return (
@@ -205,7 +206,7 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
                 <span className="truncate">Manifesto do Editor & Termos</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold" style={{ color: primaryColor }}>PÁG. {pageNumber < 10 ? `0${pageNumber}` : pageNumber}</span>
+                <span className="font-bold" style={{ color: primaryColor }}>PÁG. {formatPageNumber(pageNumber)}</span>
                 <span className="truncate">Sumário Completo</span>
               </div>
             </div>
@@ -258,7 +259,7 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
           className="px-2 py-0.5 rounded border"
           style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
         >
-          PÁGINA {pageNumber < 10 ? `0${pageNumber}` : pageNumber}
+          PÁGINA {formatPageNumber(pageNumber)}
         </span>
       </div>
     </div>

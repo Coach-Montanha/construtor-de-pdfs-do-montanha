@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
+import { calculateMagazineTotalPages } from "../../lib/magazine-utils";
 import {
   Dialog,
   DialogContent,
@@ -33,31 +34,7 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
 }) => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  // Dynamic total pages calculation
-  const calculateTotalPages = (): number => {
-    const vis = {
-      showCover: true,
-      showEditorLetter: true,
-      showContributors: false,
-      showTableOfContents: true,
-      showBackCover: true,
-      ...project.pageVisibility,
-    };
-    let count = 0;
-    if (vis.showCover) count++;
-    if (vis.showEditorLetter) count++;
-    if (vis.showContributors) count++;
-    if (vis.showTableOfContents) count++;
-    project.articles
-      .filter((a) => a.enabled !== false)
-      .forEach((a) => {
-        count += a.pageSpan === 2 ? 2 : 1;
-      });
-    if (vis.showBackCover) count++;
-    return Math.max(1, count);
-  };
-
-  const totalPages = customTotalPages || calculateTotalPages();
+  const totalPages = customTotalPages || calculateMagazineTotalPages(project);
 
   const handlePrintPdf = () => {
     setIsExporting(true);

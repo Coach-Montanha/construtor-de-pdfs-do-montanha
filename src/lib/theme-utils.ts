@@ -1,4 +1,4 @@
-import { MagazineTheme, HeadlineFontOption, BodyFontOption, FontConfig } from "../types/magazine";
+import { MagazineTheme, HeadlineFontOption, BodyFontOption } from "../types/magazine";
 
 export function getHeadlineFontClass(headlineFont?: HeadlineFontOption): string {
   switch (headlineFont) {

@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   MagazineProject,
   RepositoryDocument,
-  Article,
 } from "../../types/magazine";
 import {
   Dialog,
@@ -21,9 +20,6 @@ import {
   FileText,
   Clock,
   Check,
-  Plus,
-  Layers,
-  Sparkles,
   ArrowRight,
 } from "lucide-react";
 

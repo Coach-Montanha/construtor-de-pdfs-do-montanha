@@ -1,7 +1,8 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
-import { Users, Instagram, Building, ArrowUpRight, ShieldCheck, Zap } from "lucide-react";
+import { formatPageNumber } from "../../lib/magazine-utils";
+import { Instagram, Building } from "lucide-react";
 
 interface ContributorsPageProps {
   project: MagazineProject;
@@ -158,7 +159,7 @@ export const ContributorsPage: React.FC<ContributorsPageProps> = ({
           className="px-2 py-0.5 rounded border"
           style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
         >
-          PÁGINA {pageNumber < 10 ? `0${pageNumber}` : pageNumber}
+          PÁGINA {formatPageNumber(pageNumber)}
         </span>
       </div>
     </div>

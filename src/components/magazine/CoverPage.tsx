@@ -1,7 +1,7 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
-import { Sparkles, QrCode, Shield, Zap, Crosshair } from "lucide-react";
+import { Sparkles, Zap, Crosshair } from "lucide-react";
 
 interface CoverPageProps {
   project: MagazineProject;

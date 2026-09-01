@@ -1,24 +1,16 @@
 import React from "react";
 import { Article, MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
+import { formatPageNumber } from "../../lib/magazine-utils";
 import {
   Quote,
   Clock,
-  CheckCircle2,
   Lightbulb,
   User,
   QrCode,
   Flame,
-  ShieldCheck,
-  Zap,
   Tag,
-  ShoppingBag,
-  ExternalLink,
-  MapPin,
   Building,
-  Target,
-  Sparkles,
-  ArrowRight,
 } from "lucide-react";
 
 interface ArticleSpreadProps {
@@ -818,7 +810,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           <span>{project.title} • {project.coverConfig?.editionNumber || project.editionNumber ? `ED. #${project.coverConfig?.editionNumber || project.editionNumber}` : "ED. #01"}</span>
           {isTwoPage && pagePart === 1 && (
             <span className="text-amber-500 font-black animate-pulse">
-              (CONTINUA NA PÁGINA {(pageNumber + 1) < 10 ? `0${pageNumber + 1}` : pageNumber + 1} ▸)
+              (CONTINUA NA PÁGINA {formatPageNumber(pageNumber + 1)} ▸)
             </span>
           )}
         </div>
@@ -826,7 +818,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           className="px-2 py-0.5 rounded border font-bold"
           style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
         >
-          PÁGINA {pageNumber < 10 ? `0${pageNumber}` : pageNumber}
+          PÁGINA {formatPageNumber(pageNumber)}
         </span>
       </div>
     </div>

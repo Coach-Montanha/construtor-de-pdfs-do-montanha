@@ -1,4 +1,5 @@
 import type { LayoutTemplate } from "../types/magazine";
+import { countWords } from "./magazine-utils";
 /**
  * AI Service for Magazine Production (Google Gemini API + Smart Editorial Heuristics)
  */
@@ -318,9 +319,7 @@ export async function analyzeAndDiagramEditorialText(
   rawText: string,
   apiKey?: string
 ): Promise<EditorialAnalysisResult> {
-  const cleanText = rawText.trim();
-  const words = cleanText.split(/\s+/).filter(Boolean);
-  const wordCount = words.length;
+  const wordCount = countWords(rawText);
   const estimatedReadTime = Math.max(1, Math.round(wordCount / 130));
 
   // 1. Tentar chamada à API Gemini com prompt ultra-específico baseado no texto fornecido
