@@ -24,6 +24,8 @@ import { ImportFromRepositoryModal } from "../components/repository/ImportFromRe
 import { AiApprovalModal } from "../components/repository/AiApprovalModal";
 import { AuthModal } from "../components/auth/AuthModal";
 import { SubscriptionModal } from "../components/subscription/SubscriptionModal";
+import { EditionsArchiveView } from "../components/archive/EditionsArchiveView";
+import { getArchivedEditions } from "../lib/editions-archive";
 import { getCurrentUser, logoutUser, UserProfile } from "../lib/auth-state";
 import { analyzeAndDiagramEditorialText, EditorialAnalysisResult } from "../lib/ai-service";
 import { formatPageNumber, countWords } from "../lib/magazine-utils";
@@ -46,6 +48,7 @@ import {
   Settings,
   Cloud,
   FolderOpen,
+  FolderArchive,
   Copy,
   Layers,
 } from "lucide-react";
@@ -70,13 +73,27 @@ function Index() {
     return "contrast-white";
   });
 
-  const [activeTab, setActiveTab] = useState<"viewer" | "articles" | "repository" | "cover" | "editorial" | "settings">("viewer");
+  const [activeTab, setActiveTab] = useState<"viewer" | "articles" | "repository" | "cover" | "editorial" | "archive" | "settings">("viewer");
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState<boolean>(false);
   const [isAiStudioOpen, setIsAiStudioOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
+
+  // Editions Archive Count State
+  const [archivedEditionsCount, setArchivedEditionsCount] = useState<number>(() => {
+    if (typeof window === "undefined") return 1;
+    return getArchivedEditions().length;
+  });
+
+  useEffect(() => {
+    const handleArchiveSync = () => {
+      setArchivedEditionsCount(getArchivedEditions().length);
+    };
+    window.addEventListener("montanha-archive-changed", handleArchiveSync);
+    return () => window.removeEventListener("montanha-archive-changed", handleArchiveSync);
+  }, []);
 
   // User Auth & PRO Subscription State
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => getCurrentUser());
@@ -479,16 +496,6 @@ function Index() {
 
           <Button
             size="sm"
-            data-testid="btn-new-article"
-            onClick={handleOpenNewArticle}
-            className="h-8 sm:h-9 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5 text-amber-500" />
-            <span className="hidden sm:inline">Novo Artigo</span>
-          </Button>
-
-          <Button
-            size="sm"
             data-testid="btn-export-pdf"
             onClick={() => setIsExportModalOpen(true)}
             className="h-8 sm:h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md border-2 border-black flex items-center gap-1.5 cursor-pointer"
@@ -565,6 +572,19 @@ function Index() {
           >
             <Feather className="w-3.5 h-3.5" />
             <span>Editorial & Páginas</span>
+          </button>
+
+          <button
+            data-testid="tab-archive"
+            onClick={() => setActiveTab("archive")}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
+              activeTab === "archive"
+                ? "bg-amber-400 text-slate-950 border-black shadow-sm"
+                : "border-transparent opacity-75 hover:opacity-100 hover:bg-black/5"
+            }`}
+          >
+            <FolderArchive className="w-3.5 h-3.5 text-amber-500" />
+            <span>Arquivo de Edições ({archivedEditionsCount})</span>
           </button>
 
           <button
@@ -648,6 +668,7 @@ function Index() {
                 </Button>
                 <Button
                   variant="outline"
+                  data-testid="btn-new-article"
                   onClick={handleOpenNewArticle}
                   className="h-9 font-bold text-xs flex items-center gap-1.5 border-2 border-current cursor-pointer shadow-xs"
                 >
@@ -891,7 +912,23 @@ function Index() {
           </div>
         )}
 
-        {/* Tab 5: Settings */}
+        {/* Tab 5: Editions Archive */}
+        {activeTab === "archive" && (
+          <div className="max-w-5xl mx-auto">
+            <EditionsArchiveView
+              currentProject={project}
+              onLoadEditionIntoStudio={(loadedProject) => {
+                setProject({
+                  ...loadedProject,
+                  updatedAt: new Date().toISOString(),
+                });
+                setActiveTab("viewer");
+              }}
+            />
+          </div>
+        )}
+
+        {/* Tab 6: Settings */}
         {activeTab === "settings" && (
           <div className="max-w-4xl mx-auto">
             <MagazineSettings
