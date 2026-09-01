@@ -214,69 +214,62 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
 
   return (
     <div className="theme-app-viewer flex flex-col h-full rounded-xl overflow-hidden border-2 shadow-2xl transition-colors font-sans">
-      {/* Top Controls Toolbar */}
-      <div className="theme-app-viewer-toolbar px-4 py-2.5 border-b-2 flex flex-wrap items-center justify-between gap-3 transition-colors">
-        {/* Left: Magazine info & View Mode Selector */}
-        <div className="flex items-center gap-2">
-          <span className="font-black text-xs uppercase tracking-widest hidden sm:inline">
-            {project.title}
-          </span>
-          <div className="h-4 w-px bg-current opacity-20 hidden sm:block" />
-
-          {/* Mode Switchers */}
-          <div className="flex items-center theme-app-card-subtle p-0.5 rounded-lg border">
-            <button
-              onClick={() => setViewMode("single")}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-md transition-all ${
-                viewMode === "single"
-                  ? "bg-amber-400 text-black border border-black shadow-sm"
-                  : "opacity-70 hover:opacity-100"
-              }`}
-              title="Modo Página Individual (Visualização Exata A4)"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Página Única (100% WYSIWYG)</span>
-            </button>
-            <button
-              onClick={() => setViewMode("spread")}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-md transition-all ${
-                viewMode === "spread"
-                  ? "bg-amber-400 text-black border border-black shadow-sm"
-                  : "opacity-70 hover:opacity-100"
-              }`}
-              title="Modo Revista Aberta (Spread 2 Páginas)"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Revista Aberta</span>
-            </button>
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-black rounded-md transition-all ${
-                viewMode === "grid"
-                  ? "bg-amber-400 text-black border border-black shadow-sm"
-                  : "opacity-70 hover:opacity-100"
-              }`}
-              title="Ver Todas as Páginas"
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Grade</span>
-            </button>
-          </div>
+      {/* Top Controls Toolbar - All buttons and icons organized in a single horizontal row */}
+      <div className="theme-app-viewer-toolbar px-3 sm:px-4 py-2 border-b-2 flex items-center justify-between gap-3 overflow-x-auto custom-scrollbar flex-nowrap transition-colors">
+        {/* Left: View Mode Selector */}
+        <div className="flex items-center theme-app-card-subtle p-0.5 rounded-lg border shrink-0">
+          <button
+            onClick={() => setViewMode("single")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
+              viewMode === "single"
+                ? "bg-amber-400 text-black border border-black shadow-xs"
+                : "opacity-70 hover:opacity-100"
+            }`}
+            title="Visualizar Página Única"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Página Única</span>
+          </button>
+          <button
+            onClick={() => setViewMode("spread")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
+              viewMode === "spread"
+                ? "bg-amber-400 text-black border border-black shadow-xs"
+                : "opacity-70 hover:opacity-100"
+            }`}
+            title="Visualizar Revista Aberta (Dupla)"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Revista Aberta</span>
+          </button>
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
+              viewMode === "grid"
+                ? "bg-amber-400 text-black border border-black shadow-xs"
+                : "opacity-70 hover:opacity-100"
+            }`}
+            title="Visualizar Grade de Páginas"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Grade</span>
+          </button>
         </div>
 
         {/* Center: Pagination & Nav */}
         {viewMode !== "grid" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
               onClick={prevPage}
               disabled={currentPageIndex === 0}
-              className="h-8 px-2 border-2 border-current disabled:opacity-30"
+              className="h-8 px-2 border-2 border-current disabled:opacity-30 cursor-pointer"
+              title="Página Anterior"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-xs font-mono font-black px-2.5 py-1 border-2 border-black rounded shadow-xs bg-amber-400 text-black">
+            <span className="text-xs font-mono font-black px-2.5 py-1 border-2 border-black rounded shadow-xs bg-amber-400 text-black whitespace-nowrap">
               {viewMode === "spread" && currentPageIndex > 0 && currentPageIndex < totalPages - 1
                 ? `PÁG ${currentPageIndex + 1} - ${Math.min(currentPageIndex + 2, totalPages)} DE ${totalPages}`
                 : `PÁG ${currentPageIndex + 1} DE ${totalPages}`}
@@ -286,7 +279,8 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
               size="sm"
               onClick={nextPage}
               disabled={currentPageIndex >= totalPages - 1}
-              className="h-8 px-2 border-2 border-current disabled:opacity-30"
+              className="h-8 px-2 border-2 border-current disabled:opacity-30 cursor-pointer"
+              title="Próxima Página"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -294,12 +288,12 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
         )}
 
         {/* Right: Zoom & Export Button */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Zoom controls */}
           <div className="hidden sm:flex items-center gap-1 theme-app-card-subtle px-2 py-0.5 rounded border text-xs">
             <button
               onClick={() => setZoomLevel((z) => Math.max(70, z - 10))}
-              className="p-1 opacity-70 hover:opacity-100"
+              className="p-1 opacity-70 hover:opacity-100 cursor-pointer"
               title="Reduzir Zoom"
             >
               <ZoomOut className="w-3.5 h-3.5" />
@@ -309,7 +303,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
             </span>
             <button
               onClick={() => setZoomLevel((z) => Math.min(140, z + 10))}
-              className="p-1 opacity-70 hover:opacity-100"
+              className="p-1 opacity-70 hover:opacity-100 cursor-pointer"
               title="Aumentar Zoom"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -319,10 +313,11 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
           <Button
             size="sm"
             onClick={onOpenExportModal}
-            className="h-8 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-md flex items-center gap-1.5 border-2 border-black"
+            className="h-8 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-xs flex items-center gap-1.5 border-2 border-black cursor-pointer"
+            title="Exportar PDF da Revista"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Exportar PDF</span>
+            <span className="hidden sm:inline">Exportar PDF</span>
           </Button>
         </div>
       </div>
