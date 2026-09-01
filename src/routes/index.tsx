@@ -251,7 +251,7 @@ function Index() {
     setIsRepoAnalyzing(true);
     setSelectedRepoDoc(doc);
     try {
-      const result = await analyzeAndDiagramEditorialText(doc.rawContent, project.geminiApiKey);
+      const result = await analyzeAndDiagramEditorialText(doc.rawContent);
       setRepoAnalysisResult(result);
       setIsRepoApprovalOpen(true);
     } catch (err: any) {
@@ -919,14 +919,12 @@ function Index() {
         onClose={() => setIsArticleModalOpen(false)}
         article={editingArticle}
         onSave={handleSaveArticle}
-        apiKey={project.geminiApiKey ?? ""}
       />
 
       <AiStudioDialog
         isOpen={isAiStudioOpen}
         onClose={() => setIsAiStudioOpen(false)}
         onAddArticle={handleSaveArticle}
-        apiKey={project.geminiApiKey ?? ""}
       />
 
       <PdfExportModal

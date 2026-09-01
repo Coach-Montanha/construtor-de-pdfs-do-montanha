@@ -16,51 +16,30 @@ interface GeminiResponse {
   };
 }
 
-async function callGeminiApi(prompt: string, apiKey?: string, systemInstruction?: string): Promise<string> {
-  const key = apiKey || (typeof window !== "undefined" ? localStorage.getItem("gemini_api_key") : null);
-
-  if (!key) {
-    throw new Error("Chave de API Gemini não informada. Configure nas opções da revista.");
-  }
-
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-
-  const requestBody: Record<string, unknown> = {
-    contents: [
-      {
-        parts: [{ text: prompt }],
-      },
-    ],
-  };
-
-  if (systemInstruction) {
-    requestBody["systemInstruction"] = {
-      parts: [{ text: systemInstruction }],
-    };
-  }
-
-  const response = await fetch(endpoint, {
+async function callGeminiApi(prompt: string, _apiKey?: string, systemInstruction?: string): Promise<string> {
+  const response = await fetch("/api/ai", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({
+      prompt,
+      systemInstruction,
+    }),
   });
 
   if (!response.ok) {
-    const errData = (await response.json().catch(() => ({}))) as GeminiResponse;
-    const msg = errData?.error?.message || `Erro na chamada da API Gemini (${response.status})`;
+    const errData = (await response.json().catch(() => ({}))) as { error?: string };
+    const msg = errData?.error || `Erro na chamada da IA (${response.status})`;
     throw new Error(msg);
   }
 
-  const data = (await response.json()) as GeminiResponse;
-  const outputText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!outputText) {
+  const data = (await response.json()) as { text?: string };
+  if (!data?.text) {
     throw new Error("A IA não retornou conteúdo. Tente novamente.");
   }
 
-  return outputText.trim();
+  return data.text.trim();
 }
 
 /**

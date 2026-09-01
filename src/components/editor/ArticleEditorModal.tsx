@@ -58,7 +58,6 @@ interface ArticleEditorModalProps {
   onClose: () => void;
   article: Article | null;
   onSave: (article: Article) => void;
-  apiKey?: string;
 }
 
 export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
@@ -66,7 +65,6 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   onClose,
   article,
   onSave,
-  apiKey,
 }) => {
   const [formData, setFormData] = useState<Article>({
     id: "art-" + Date.now(),
@@ -213,7 +211,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     setIsAiLoading(true);
     setAiStatusMsg("Polindo texto com linguagem editorial de revista...");
     try {
-      const polished = await polishEditorialText(formData.content, tone, apiKey);
+      const polished = await polishEditorialText(formData.content, tone);
       setFormData((prev) => ({ ...prev, content: polished }));
     } catch (err: any) {
       alert("Erro na IA: " + err.message);
@@ -227,7 +225,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     setIsAiLoading(true);
     setAiStatusMsg("Criando sugestões de manchetes impactantes...");
     try {
-      const suggestions = await generateEditorialHeadlines(formData.title, formData.content, apiKey);
+      const suggestions = await generateEditorialHeadlines(formData.title, formData.content);
       if (suggestions.length > 0) {
         const pick = suggestions[0]!;
         setFormData((prev) => ({
@@ -249,7 +247,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     setIsAiLoading(true);
     setAiStatusMsg("Extraindo citações de destaque tipográfico...");
     try {
-      const quotes = await extractPullQuotes(formData.content, apiKey);
+      const quotes = await extractPullQuotes(formData.content);
       setFormData((prev) => ({ ...prev, pullQuotes: quotes }));
     } catch (err: any) {
       alert("Erro na IA: " + err.message);

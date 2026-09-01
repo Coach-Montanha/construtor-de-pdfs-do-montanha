@@ -292,7 +292,6 @@ export interface MagazineProject {
   backCoverConfig: BackCoverConfig;
   pageVisibility?: PageVisibilityConfig;
   fontConfig?: FontConfig;
-  geminiApiKey?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -50,11 +50,14 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
   currentUiTheme,
   onSelectUiTheme,
 }) => {
-  const [apiKeyInput, setApiKeyInput] = useState<string>(
-    project.geminiApiKey || (typeof window !== "undefined" ? localStorage.getItem("gemini_api_key") || "" : "")
-  );
-  const [apiKeySaved, setApiKeySaved] = useState<boolean>(false);
   const [themeFilter, setThemeFilter] = useState<"all" | "dark" | "light" | "vibrant">("all");
+
+  // Limpeza de segurança de chaves legadas armazenadas no navegador
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("gemini_api_key");
+    }
+  }, []);
 
   const visibility = {
     showCover: true,
@@ -100,17 +103,6 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     });
   };
 
-  const handleSaveApiKey = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("gemini_api_key", apiKeyInput.trim());
-    }
-    onChange({
-      ...project,
-      geminiApiKey: apiKeyInput.trim(),
-    });
-    setApiKeySaved(true);
-    setTimeout(() => setApiKeySaved(false), 3000);
-  };
 
   const handleSelectMagazineTheme = (themeId: MagazineThemeId) => {
     onChange({
@@ -584,30 +576,24 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
         </div>
       </div>
 
-      {/* 4. GEMINI API KEY CONFIGURATION */}
-      <div className="theme-app-card p-5 rounded-xl border-2 space-y-4 shadow-sm">
-        <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-          <Key className="w-4 h-4 text-amber-500" />
-          <span>4. Chave de API do Google Gemini (IA)</span>
-        </h3>
-        <p className="text-xs opacity-75 leading-relaxed">
-          Insira sua chave de API para habilitar a redação automática de matérias completas, sugestão de títulos e geração de imagens realistas.
+      {/* 4. INTELIGÊNCIA ARTIFICIAL (GOOGLE GEMINI) */}
+      <div className="theme-app-card p-5 rounded-xl border-2 space-y-3 shadow-sm bg-emerald-500/5 border-emerald-500/30">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <Key className="w-4 h-4 text-amber-500" />
+            <span>4. Inteligência Artificial (Google Gemini)</span>
+          </h3>
+          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-emerald-500 text-white uppercase flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-white" />
+            BACKEND SEGURO
+          </span>
+        </div>
+        <p className="text-xs opacity-80 leading-relaxed">
+          A integração com a Inteligência Artificial é gerenciada diretamente no servidor através da variável de ambiente <code className="font-mono font-bold">GEMINI_API_KEY</code>. As chaves de acesso nunca são expostas no navegador, URLs ou arquivos de backup.
         </p>
-
-        <div className="flex flex-col sm:flex-row gap-2 max-w-xl">
-          <Input
-            type="password"
-            value={apiKeyInput}
-            onChange={(e) => setApiKeyInput(e.target.value)}
-            placeholder="AIzaSy..."
-            className="theme-app-input font-mono text-xs border-2 flex-1"
-          />
-          <Button
-            onClick={handleSaveApiKey}
-            className="h-9 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-4 border-2 border-black shrink-0 shadow-xs cursor-pointer"
-          >
-            {apiKeySaved ? "Chave Salva!" : "Salvar Chave"}
-          </Button>
+        <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-xs font-semibold text-emerald-800">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>Chamadas de IA protegidas e roteadas via servidor seguro (/api/ai).</span>
         </div>
       </div>
 

@@ -207,7 +207,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     setSelectedSourceDoc(doc);
 
     try {
-      const result = await analyzeAndDiagramEditorialText(doc.rawContent, project.geminiApiKey);
+      const result = await analyzeAndDiagramEditorialText(doc.rawContent);
       setAnalysisResult(result);
       setIsApprovalModalOpen(true);
     } catch (err: any) {

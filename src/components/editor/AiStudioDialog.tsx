@@ -27,14 +27,12 @@ interface AiStudioDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onAddArticle: (article: Article) => void;
-  apiKey?: string;
 }
 
 export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
   isOpen,
   onClose,
   onAddArticle,
-  apiKey,
 }) => {
   const [topic, setTopic] = useState<string>("");
   const [category, setCategory] = useState<string>("HIPERTROFIA & PERFORMANCE");
@@ -77,7 +75,7 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
 
     try {
       setIsLoading(true);
-      const result = await generateFullArticleByTopic(topic, category, tone, apiKey);
+      const result = await generateFullArticleByTopic(topic, category, tone);
       setGeneratedResult(result);
     } catch (err: any) {
       alert("Erro ao gerar matéria: " + err.message);
