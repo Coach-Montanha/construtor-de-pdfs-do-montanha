@@ -647,8 +647,6 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
                       })}
                     </select>
                   )}
-                    </select>
-                  )}
 
                   <button
                     type="button"
