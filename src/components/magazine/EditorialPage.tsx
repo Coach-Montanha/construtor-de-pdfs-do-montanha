@@ -114,10 +114,8 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
             </div>
 
             <div className="space-y-3">
-              {activeArticlesWithPages.map(({ article: art, startPage, endPage, isTwoPage }) => {
-                const startPadded = formatPageNumber(startPage);
-                const endPadded = formatPageNumber(endPage);
-                const pageLabel = isTwoPage ? `${startPadded}-${endPadded}` : startPadded;
+              {activeArticlesWithPages.map(({ article: art, startPage }) => {
+                const pageLabel = formatPageNumber(startPage);
 
                 return (
                   <div
@@ -125,7 +123,7 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
                     className="group flex items-start gap-3 p-1.5 rounded transition-all border-l-2"
                     style={{ borderColor: `${primaryColor}40`, backgroundColor: `${cardBg}50` }}
                   >
-                    {/* 1. Page Number & Spread Badge */}
+                    {/* 1. Initial Page Number */}
                     <div className="shrink-0 flex flex-col items-center">
                       <span
                         className="font-mono font-black text-xs sm:text-sm px-2 py-0.5 rounded border block"
@@ -133,11 +131,6 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
                       >
                         {pageLabel}
                       </span>
-                      {isTwoPage && (
-                        <span className="font-mono text-[7px] font-black uppercase text-amber-500 mt-0.5">
-                          DUPLA
-                        </span>
-                      )}
                     </div>
 
                     {/* 2. Article Title, Category Tag, Author */}
@@ -152,14 +145,6 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
                         <span className="text-[8px] font-mono" style={{ color: textMutedColor }}>
                           {art.estimatedReadTime} MIN DE LEITURA
                         </span>
-                        {isTwoPage && (
-                          <span
-                            className="text-[7.5px] font-mono font-bold px-1 rounded uppercase"
-                            style={{ backgroundColor: `${primaryColor}25`, color: primaryColor }}
-                          >
-                            2 PÁGINAS
-                          </span>
-                        )}
                       </div>
 
                       <h3

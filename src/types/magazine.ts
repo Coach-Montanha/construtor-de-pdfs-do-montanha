@@ -205,10 +205,12 @@ export interface Article {
   heroImageCaption?: string;
   heroImagePrompt?: string;
   heroImageLayout?: "banner" | "side" | "contain" | "compact" | "hidden";
+  heroImageHeight?: "large" | "medium" | "compact";
   heroImagePosition?: string; // e.g. "center", "50% 20%", "top", "bottom"
   secondaryImage?: string;
   secondaryImageCaption?: string;
   secondaryImagePosition?: string;
+  secondaryImagePlacement?: "bottom" | "top"; // default "bottom"
   bottomSpotlightImage?: string;
   bottomSpotlightCaption?: string;
   bottomSpotlightPosition?: string;

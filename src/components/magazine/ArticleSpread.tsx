@@ -57,15 +57,27 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const isTwoPage = totalPagesForArticle === 2;
 
   // Split content into clean paragraph chunks
-  const allRawChunks = (article.content || "")
+  // Check for manual page break delimiter (Diagramação Manual)
+  const manualSplitRegex = /\n?\s*(?:---|===)\s*(?:QUEBRA DE P[ÁA]GINA|PAGE\s*BREAK)\s*(?:---|===)\s*\n?/i;
+  const hasManualSplit = manualSplitRegex.test(article.content || "");
+
+  const cleanRawContent = (article.content || "").replace(manualSplitRegex, "\n\n");
+  const allRawChunks = cleanRawContent
     .split("\n\n")
     .map((c) => c.trim())
     .filter(Boolean);
 
-  // Character-balanced splitting for 2-page spreads to avoid overloading Part 1
+  // Determine page chunks (Manual diagramming has 100% precedence, otherwise character-balanced)
   let pageChunks: string[] = [];
   if (isTwoPage) {
-    if (allRawChunks.length <= 1) {
+    if (hasManualSplit) {
+      const parts = (article.content || "").split(manualSplitRegex);
+      const targetContent = pagePart === 1 ? parts[0] || "" : parts[1] || "";
+      pageChunks = targetContent
+        .split("\n\n")
+        .map((c) => c.trim())
+        .filter(Boolean);
+    } else if (allRawChunks.length <= 1) {
       pageChunks = pagePart === 1 ? allRawChunks : [];
     } else {
       const totalAllChars = allRawChunks.reduce((acc, c) => acc + c.length, 0);
@@ -266,15 +278,17 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
   // Hero Image layout styling
   const heroLayout = article.heroImageLayout || "banner";
+  const heroSize = article.heroImageHeight || "large";
   const showHeroImage = article.heroImage && heroLayout !== "hidden" && pagePart === 1;
+  const secondaryPlacement = article.secondaryImagePlacement || "bottom";
   const showSecondaryImage = article.secondaryImage && isTwoPage && pagePart === 2;
 
-  // Visual Spotlight for small articles (fills empty space dynamically)
+  // Visual Spotlight for small articles (fills empty space dynamically when no secondary image is present)
   const isShortContent = pageChunks.length <= 5 && totalPageChars < 1150;
   const shouldShowArticleSpotlight =
     isShortContent &&
-    (!showHeroImage || heroLayout === "compact" || heroLayout === "banner") &&
-    (!isTwoPage || pagePart === 2 || !showHeroImage);
+    (!showHeroImage || heroLayout === "compact") &&
+    (!isTwoPage || (pagePart === 2 && !showSecondaryImage));
 
   const getContextualSpotlightImage = () => {
     if (article.bottomSpotlightImage) return article.bottomSpotlightImage;
@@ -772,21 +786,17 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* Hero Image (Part 1) */}
+            {/* Hero Image (Part 1 or Single Page): 2x a 3x maior para impacto editorial */}
             {showHeroImage && (
               <div
-                className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-xs ${
-                  isTwoPage
-                    ? isDenseText
-                      ? "h-28 sm:h-32 md:h-36"
-                      : "h-36 sm:h-44 md:h-48"
-                    : heroLayout === "compact"
-                    ? "h-20 sm:h-24"
-                    : heroLayout === "contain"
-                    ? "h-36 sm:h-44 bg-black/60"
-                    : isShortContent
+                className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-sm ${
+                  heroLayout === "contain"
+                    ? "h-56 sm:h-64 md:h-72 bg-black/60"
+                    : heroSize === "compact"
                     ? "h-32 sm:h-36 md:h-40"
-                    : "h-24 sm:h-28"
+                    : heroSize === "medium"
+                    ? "h-44 sm:h-52 md:h-60"
+                    : "h-56 sm:h-64 md:h-72"
                 }`}
                 style={{ borderColor: `${primaryColor}40` }}
               >
@@ -806,10 +816,10 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* Secondary Image (Part 2 if available) */}
-            {showSecondaryImage && (
+            {/* Secondary Image (Part 2 at Top, only if explicitly chosen) */}
+            {showSecondaryImage && secondaryPlacement === "top" && (
               <div
-                className="relative w-full h-36 sm:h-44 md:h-48 rounded-md overflow-hidden border shrink-0 shadow-xs"
+                className="relative w-full h-44 sm:h-52 md:h-60 rounded-md overflow-hidden border shrink-0 shadow-xs"
                 style={{ borderColor: `${primaryColor}40` }}
               >
                 <img
@@ -826,15 +836,43 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* True Multi-Column Fluid Narrative Flow (Contínuo sem corte prematuro de coluna) */}
+            {/* Multi-Column Fluid Narrative Flow (Equilibrado e alinhado à esquerda sem distorção) */}
             <div
-              className={`columns-1 sm:columns-2 gap-4 flex-1 text-justify overflow-hidden ${bodyFontClass}`}
+              className={`columns-1 sm:columns-2 gap-5 flex-1 text-left overflow-hidden ${bodyFontClass}`}
               style={{
-                columnFill: "auto",
+                columnFill: "balance",
               }}
             >
               {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
             </div>
+
+            {/* Secondary Image (Part 2 at Bottom: Ocupa o espaço restante da página ao final do artigo) */}
+            {showSecondaryImage && secondaryPlacement === "bottom" && (
+              <div
+                className="relative w-full rounded-md overflow-hidden border flex-1 min-h-[190px] sm:min-h-[230px] md:min-h-[260px] shrink-0 shadow-md group mt-2"
+                style={{ borderColor: `${primaryColor}40` }}
+              >
+                <img
+                  src={article.secondaryImage}
+                  alt="Foto de Apoio Editorial"
+                  className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
+                  style={{ objectPosition: article.secondaryImagePosition || "50% 50%" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end justify-between p-2.5">
+                  <span
+                    className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                  >
+                    // REGISTRO DE PERFORMANCE
+                  </span>
+                  {article.secondaryImageCaption && (
+                    <span className="text-[8px] font-mono italic text-slate-200">
+                      "{article.secondaryImageCaption}"
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Bottom Visual Spotlight (Acrescenta imagem exclusiva para artigos pequenos preenchendo o vazio escuro) */}
             {shouldShowArticleSpotlight && (

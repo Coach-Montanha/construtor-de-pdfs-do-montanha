@@ -42,6 +42,8 @@ import {
   Eye,
   Edit3,
   AlertCircle,
+  Scissors,
+  BookOpen,
 } from "lucide-react";
 import {
   polishEditorialText,
@@ -125,7 +127,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
         keyTakeaways: Array.isArray(article.keyTakeaways) ? article.keyTakeaways : [],
         tags: Array.isArray(article.tags) ? article.tags : [],
         heroImagePosition: article.heroImagePosition || "50% 50%",
+        heroImageHeight: article.heroImageHeight || "large",
         secondaryImagePosition: article.secondaryImagePosition || "50% 50%",
+        secondaryImagePlacement: article.secondaryImagePlacement || "bottom",
         bottomSpotlightPosition: article.bottomSpotlightPosition || "50% 50%",
         enabled: article.enabled !== false,
       });
@@ -141,7 +145,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
         heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
         heroImageCaption: "",
         heroImagePosition: "50% 50%",
+        heroImageHeight: "large",
         secondaryImagePosition: "50% 50%",
+        secondaryImagePlacement: "bottom",
         bottomSpotlightPosition: "50% 50%",
         content: "",
         pullQuotes: [],
@@ -553,7 +559,20 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               helperText="Upload do PC, IA ou URL"
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label className="text-[10px] font-bold">ALTURA DA FOTO DE ABERTURA</Label>
+                <select
+                  value={formData.heroImageHeight || "large"}
+                  onChange={(e) => setFormData({ ...formData, heroImageHeight: e.target.value as any })}
+                  className="w-full theme-app-input text-xs font-bold mt-1 border-2 p-1.5 rounded"
+                >
+                  <option value="large">Grande e Imponente (2x a 3x maior)</option>
+                  <option value="medium">Panorâmica Média</option>
+                  <option value="compact">Faixa Compacta</option>
+                </select>
+              </div>
+
               <div>
                 <Label className="text-[10px] font-bold">ENQUADRAMENTO DA FOTO NO ARTIGO</Label>
                 <select
@@ -595,10 +614,31 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             {/* Secondary Image for 2-Page Spreads */}
             {formData.pageSpan === 2 && (
               <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2 bg-amber-400/5">
-                <Label className="text-xs font-bold flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
-                  <span>FOTO SECUNDÁRIA (PARTE 2 / PÁGINA DUPLA)</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
+                    <span>FOTO SECUNDÁRIA (PARTE 2 / PÁGINA DUPLA)</span>
+                  </Label>
+                  <span className="text-[9px] font-mono text-amber-600 font-bold uppercase">
+                    Página 2
+                  </span>
+                </div>
+
+                <div>
+                  <Label className="text-[10px] font-bold">POSIÇÃO DA FOTO NA PÁGINA 2</Label>
+                  <select
+                    value={formData.secondaryImagePlacement || "bottom"}
+                    onChange={(e) => setFormData({ ...formData, secondaryImagePlacement: e.target.value as any })}
+                    className="w-full theme-app-input text-xs font-bold mt-1 border-2 p-1.5 rounded"
+                  >
+                    <option value="bottom">Ao Final da Matéria (Ocupando a Base / Restante da Página - Recomendado)</option>
+                    <option value="top">No Topo da Página 2 (Acima do Texto)</option>
+                  </select>
+                  <p className="text-[9.5px] opacity-70 mt-0.5">
+                    Ao final da matéria, a foto expande para preencher o espaço restante da página, eliminando buracos vazios.
+                  </p>
+                </div>
+
                 <ImagePicker
                   label="Segunda Imagem Editorial"
                   value={formData.secondaryImage || ""}
@@ -607,7 +647,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                   onPositionChange={(pos) => setFormData({ ...formData, secondaryImagePosition: pos })}
                   aspectRatio="landscape"
                   placeholderPrompt="Fotografia complementar de apoio em alta resolução..."
-                  helperText="Exibida no topo da 2ª página da matéria dupla"
+                  helperText="Preenche o espaço da 2ª página com imponência visual"
                 />
               </div>
             )}
@@ -1055,7 +1095,30 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               <List className="w-3.5 h-3.5" />
               <span>Lista</span>
             </button>
+
+            {formData.pageSpan === 2 && (
+              <button
+                type="button"
+                onClick={() => applyFormatting("\n\n---QUEBRA DE PÁGINA---\n\n", "", "")}
+                className="px-2.5 py-1 rounded border-2 border-amber-500 bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-500/30 font-black flex items-center gap-1 cursor-pointer sm:ml-auto shadow-xs"
+                title="Dividir manualmente o que vai na Página 1 e o que vai na Página 2"
+              >
+                <Scissors className="w-3.5 h-3.5" />
+                <span>Dividir Pág. 1 // Pág. 2</span>
+              </button>
+            )}
           </div>
+
+          {formData.pageSpan === 2 && (
+            <div className="flex items-center justify-between p-2 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  <strong>Diagramação Manual de 2 Páginas:</strong> Use o botão <em>"Dividir Pág. 1 // Pág. 2"</em> para definir onde a página 1 termina e a página 2 começa, eliminando qualquer buraco sem texto.
+                </span>
+              </span>
+            </div>
+          )}
 
           {!previewFormatted ? (
             <Textarea
@@ -1071,6 +1134,13 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               {(formData.content || "")
                 .split("\n\n")
                 .map((p, idx) => {
+                  if (/(?:---|===)\s*(?:QUEBRA DE P[ÁA]GINA|PAGE\s*BREAK)\s*(?:---|===)/i.test(p)) {
+                    return (
+                      <div key={idx} className="my-3 py-1.5 px-3 rounded bg-amber-500/20 border-2 border-dashed border-amber-500 text-amber-500 font-mono font-black text-center text-[10px] tracking-wider uppercase">
+                        ✂️ FIM DA PÁGINA 1 — INÍCIO DA PÁGINA 2
+                      </div>
+                    );
+                  }
                   if (p.startsWith("### ") || p.startsWith("## ")) {
                     return (
                       <h4 key={idx} className="font-black text-amber-500 uppercase text-xs pt-1 border-b border-amber-500/30">
@@ -1091,7 +1161,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                     );
                   }
                   return (
-                    <p key={idx} className="text-justify">
+                    <p key={idx} className="text-left">
                       {p}
                     </p>
                   );

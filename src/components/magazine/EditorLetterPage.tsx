@@ -212,13 +212,11 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
 
             return (
               <div
-                className={`${
-                  isLong ? "grid grid-cols-1 sm:grid-cols-2 gap-5" : "space-y-3 max-w-4xl"
-                } text-xs sm:text-[12px] leading-relaxed text-left shrink-0 mb-3 ${bodyFontClass}`}
-                style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
+                className={`columns-1 sm:columns-2 gap-6 text-xs sm:text-[12.5px] leading-relaxed text-left shrink-0 mb-3 ${bodyFontClass}`}
+                style={{ color: isLight ? "#1E293B" : "#CBD5E1", columnFill: "balance" }}
               >
                 {paragraphs.map((paragraph, idx) => (
-                  <p key={idx} className="leading-relaxed">
+                  <p key={idx} className="leading-relaxed mb-3 break-inside-avoid">
                     {paragraph}
                   </p>
                 ))}
