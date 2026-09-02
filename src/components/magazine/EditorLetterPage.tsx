@@ -202,64 +202,70 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
             )}
           </div>
 
-          {/* Letter Body (2 Colunas Sequenciais Contínuas: Coluna 1 do topo à base, depois Coluna 2) */}
+          {/* Letter Body */}
           {(() => {
             const paragraphs = (editorialInfo.editorLetter || "")
               .split("\n\n")
               .map((p) => p.trim())
               .filter(Boolean);
-            const half = Math.ceil(paragraphs.length / 2);
-            const leftCol = paragraphs.slice(0, half);
-            const rightCol = paragraphs.slice(half);
+            const isLong = paragraphs.length >= 4;
 
             return (
               <div
-                className={`grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs sm:text-[11.5px] leading-relaxed text-left flex-1 overflow-hidden ${bodyFontClass}`}
+                className={`${
+                  isLong ? "grid grid-cols-1 sm:grid-cols-2 gap-5" : "space-y-3 max-w-4xl"
+                } text-xs sm:text-[12px] leading-relaxed text-left shrink-0 mb-3 ${bodyFontClass}`}
                 style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
               >
-                <div className="space-y-3">
-                  {leftCol.map((paragraph, idx) => (
-                    <p key={idx} className="leading-relaxed">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-                <div className="space-y-3">
-                  {rightCol.map((paragraph, idx) => (
-                    <p key={idx} className="leading-relaxed">
-                      {paragraph}
-                    </p>
-                  ))}
+                {paragraphs.map((paragraph, idx) => (
+                  <p key={idx} className="leading-relaxed">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* Editor Letter Visual Spotlight Banner (ALWAYS fills the remaining space with power and elegance) */}
+          {(() => {
+            const spotlightImg =
+              editorialInfo.editorLetterSpotlightImage ||
+              "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80";
+            const spotlightCaption =
+              editorialInfo.editorLetterSpotlightCaption ||
+              "A consistência nos detalhes invisíveis constrói o corpo e a mente indestrutíveis.";
+
+            return (
+              <div
+                className="relative w-full rounded-lg overflow-hidden border flex-1 min-h-[160px] sm:min-h-[190px] mb-2 shadow-md group"
+                style={{
+                  borderColor: `${primaryColor}50`,
+                }}
+              >
+                <img
+                  src={spotlightImg}
+                  alt="Destaque Carta do Editor"
+                  className="w-full h-full object-cover object-center filter contrast-125 brightness-95 group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent flex items-end justify-between p-3.5">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-[8px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded"
+                      style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                    >
+                      // MANIFESTO VISUAL
+                    </span>
+                    <span className="text-[8.5px] font-mono uppercase text-slate-300 hidden sm:inline">
+                      {project.title} • EDIÇÃO #{coverConfig.editionNumber || "01"}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-mono italic text-amber-200/90 hidden sm:inline max-w-md truncate">
+                    "{spotlightCaption}"
+                  </span>
                 </div>
               </div>
             );
           })()}
-        {/* Editor Letter Visual Spotlight Banner (Fills bottom space with power and elegance) */}
-        {editorialInfo.editorLetterSpotlightImage && (
-          <div
-            className="relative w-full rounded-lg overflow-hidden border shrink-0 mt-2 mb-1 shadow-sm"
-            style={{
-              height: "115px",
-              borderColor: `${primaryColor}40`,
-            }}
-          >
-            <img
-              src={editorialInfo.editorLetterSpotlightImage}
-              alt="Destaque Carta do Editor"
-              className="w-full h-full object-cover object-center filter contrast-125 brightness-95"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end justify-between p-2.5">
-              <span className="text-[8px] font-mono font-black uppercase tracking-wider" style={{ color: primaryColor }}>
-                // MANIFESTO VISUAL // {project.title}
-              </span>
-              {editorialInfo.editorLetterSpotlightCaption && (
-                <span className="text-[8px] font-mono italic text-slate-200 hidden sm:inline max-w-md truncate">
-                  "{editorialInfo.editorLetterSpotlightCaption}"
-                </span>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Bottom Signature & Sign-off */}
         <div className="pt-2 border-t flex items-center justify-between shrink-0" style={{ borderColor: `${primaryColor}40` }}>

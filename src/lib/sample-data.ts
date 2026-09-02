@@ -407,7 +407,7 @@ Cada página que você ler nesta edição foi cuidadosamente diagramada para ent
     ],
     tocHeadline: "SUMÁRIO",
     tocSpotlightImage:
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80",
     tocSpotlightTitle: "TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA",
     tocSpotlightCategory: "LABORATÓRIO DE PERFORMANCE",
     editorLetterSpotlightImage:

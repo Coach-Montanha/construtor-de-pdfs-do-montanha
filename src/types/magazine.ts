@@ -207,6 +207,8 @@ export interface Article {
   heroImageLayout?: "banner" | "side" | "contain" | "compact" | "hidden";
   secondaryImage?: string;
   secondaryImageCaption?: string;
+  bottomSpotlightImage?: string;
+  bottomSpotlightCaption?: string;
   pageSpan?: 1 | 2; // 1 = Página Única, 2 = Página Dupla / Artigo Longo
   quotePlacement?: "end" | "side" | "none"; // Posição da citação (Padrão: no final do artigo)
   textDensity?: "compact" | "normal" | "spacious";

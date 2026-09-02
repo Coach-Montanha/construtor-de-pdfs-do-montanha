@@ -54,18 +54,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const borderColor = theme.borderColor;
   const brandTitle = project.editorialInfo?.headerBrandTitle || project.title;
 
-  // Dynamic Text Density / Font Sizing
-  const density = article.textDensity || "normal";
   const isTwoPage = totalPagesForArticle === 2;
-
-  const bodyTextSizeClass =
-    density === "compact"
-      ? "text-[9px] leading-tight sm:text-[9.5px] sm:leading-snug mb-1.5"
-      : density === "spacious"
-      ? "text-[11.5px] leading-relaxed sm:text-[12px] sm:leading-relaxed mb-2.5"
-      : isTwoPage
-      ? "text-[11px] leading-relaxed sm:text-[11.5px] sm:leading-relaxed mb-2.5"
-      : "text-[10px] leading-snug sm:text-[10.5px] sm:leading-snug mb-2";
 
   // Split content into clean paragraph chunks
   const allRawChunks = (article.content || "")
@@ -73,14 +62,48 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     .map((c) => c.trim())
     .filter(Boolean);
 
-  // Determine chunks for this page part
+  // Character-balanced splitting for 2-page spreads to avoid overloading Part 1
   let pageChunks: string[] = [];
   if (isTwoPage) {
-    const half = Math.ceil(allRawChunks.length / 2);
-    pageChunks = pagePart === 1 ? allRawChunks.slice(0, half) : allRawChunks.slice(half);
+    if (allRawChunks.length <= 1) {
+      pageChunks = pagePart === 1 ? allRawChunks : [];
+    } else {
+      const totalAllChars = allRawChunks.reduce((acc, c) => acc + c.length, 0);
+      const targetHalf = totalAllChars / 2;
+      let runningChars = 0;
+      let splitIdx = 1;
+
+      for (let i = 0; i < allRawChunks.length - 1; i++) {
+        runningChars += allRawChunks[i].length;
+        if (runningChars >= targetHalf) {
+          const diffCurrent = Math.abs(runningChars - targetHalf);
+          const diffPrev = Math.abs((runningChars - allRawChunks[i].length) - targetHalf);
+          splitIdx = diffCurrent < diffPrev ? i + 1 : Math.max(1, i);
+          break;
+        }
+        splitIdx = i + 1;
+      }
+
+      pageChunks = pagePart === 1 ? allRawChunks.slice(0, splitIdx) : allRawChunks.slice(splitIdx);
+    }
   } else {
     pageChunks = allRawChunks;
   }
+
+  const totalPageChars = pageChunks.reduce((sum, c) => sum + c.length, 0);
+  const isDenseText = totalPageChars > 1150;
+  const isMediumText = totalPageChars > 750;
+
+  // Dynamic Text Density / Font Sizing based on explicit density AND real text volume
+  const density = article.textDensity || "normal";
+  const bodyTextSizeClass =
+    density === "compact" || isDenseText
+      ? "text-[9px] leading-tight sm:text-[9.5px] sm:leading-snug mb-1.5"
+      : density === "spacious" && !isMediumText
+      ? "text-[11.5px] leading-relaxed sm:text-[12px] sm:leading-relaxed mb-3"
+      : isTwoPage && !isDenseText
+      ? "text-[10px] leading-snug sm:text-[10.5px] sm:leading-snug mb-2"
+      : "text-[10px] leading-snug sm:text-[10.5px] sm:leading-snug mb-2";
 
   // Helper to parse inline rich typography tokens (bold, italic, underline, mark, quotes)
   const renderInlineFormatted = (rawText: string) => {
@@ -167,7 +190,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     if (chunk.startsWith("### ") || chunk.startsWith("## ")) {
       const cleanTitle = chunk.replace(/^#+\s*/, "");
       return (
-        <div key={idx} className="mt-2 mb-1 pb-0.5 border-b" style={{ borderColor: `${primaryColor}50` }}>
+        <div key={idx} className="mt-2 mb-1 pb-0.5 border-b break-inside-avoid break-inside-avoid-column" style={{ borderColor: `${primaryColor}50` }}>
           <h4
             className={`text-[10.5px] sm:text-[11px] font-black uppercase tracking-tight flex items-center gap-1 ${headlineFontClass}`}
             style={{ color: primaryColor }}
@@ -183,7 +206,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     if (chunk.startsWith("- ") || chunk.startsWith("• ")) {
       const items = chunk.split("\n").filter((l) => l.trim().startsWith("- ") || l.trim().startsWith("• "));
       return (
-        <ul key={idx} className={`my-1.5 space-y-1 ${bodyFontClass}`}>
+        <ul key={idx} className={`my-1.5 space-y-1 ${bodyFontClass} break-inside-avoid break-inside-avoid-column`}>
           {items.map((item, itemIdx) => (
             <li key={itemIdx} className={`flex items-start gap-1.5 leading-snug ${bodyTextSizeClass}`}>
               <span className="font-bold shrink-0" style={{ color: primaryColor }}>▸</span>
@@ -202,7 +225,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       const title = (parts[0] ?? "").replace(/\*\*/g, "");
       const body = parts.slice(1).join("\n");
       return (
-        <div key={idx} className="my-1.5">
+        <div key={idx} className="my-1.5 break-inside-avoid break-inside-avoid-column">
           <h4
             className={`text-[10px] sm:text-[10.5px] font-black uppercase mb-0.5 ${headlineFontClass}`}
             style={{ color: primaryColor }}
@@ -223,7 +246,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     return (
       <p
         key={idx}
-        className={`${bodyTextSizeClass} text-left leading-relaxed ${bodyFontClass} ${
+        className={`${bodyTextSizeClass} text-left leading-relaxed ${bodyFontClass} break-inside-avoid break-inside-avoid-column ${
           enableDropCap
             ? "first-letter:text-3xl sm:first-letter:text-4xl first-letter:font-black first-letter:float-left first-letter:mr-2 first-letter:leading-none"
             : ""
@@ -235,11 +258,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     );
   };
 
-  // Divide this page's chunks across 2 columns
-  const halfCol = Math.ceil(pageChunks.length / 2);
-  const leftChunks = pageChunks.slice(0, halfCol);
-  const rightChunks = pageChunks.slice(halfCol);
-
   // Quote & Takeaways visibility
   const hasPullQuote = article.pullQuotes && article.pullQuotes.length > 0;
   const hasTakeaways = article.keyTakeaways && article.keyTakeaways.length > 0;
@@ -250,6 +268,64 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const heroLayout = article.heroImageLayout || "banner";
   const showHeroImage = article.heroImage && heroLayout !== "hidden" && pagePart === 1;
   const showSecondaryImage = article.secondaryImage && isTwoPage && pagePart === 2;
+
+  // Visual Spotlight for small articles (fills empty space dynamically)
+  const isShortContent = pageChunks.length <= 5 && totalPageChars < 1150;
+  const shouldShowArticleSpotlight =
+    isShortContent &&
+    (!showHeroImage || heroLayout === "compact" || heroLayout === "banner") &&
+    (!isTwoPage || pagePart === 2 || !showHeroImage);
+
+  const getContextualSpotlightImage = () => {
+    if (article.bottomSpotlightImage) return article.bottomSpotlightImage;
+    if (!isTwoPage && article.secondaryImage) return article.secondaryImage;
+
+    const hero = article.heroImage || "";
+    const textContent = (article.title + " " + (article.content || "")).toLowerCase();
+
+    const pools = [
+      {
+        test: /\b(remo|rower|erg|cardio|aerób|nordic)\b/,
+        url: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
+      },
+      {
+        test: /\b(caloria|metab|gasto|massa|gordura|bioquím|nutri)\b/,
+        url: "https://images.unsplash.com/photo-1579758629938-03607ccdbaba?auto=format&fit=crop&w=1200&q=80",
+      },
+      {
+        test: /\b(kettlebell|swing|mace|balístico|força)\b/,
+        url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+      },
+      {
+        test: /\b(mulher|femin|deadlift|levantar|terra)\b/,
+        url: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=1200&q=80",
+      },
+      {
+        test: /\b(mente|mindset|foco|disciplina|resiliência)\b/,
+        url: "https://images.unsplash.com/photo-1549060279-7e168fcee0c2?auto=format&fit=crop&w=1200&q=80",
+      },
+    ];
+
+    for (const p of pools) {
+      if (p.test.test(textContent) && p.url !== hero) {
+        return p.url;
+      }
+    }
+
+    const fallbacks = [
+      "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+    ];
+    return fallbacks.find((u) => u !== hero) || fallbacks[0];
+  };
+
+  const spotlightImageToUse = getContextualSpotlightImage();
+  const spotlightCaptionToUse =
+    article.bottomSpotlightCaption ||
+    article.pullQuotes?.[0] ||
+    article.subtitle ||
+    "Protocolo de alto impacto • Laboratório de Performance Montanha.";
 
   return (
     <div
@@ -701,12 +777,16 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-xs ${
                   isTwoPage
-                    ? "h-48 sm:h-56 md:h-64"
+                    ? isDenseText
+                      ? "h-28 sm:h-32 md:h-36"
+                      : "h-36 sm:h-44 md:h-48"
                     : heroLayout === "compact"
                     ? "h-20 sm:h-24"
                     : heroLayout === "contain"
                     ? "h-36 sm:h-44 bg-black/60"
-                    : "h-24 sm:h-32"
+                    : isShortContent
+                    ? "h-32 sm:h-36 md:h-40"
+                    : "h-24 sm:h-28"
                 }`}
                 style={{ borderColor: `${primaryColor}40` }}
               >
@@ -728,7 +808,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             {/* Secondary Image (Part 2 if available) */}
             {showSecondaryImage && (
               <div
-                className="relative w-full h-44 sm:h-52 md:h-60 rounded-md overflow-hidden border shrink-0 shadow-xs"
+                className="relative w-full h-36 sm:h-44 md:h-48 rounded-md overflow-hidden border shrink-0 shadow-xs"
                 style={{ borderColor: `${primaryColor}40` }}
               >
                 <img
@@ -744,18 +824,47 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* True Two-Column Fluid Narrative Flow */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 flex-1 overflow-hidden">
-              {/* Column 1 (Left): First Half */}
-              <div className="flex flex-col justify-start overflow-hidden">
-                {leftChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
-              </div>
-
-              {/* Column 2 (Right): Second Half */}
-              <div className="flex flex-col justify-start overflow-hidden">
-                {rightChunks.map((chunk, idx) => renderSingleChunk(chunk, idx + leftChunks.length, false))}
-              </div>
+            {/* True Multi-Column Fluid Narrative Flow (Contínuo sem corte prematuro de coluna) */}
+            <div
+              className={`columns-1 sm:columns-2 gap-4 flex-1 text-justify overflow-hidden ${bodyFontClass}`}
+              style={{
+                columnFill: "auto",
+              }}
+            >
+              {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
             </div>
+
+            {/* Bottom Visual Spotlight (Acrescenta imagem exclusiva para artigos pequenos preenchendo o vazio escuro) */}
+            {shouldShowArticleSpotlight && (
+              <div
+                className="relative w-full h-36 sm:h-44 md:h-48 rounded-lg overflow-hidden border shrink-0 mt-2 shadow-md group"
+                style={{ borderColor: `${primaryColor}50` }}
+              >
+                <img
+                  src={spotlightImageToUse}
+                  alt={article.title}
+                  className="w-full h-full object-cover object-center filter contrast-115 brightness-90 group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                    >
+                      // VISUAL SPOTLIGHT
+                    </span>
+                    <span className="text-[8px] font-mono uppercase text-slate-300">
+                      REGISTRO EDITORIAL • {project.title}
+                    </span>
+                  </div>
+                  {spotlightCaptionToUse && (
+                    <p className="text-[10px] sm:text-xs font-bold text-white mt-1 italic line-clamp-1">
+                      "{spotlightCaptionToUse}"
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Bottom Inset: Pull Quote & Key Takeaways AT THE END OF THE ARTICLE */}
             {(showQuoteOnThisPage || showTakeawaysOnThisPage) && (

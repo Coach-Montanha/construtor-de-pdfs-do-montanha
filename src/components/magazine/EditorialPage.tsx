@@ -31,8 +31,6 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
   const accentColor = theme.accentColor;
   const borderColor = theme.borderColor;
 
-  // Filter articles with images for the Visual Feature Column (right)
-  const visualArticles = articles.filter((a) => a.heroImage && a.enabled !== false).slice(0, 3);
 
   // Compute exact starting page for each article dynamically accumulating page spans
   let currentOffset = 1;
@@ -224,50 +222,39 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
           </div>
 
           <div className="flex-1 flex flex-col justify-between overflow-hidden">
-            {project.editorialInfo?.tocSpotlightImage ? (
-              <div
-                className="relative rounded-lg overflow-hidden border flex-1 w-full min-h-[160px] group shadow-md"
-                style={{ borderColor: `${primaryColor}50` }}
-              >
-                <img
-                  src={project.editorialInfo.tocSpotlightImage}
-                  alt={project.editorialInfo.tocSpotlightTitle || "Visual Spotlight"}
-                  className="w-full h-full object-cover object-center filter contrast-125 brightness-95 group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3">
-                  <span className="text-[8px] font-mono font-black uppercase tracking-wider" style={{ color: primaryColor }}>
-                    // {project.editorialInfo.tocSpotlightCategory || "FOTOGRAFIA EDITORIAL"}
-                  </span>
-                  <h4 className={`text-xs sm:text-sm font-black uppercase text-white leading-tight drop-shadow-md mt-0.5 ${headlineFontClass}`}>
-                    {project.editorialInfo.tocSpotlightTitle || "TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA"}
-                  </h4>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2 flex-1 flex flex-col justify-between">
-                {visualArticles.map((art) => (
-                  <div
-                    key={art.id}
-                    className="relative rounded-lg overflow-hidden border flex-1 min-h-[75px] group shadow-sm"
-                    style={{ borderColor: `${primaryColor}40` }}
-                  >
-                    <img
-                      src={art.heroImage}
-                      alt={art.title}
-                      className="w-full h-full object-cover filter contrast-125 brightness-90 group-hover:scale-105 transition-transform"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end p-2">
-                      <span className="text-[7.5px] font-mono font-bold uppercase" style={{ color: primaryColor }}>
-                        // {art.category}
-                      </span>
-                      <h4 className={`text-[11px] font-black uppercase text-white leading-tight line-clamp-1 ${headlineFontClass}`}>
-                        {art.title}
-                      </h4>
-                    </div>
+            {(() => {
+              const firstArticleHero = project.articles?.[0]?.heroImage;
+              const configuredSpotlight = project.editorialInfo?.tocSpotlightImage;
+              // Ensure we never repeat the first article's hero image
+              const exclusiveDefaultImg = "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80";
+              const spotlightSrc = (configuredSpotlight && configuredSpotlight !== firstArticleHero)
+                ? configuredSpotlight
+                : exclusiveDefaultImg;
+
+              return (
+                <div
+                  className="relative rounded-lg overflow-hidden border flex-1 w-full min-h-[180px] group shadow-md"
+                  style={{ borderColor: `${primaryColor}50` }}
+                >
+                  <img
+                    src={spotlightSrc}
+                    alt={project.editorialInfo?.tocSpotlightTitle || "Visual Spotlight"}
+                    className="w-full h-full object-cover object-center filter contrast-125 brightness-95 group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3.5">
+                    <span className="text-[8px] font-mono font-black uppercase tracking-wider" style={{ color: primaryColor }}>
+                      // {project.editorialInfo?.tocSpotlightCategory || "FOTOGRAFIA EDITORIAL"}
+                    </span>
+                    <h4 className={`text-xs sm:text-sm font-black uppercase text-white leading-tight drop-shadow-md mt-1 ${headlineFontClass}`}>
+                      {project.editorialInfo?.tocSpotlightTitle || "TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA"}
+                    </h4>
+                    <p className="text-[9px] font-mono text-slate-300 mt-1 line-clamp-1">
+                      REGISTRO EXCLUSIVO DA EDIÇÃO • MONTANHA LAB
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

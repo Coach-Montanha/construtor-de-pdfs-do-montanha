@@ -602,6 +602,28 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </div>
             )}
 
+            {/* Visual Spotlight Image (para matérias curtas ou preenchimento de rodapé) */}
+            <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2">
+              <Label className="text-xs font-bold flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>VISUAL SPOTLIGHT (DESTAQUE INFERIOR / ARTIGOS CURTOS)</span>
+              </Label>
+              <ImagePicker
+                label="Imagem do Visual Spotlight (Opcional)"
+                value={formData.bottomSpotlightImage || ""}
+                onChange={(url) => setFormData({ ...formData, bottomSpotlightImage: url })}
+                aspectRatio="landscape"
+                placeholderPrompt="Fotografia editorial temática em alta definição para preencher o rodapé..."
+                helperText="Preenche automaticamente o espaço inferior quando a matéria for curta"
+              />
+              <Input
+                value={formData.bottomSpotlightCaption || ""}
+                onChange={(e) => setFormData({ ...formData, bottomSpotlightCaption: e.target.value })}
+                placeholder="Legenda ou frase do Visual Spotlight (Opcional)"
+                className="theme-app-input text-xs mt-1 border"
+              />
+            </div>
+
             {/* Pull Quotes Manager */}
             <div className="theme-app-card-subtle p-3.5 rounded-lg border-2 space-y-2">
               <div className="flex items-center justify-between">
