@@ -205,10 +205,13 @@ export interface Article {
   heroImageCaption?: string;
   heroImagePrompt?: string;
   heroImageLayout?: "banner" | "side" | "contain" | "compact" | "hidden";
+  heroImagePosition?: string; // e.g. "center", "50% 20%", "top", "bottom"
   secondaryImage?: string;
   secondaryImageCaption?: string;
+  secondaryImagePosition?: string;
   bottomSpotlightImage?: string;
   bottomSpotlightCaption?: string;
+  bottomSpotlightPosition?: string;
   pageSpan?: 1 | 2; // 1 = Página Única, 2 = Página Dupla / Artigo Longo
   quotePlacement?: "end" | "side" | "none"; // Posição da citação (Padrão: no final do artigo)
   textDensity?: "compact" | "normal" | "spacious";

@@ -11,6 +11,7 @@ import {
   Loader2,
   CheckCircle2,
   Wand2,
+  MoveVertical,
 } from "lucide-react";
 import { generateAiImageUrl } from "../../lib/ai-service";
 
@@ -18,6 +19,8 @@ interface ImagePickerProps {
   label: string;
   value: string;
   onChange: (url: string) => void;
+  position?: string;
+  onPositionChange?: (pos: string) => void;
   aspectRatio?: "square" | "portrait" | "landscape" | "banner";
   placeholderPrompt?: string;
   helperText?: string;
@@ -28,6 +31,8 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   label,
   value,
   onChange,
+  position,
+  onPositionChange,
   aspectRatio = "landscape",
   placeholderPrompt = "Foto atlética profissional de força não-convencional...",
   helperText,
@@ -37,6 +42,23 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   const [promptText, setPromptText] = useState<string>("");
   const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Helper to extract vertical percentage from position string (e.g. "50% 20%", "top", "center", "bottom")
+  const parsePercentY = (pos?: string): number => {
+    if (!pos || pos === "center") return 50;
+    if (pos === "top") return 15;
+    if (pos === "bottom") return 85;
+    const match = pos.match(/(\d+)%/g);
+    if (match && match.length >= 2) {
+      return parseInt(match[1]!, 10);
+    }
+    if (match && match.length === 1) {
+      return parseInt(match[0]!, 10);
+    }
+    return 50;
+  };
+
+  const currentPercentY = parsePercentY(position);
 
   const aspectClass =
     aspectRatio === "square"
@@ -62,6 +84,9 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
       const result = event.target?.result as string;
       if (result) {
         onChange(result);
+        if (onPositionChange && !position) {
+          onPositionChange("50% 50%");
+        }
       }
     };
     reader.readAsDataURL(file);
@@ -82,10 +107,16 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
       img.src = aiUrl;
       img.onload = () => {
         onChange(aiUrl);
+        if (onPositionChange && !position) {
+          onPositionChange("50% 50%");
+        }
         setIsGeneratingAi(false);
       };
       img.onerror = () => {
         onChange(aiUrl);
+        if (onPositionChange && !position) {
+          onPositionChange("50% 50%");
+        }
         setIsGeneratingAi(false);
       };
     } catch (err) {
@@ -127,6 +158,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
                   src={value}
                   alt={label}
                   className={`${aspectClass} object-cover filter contrast-110`}
+                  style={{ objectPosition: position || "center" }}
                 />
                 <button
                   type="button"
@@ -276,6 +308,62 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
             )}
           </div>
         </div>
+
+        {/* Focal Point / Visible Area Selector */}
+        {value && onPositionChange && (
+          <div className="pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] font-black uppercase tracking-tight flex items-center gap-1.5 text-amber-500">
+                <MoveVertical className="w-3.5 h-3.5" />
+                <span>Enquadramento / Trecho Visível da Foto</span>
+              </Label>
+              <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/40">
+                {currentPercentY}% vertical
+              </span>
+            </div>
+
+            {/* Quick Preset Buttons */}
+            <div className="grid grid-cols-5 gap-1 text-[10px] font-bold">
+              {[
+                { label: "Topo / Rosto", val: 15 },
+                { label: "Superior", val: 35 },
+                { label: "Centro", val: 50 },
+                { label: "Inferior", val: 65 },
+                { label: "Base", val: 85 },
+              ].map((preset) => {
+                const isCurrent = Math.abs(currentPercentY - preset.val) <= 10;
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => onPositionChange(`50% ${preset.val}%`)}
+                    className={`py-1 px-1 rounded border text-center transition-all cursor-pointer truncate ${
+                      isCurrent
+                        ? "bg-amber-400 text-black border-black font-black shadow-xs ring-1 ring-amber-400"
+                        : "theme-app-card-subtle opacity-75 hover:opacity-100 hover:border-black"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Slider for continuous adjustment */}
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-[9px] font-mono opacity-60 shrink-0">0% (Topo)</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={currentPercentY}
+                onChange={(e) => onPositionChange(`50% ${e.target.value}%`)}
+                className="flex-1 accent-amber-500 cursor-pointer h-1.5 bg-slate-700 rounded-lg"
+              />
+              <span className="text-[9px] font-mono opacity-60 shrink-0">100% (Base)</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

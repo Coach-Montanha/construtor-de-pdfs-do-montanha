@@ -124,6 +124,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
         pullQuotes: Array.isArray(article.pullQuotes) ? article.pullQuotes : [],
         keyTakeaways: Array.isArray(article.keyTakeaways) ? article.keyTakeaways : [],
         tags: Array.isArray(article.tags) ? article.tags : [],
+        heroImagePosition: article.heroImagePosition || "50% 50%",
+        secondaryImagePosition: article.secondaryImagePosition || "50% 50%",
+        bottomSpotlightPosition: article.bottomSpotlightPosition || "50% 50%",
         enabled: article.enabled !== false,
       });
     } else {
@@ -137,6 +140,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
         authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
         heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
         heroImageCaption: "",
+        heroImagePosition: "50% 50%",
+        secondaryImagePosition: "50% 50%",
+        bottomSpotlightPosition: "50% 50%",
         content: "",
         pullQuotes: [],
         keyTakeaways: [],
@@ -539,7 +545,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             <ImagePicker
               label="Foto Hero do Artigo"
               value={formData.heroImage}
-              onChange={(url) => setFormData({ ...formData, heroImage: url })}
+              onChange={(url) => setFormData({ ...formData, heroImage: url, heroImagePosition: formData.heroImagePosition || "50% 50%" })}
+              position={formData.heroImagePosition || "50% 50%"}
+              onPositionChange={(pos) => setFormData({ ...formData, heroImagePosition: pos })}
               aspectRatio="landscape"
               placeholderPrompt="Fotografia editorial em 8k de atleta em treino intenso..."
               helperText="Upload do PC, IA ou URL"
@@ -594,7 +602,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 <ImagePicker
                   label="Segunda Imagem Editorial"
                   value={formData.secondaryImage || ""}
-                  onChange={(url) => setFormData({ ...formData, secondaryImage: url })}
+                  onChange={(url) => setFormData({ ...formData, secondaryImage: url, secondaryImagePosition: formData.secondaryImagePosition || "50% 50%" })}
+                  position={formData.secondaryImagePosition || "50% 50%"}
+                  onPositionChange={(pos) => setFormData({ ...formData, secondaryImagePosition: pos })}
                   aspectRatio="landscape"
                   placeholderPrompt="Fotografia complementar de apoio em alta resolução..."
                   helperText="Exibida no topo da 2ª página da matéria dupla"
@@ -611,7 +621,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               <ImagePicker
                 label="Imagem do Visual Spotlight (Opcional)"
                 value={formData.bottomSpotlightImage || ""}
-                onChange={(url) => setFormData({ ...formData, bottomSpotlightImage: url })}
+                onChange={(url) => setFormData({ ...formData, bottomSpotlightImage: url, bottomSpotlightPosition: formData.bottomSpotlightPosition || "50% 50%" })}
+                position={formData.bottomSpotlightPosition || "50% 50%"}
+                onPositionChange={(pos) => setFormData({ ...formData, bottomSpotlightPosition: pos })}
                 aspectRatio="landscape"
                 placeholderPrompt="Fotografia editorial temática em alta definição para preencher o rodapé..."
                 helperText="Preenche automaticamente o espaço inferior quando a matéria for curta"

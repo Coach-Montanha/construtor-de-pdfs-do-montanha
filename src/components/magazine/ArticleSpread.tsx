@@ -794,8 +794,9 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                   src={article.heroImage}
                   alt={article.title}
                   className={`w-full h-full filter contrast-110 brightness-95 ${
-                    heroLayout === "contain" ? "object-contain" : "object-cover object-center"
+                    heroLayout === "contain" ? "object-contain" : "object-cover"
                   }`}
+                  style={{ objectPosition: article.heroImagePosition || "50% 50%" }}
                 />
                 {article.heroImageCaption && (
                   <div className="absolute bottom-1 right-2 bg-black/80 px-2 py-0.5 rounded text-[7.5px] font-mono text-white">
@@ -814,7 +815,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                 <img
                   src={article.secondaryImage}
                   alt="Foto Secundária"
-                  className="w-full h-full object-cover object-center filter contrast-110 brightness-95"
+                  className="w-full h-full object-cover filter contrast-110 brightness-95"
+                  style={{ objectPosition: article.secondaryImagePosition || "50% 50%" }}
                 />
                 {article.secondaryImageCaption && (
                   <div className="absolute bottom-1 right-2 bg-black/80 px-2 py-0.5 rounded text-[7.5px] font-mono text-white">
@@ -843,7 +845,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                 <img
                   src={spotlightImageToUse}
                   alt={article.title}
-                  className="w-full h-full object-cover object-center filter contrast-115 brightness-90 group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-cover filter contrast-115 brightness-90 group-hover:scale-105 transition-transform duration-700"
+                  style={{ objectPosition: article.bottomSpotlightPosition || "50% 50%" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3">
                   <div className="flex items-center gap-2">
