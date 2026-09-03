@@ -245,21 +245,23 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
                   alt="Destaque Carta do Editor"
                   className="w-full h-full object-cover object-center filter contrast-125 brightness-95 group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent flex items-end justify-between p-3.5">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-[8px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded"
-                      style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
-                    >
-                      // MANIFESTO VISUAL
-                    </span>
-                    <span className="text-[8.5px] font-mono uppercase text-slate-300 hidden sm:inline">
-                      {project.title} • EDIÇÃO #{coverConfig.editionNumber || "01"}
+                <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
+                  <div className="bg-black/90 backdrop-blur-md px-3 py-1.5 rounded border border-white/15 flex items-center justify-between shadow-xl">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[8px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded"
+                        style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                      >
+                        // MANIFESTO VISUAL
+                      </span>
+                      <span className="text-[8.5px] font-mono uppercase text-slate-300 hidden sm:inline">
+                        {project.title} • EDIÇÃO #{coverConfig.editionNumber || "01"}
+                      </span>
+                    </div>
+                    <span className="text-[8.5px] font-mono italic text-amber-200/90 hidden sm:inline max-w-md truncate">
+                      "{spotlightCaption}"
                     </span>
                   </div>
-                  <span className="text-[9px] font-mono italic text-amber-200/90 hidden sm:inline max-w-md truncate">
-                    "{spotlightCaption}"
-                  </span>
                 </div>
               </div>
             );

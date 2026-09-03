@@ -233,20 +233,26 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         fontFamily: theme.fontSerif ? "Georgia, serif" : "inherit",
       }}
     >
-      {/* Background Athletic Movement Photo */}
-      <div className="absolute inset-0 z-0">
+      {/* Background Athletic Movement Photo (Ultra High Resolution & Dynamic Contrast) */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
         <img
-          src={coverConfig.backgroundImage}
+          src={
+            coverConfig.backgroundImage?.includes("unsplash.com")
+              ? coverConfig.backgroundImage.replace(/w=\d+/, "w=2560").replace(/q=\d+/, "q=95")
+              : coverConfig.backgroundImage
+          }
           alt="Capa da Revista Montanha"
-          className="w-full h-full object-cover object-center filter contrast-125 brightness-95"
+          className="w-full h-full object-cover object-center filter contrast-120 brightness-100"
+          style={{ imageRendering: "auto" }}
+          loading="eager"
         />
-        {/* Gritty Vignette & Atmospheric Gradients */}
+        {/* Atmospheric Gradients com foco no contraste nítido do atleta */}
         <div
-          className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/80"
+          className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/75 pointer-events-none"
           style={{ opacity: overlayOpacity }}
         />
         <div
-          className="absolute inset-0 bg-radial from-transparent via-black/40 to-black/90 pointer-events-none"
+          className="absolute inset-0 bg-radial from-transparent via-black/30 to-black/85 pointer-events-none"
         />
       </div>
 

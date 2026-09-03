@@ -27,29 +27,29 @@ export function calculateRequiredArticlePages(article: MagazineArticle): number 
   const totalChars = cleanContent.length;
 
   const hasHero = Boolean(article.heroImage && (article.heroImageLayout || "banner") !== "hidden");
-  const singlePageLimit = hasHero ? 2200 : 3600;
+  const singlePageLimit = hasHero ? 2000 : 3600;
 
   if (totalChars <= singlePageLimit) {
     return 1;
   }
 
-  // Multi-page editorial thresholds:
-  // 2 páginas: até 4.800 caracteres
-  if (totalChars <= 4800) {
+  // Multi-page editorial thresholds com páginas intermediárias 100% limpas de texto contínuo:
+  // 2 páginas: até 5.000 caracteres
+  if (totalChars <= 5000) {
     return 2;
   }
 
-  // 3 páginas: até 7.500 caracteres
-  if (totalChars <= 7500) {
+  // 3 páginas: até 8.000 caracteres
+  if (totalChars <= 8000) {
     return 3;
   }
 
-  // 4 páginas: até 10.500 caracteres
-  if (totalChars <= 10500) {
+  // 4 páginas: até 11.500 caracteres
+  if (totalChars <= 11500) {
     return 4;
   }
 
-  return Math.min(6, Math.ceil(totalChars / 2800));
+  return Math.min(5, Math.ceil(totalChars / 3000));
 }
 
 /**
@@ -76,19 +76,19 @@ export function getEffectiveArticlePageSpan(article: MagazineArticle): number {
     return 1;
   }
 
-  // Para artigos moderados (1.100 a 2.200 caracteres), permitir no máximo 2 páginas se configurado
-  if (totalChars <= 2200) {
+  // Para artigos moderados (1.100 a 2.000 caracteres), permitir no máximo 2 páginas se configurado
+  if (totalChars <= 2000) {
     return Math.min(2, Math.max(required, configured));
   }
 
-  // Para artigos de 2.201 a 4.000 caracteres, permitir no máximo 2 páginas se configurado
-  if (totalChars <= 4000) {
-    return Math.min(2, Math.max(required, configured));
-  }
-
-  // Para artigos de 4.001 a 6.500 caracteres, permitir no máximo 3 páginas se configurado
-  if (totalChars <= 6500) {
+  // Para artigos de 2.001 a 5.000 caracteres, permitir no máximo 2 páginas (ou 3 se configurado)
+  if (totalChars <= 5000) {
     return Math.min(3, Math.max(required, configured));
+  }
+
+  // Para artigos de 5.001 a 8.000 caracteres, permitir no máximo 3 páginas (ou 4 se configurado)
+  if (totalChars <= 8000) {
+    return Math.min(4, Math.max(required, configured));
   }
 
   return Math.max(required, configured);

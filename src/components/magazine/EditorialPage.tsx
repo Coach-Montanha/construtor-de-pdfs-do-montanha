@@ -226,16 +226,18 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
                     alt={project.editorialInfo?.tocSpotlightTitle || "Visual Spotlight"}
                     className="w-full h-full object-cover object-center filter contrast-125 brightness-95 group-hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3.5">
-                    <span className="text-[8px] font-mono font-black uppercase tracking-wider" style={{ color: primaryColor }}>
-                      // {project.editorialInfo?.tocSpotlightCategory || "FOTOGRAFIA EDITORIAL"}
-                    </span>
-                    <h4 className={`text-xs sm:text-sm font-black uppercase text-white leading-tight drop-shadow-md mt-1 ${headlineFontClass}`}>
-                      {project.editorialInfo?.tocSpotlightTitle || "TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA"}
-                    </h4>
-                    <p className="text-[9px] font-mono text-slate-300 mt-1 line-clamp-1">
-                      REGISTRO EXCLUSIVO DA EDIÇÃO • MONTANHA LAB
-                    </p>
+                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
+                    <div className="bg-black/90 backdrop-blur-md p-2.5 rounded border border-white/15 shadow-xl space-y-1">
+                      <span className="text-[8px] font-mono font-black uppercase tracking-wider block" style={{ color: primaryColor }}>
+                        // {project.editorialInfo?.tocSpotlightCategory || "FOTOGRAFIA EDITORIAL"}
+                      </span>
+                      <h4 className={`text-xs sm:text-sm font-black uppercase text-white leading-tight ${headlineFontClass}`}>
+                        {project.editorialInfo?.tocSpotlightTitle || "TREINAMENTO NÃO-CONVENCIONAL & ALAVANCAS DE FORÇA"}
+                      </h4>
+                      <p className="text-[8.5px] font-mono text-slate-300">
+                        REGISTRO EXCLUSIVO DA EDIÇÃO • MONTANHA LAB
+                      </p>
+                    </div>
                   </div>
                 </div>
               );

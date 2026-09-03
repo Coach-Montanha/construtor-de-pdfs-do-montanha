@@ -96,17 +96,17 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       const totalAllChars = allRawChunks.reduce((acc, c) => acc + c.length, 0);
 
       // Balanced proportional distribution:
-      // Page 1 with hero banner has relative capacity 1.0 (~1.600-2.000 chars)
-      // Intermediate pages have full column height capacity 1.4 (~2.400-2.800 chars)
-      // Final page with closing photo + takeaways has capacity 1.0 (~1.600-2.000 chars)
+      // Page 1 with majestic hero banner has capacity 0.9 (~1.400 chars)
+      // Intermediate pages (100% clean full-height text columns without bottom image) have capacity 1.8 (~2.800-3.200 chars)
+      // Final page (with closing photo + takeaways) has capacity 1.0 (~1.600 chars)
       const pageWeights: number[] = [];
       for (let p = 0; p < N; p++) {
         if (p === 0) {
-          pageWeights.push(showHeroImage ? 1.0 : 1.4);
+          pageWeights.push(showHeroImage ? 0.9 : 1.5);
         } else if (p === N - 1) {
           pageWeights.push(1.0);
         } else {
-          pageWeights.push(1.4);
+          pageWeights.push(1.8);
         }
       }
       const sumWeights = pageWeights.reduce((a, b) => a + b, 0);
@@ -356,30 +356,23 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const showQuoteOnThisPage = hasPullQuote && isLastPage;
   const showTakeawaysOnThisPage = hasTakeaways && isLastPage;
 
-  // Visual features across ALL pages to eliminate dark voids completely:
-  // 1. Last Page: always receives closing editorial image (unless user explicitly put a secondary image at the top)
+  // Visual features across pages:
+  // 1. Apenas a ÚLTIMA página recebe a imagem de fechamento editorial para preencher o que sobrar de espaço:
   const showClosingImage = isLastPage && !showSecondaryImageTop;
 
-  // 2. Page 1 of multi-page articles: if text doesn't fill the space below hero (< 1.600 chars), display supporting feature
-  const showPage1Feature = isFirstPage && isMultiPage && totalPageChars < 1600;
+  // 2. Artigos de 1 página curtos (< 1.100 caracteres) recebem spotlight inferior para preenchimento:
+  const showSinglePageFeature = !isMultiPage && totalPageChars < 1100;
 
-  // 3. Intermediate pages: if text doesn't fill the full 950px column height (< 2.200 chars), display supporting photo
-  const showIntermediateFeature = isIntermediatePage && totalPageChars < 2200;
-
-  // 4. Single-page articles: if text is short (< 1.400 chars), display visual spotlight
-  const showSinglePageFeature = !isMultiPage && totalPageChars < 1400;
-
-  const hasBottomFeature =
-    showClosingImage ||
-    showPage1Feature ||
-    showIntermediateFeature ||
-    showSinglePageFeature;
+  // Páginas intermediárias e Página 1 de matérias multi-página NUNCA recebem imagem inferior.
+  // Isso garante colunas 100% limpas de texto contínuo, máximo aproveitamento de espaço e evita repetição de fotos!
+  const hasBottomFeature = showClosingImage || showSinglePageFeature;
 
   const getContextualSpotlightImage = () => {
-    if (article.secondaryImage) return article.secondaryImage;
-    if (article.bottomSpotlightImage) return article.bottomSpotlightImage;
-
     const hero = article.heroImage || "";
+    // Garantir que a imagem de fechamento nunca seja idêntica à imagem de abertura (evita repetição)
+    if (article.secondaryImage && article.secondaryImage !== hero) return article.secondaryImage;
+    if (article.bottomSpotlightImage && article.bottomSpotlightImage !== hero) return article.bottomSpotlightImage;
+
     const textContent = (article.title + " " + (article.content || "")).toLowerCase();
 
     const pools = [
@@ -437,8 +430,20 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         color: textColor,
       }}
     >
-      {/* Background Subtle Industrial Texture */}
-      <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+      {/* Background Subtle Industrial Texture or Clean Controlled-Opacity Image */}
+      {article.backgroundImage ? (
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <img
+            src={article.backgroundImage}
+            alt=""
+            className="w-full h-full object-cover filter contrast-125 grayscale"
+            style={{ opacity: (article.backgroundOpacity ?? 5) / 100 }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/85 to-black/70 pointer-events-none" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+      )}
 
       {/* Top Header Block */}
       <div
@@ -873,31 +878,17 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* Hero Image (Part 1 or Single Page): Altura adaptativa inteligente */}
+            {/* Hero Image (Part 1 or Single Page): Imagem inicial imponente e cinematográfica */}
             {showHeroImage && (
               <div
-                className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-sm ${
-                  isMultiPage
-                    ? isVeryDenseText
-                      ? "h-24 sm:h-28"
-                      : isDenseText
-                      ? "h-32 sm:h-36"
-                      : heroSize === "compact"
-                      ? "h-28 sm:h-32"
-                      : heroSize === "medium"
-                      ? "h-36 sm:h-40 md:h-44"
-                      : "h-44 sm:h-48 md:h-52"
-                    : isVeryDenseText
-                    ? "h-28 sm:h-32"
-                    : isDenseText
-                    ? "h-36 sm:h-40 md:h-44"
-                    : heroLayout === "contain"
-                    ? "h-52 sm:h-60 bg-black/60"
+                className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-md ${
+                  heroLayout === "contain"
+                    ? "h-56 sm:h-64 md:h-72 bg-black/60"
                     : heroSize === "compact"
-                    ? "h-32 sm:h-36"
+                    ? "h-36 sm:h-44 md:h-48"
                     : heroSize === "medium"
-                    ? "h-44 sm:h-52"
-                    : "h-56 sm:h-64 md:h-72"
+                    ? "h-52 sm:h-60 md:h-68"
+                    : "h-64 sm:h-72 md:h-80 lg:h-96"
                 }`}
                 style={{ borderColor: `${primaryColor}40` }}
               >
@@ -949,8 +940,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
             </div>
 
-            {/* Visual Features: Preenchimento Visual Garantido em TODAS as páginas sem buracos pretos */}
-            {/* 1. Imagem de Fechamento da Página Final */}
+            {/* Visual Feature: Apenas na última página para completar o espaço restante, ou em artigo curto de página única */}
+            {/* 1. Imagem Editorial de Fechamento da Página Final */}
             {showClosingImage && (
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 ${
@@ -958,7 +949,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                     ? "min-h-[140px] sm:min-h-[160px]"
                     : isDenseText
                     ? "min-h-[160px] sm:min-h-[190px]"
-                    : "min-h-[180px] sm:min-h-[220px] md:min-h-[250px]"
+                    : "min-h-[180px] sm:min-h-[220px] md:min-h-[260px]"
                 }`}
                 style={{ borderColor: `${primaryColor}40` }}
               >
@@ -968,78 +959,32 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                   className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
                   style={{ objectPosition: article.secondaryImagePosition || article.bottomSpotlightPosition || "50% 50%" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5">
-                  <span
-                    className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
-                  >
-                    // REGISTRO DE PERFORMANCE
-                  </span>
-                  {(article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse) && (
-                    <span className="text-[8px] font-mono italic text-slate-200 line-clamp-1 max-w-[70%]">
-                      "{article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse}"
-                    </span>
-                  )}
+                {/* Faixa protetora de contraste com fundo sólido translúcido ao fundo do texto */}
+                <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
+                  <div className="bg-black/90 backdrop-blur-md px-3 py-1.5 rounded border border-white/15 flex items-center justify-between shadow-xl">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm"
+                        style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                      >
+                        // REGISTRO DE PERFORMANCE
+                      </span>
+                      <span className="text-[8px] font-mono uppercase text-slate-300 hidden sm:inline">
+                        • {article.category}
+                      </span>
+                    </div>
+                    {(article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse) && (
+                      <span className="text-[8.5px] font-mono italic text-slate-100 line-clamp-1 max-w-[65%] text-right font-medium">
+                        "{article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse}"
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* 2. Imagem de Apoio das Páginas Intermediárias (Elimina o vazio escuro quando o texto termina antes da base) */}
-            {showIntermediateFeature && !showClosingImage && (
-              <div
-                className="relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 min-h-[170px] sm:min-h-[200px]"
-                style={{ borderColor: `${primaryColor}40` }}
-              >
-                <img
-                  src={getContextualSpotlightImage()}
-                  alt="Registro Editorial de Continuação"
-                  className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
-                  style={{ objectPosition: "50% 40%" }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5">
-                  <span
-                    className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
-                  >
-                    // REGISTRO EDITORIAL • PARTE {pagePart}
-                  </span>
-                  <span className="text-[8px] font-mono uppercase text-slate-300">
-                    {project.title} MAGAZINE
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* 3. Destaque Visual da Página 1 (Para matérias de páginas duplas com texto curto na pág 1) */}
-            {showPage1Feature && !showClosingImage && !showIntermediateFeature && (
-              <div
-                className="relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 min-h-[140px] sm:min-h-[170px]"
-                style={{ borderColor: `${primaryColor}40` }}
-              >
-                <img
-                  src={article.secondaryImage || getContextualSpotlightImage()}
-                  alt="Registro Editorial de Abertura"
-                  className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
-                  style={{ objectPosition: "50% 30%" }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5">
-                  <span
-                    className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
-                  >
-                    // VISUAL SPOTLIGHT • {article.category}
-                  </span>
-                  {hasPullQuote && (
-                    <span className="text-[8px] font-mono italic text-slate-200 line-clamp-1 max-w-[65%]">
-                      "{article.pullQuotes![0]}"
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* 4. Destaque Visual de Artigos de Página Única Pequenos */}
-            {showSinglePageFeature && !showClosingImage && !showIntermediateFeature && !showPage1Feature && (
+            {/* 2. Destaque Visual em Artigo Curto de Página Única */}
+            {showSinglePageFeature && !showClosingImage && (
               <div
                 className="relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 min-h-[160px] sm:min-h-[190px]"
                 style={{ borderColor: `${primaryColor}40` }}
@@ -1050,18 +995,21 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                   className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
                   style={{ objectPosition: article.bottomSpotlightPosition || "50% 50%" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5">
-                  <span
-                    className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
-                  >
-                    // VISUAL SPOTLIGHT
-                  </span>
-                  {spotlightCaptionToUse && (
-                    <span className="text-[8px] font-mono italic text-slate-200 line-clamp-1 max-w-[70%]">
-                      "{spotlightCaptionToUse}"
+                {/* Faixa protetora de contraste com fundo sólido translúcido ao fundo do texto */}
+                <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
+                  <div className="bg-black/90 backdrop-blur-md px-3 py-1.5 rounded border border-white/15 flex items-center justify-between shadow-xl">
+                    <span
+                      className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm"
+                      style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                    >
+                      // VISUAL SPOTLIGHT
                     </span>
-                  )}
+                    {spotlightCaptionToUse && (
+                      <span className="text-[8.5px] font-mono italic text-slate-100 line-clamp-1 max-w-[70%] font-medium">
+                        "{spotlightCaptionToUse}"
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

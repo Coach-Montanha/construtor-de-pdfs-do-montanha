@@ -340,7 +340,7 @@ export const INITIAL_MAGAZINE_PROJECT: MagazineProject = {
       "FORÇA BRUTA",
     ],
     backgroundImage:
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1600&q=85",
+      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=2560&q=95",
     backgroundOverlayOpacity: 60,
     barcodeText: "9 772026 001008",
     priceBadge: "EDIÇÃO PREMIUM",
