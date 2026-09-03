@@ -114,7 +114,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       let targetCumulative = 0;
 
       for (let p = 0; p < N - 1; p++) {
-        const targetForThisPage = (pageCapacities[p] / totalCapacity) * totalAllChars;
+        const targetForThisPage = ((pageCapacities[p] ?? 0) / totalCapacity) * totalAllChars;
         targetCumulative += targetForThisPage;
 
         while (
