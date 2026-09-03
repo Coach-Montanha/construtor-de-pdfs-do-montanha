@@ -192,6 +192,7 @@ export interface FacilitySpotlight {
   philosophyText: string;
   anchoredQuote: string;
 }
+export type MagazineArticle = Article;
 
 export interface Article {
   id: string;

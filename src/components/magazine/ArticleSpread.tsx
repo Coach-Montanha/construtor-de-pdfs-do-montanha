@@ -76,6 +76,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const heroLayout = article.heroImageLayout || "banner";
   const heroSize = article.heroImageHeight || "large";
   const showHeroImage = Boolean(article.heroImage && heroLayout !== "hidden" && isFirstPage);
+  const secondaryPlacement = article.secondaryImagePlacement || "bottom";
+  const showSecondaryImageTop = Boolean(article.secondaryImage && isMultiPage && isLastPage && secondaryPlacement === "top");
 
   // Determine page chunks (Manual diagramming has 100% precedence, otherwise greedy continuous packing)
   let pageChunks: string[] = [];
@@ -336,7 +338,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   // Closing Editorial Image condition:
   // Rendered on the LAST page of EVERY article whenever there is space to occupy,
   // guaranteeing no dark holes anywhere in the magazine.
-  const showClosingImage = isLastPage && (!isFirstPage || !showHeroImage || totalPageChars < 1350);
+  const showClosingImage = isLastPage && !showSecondaryImageTop && (!isFirstPage || !showHeroImage || totalPageChars < 1350);
 
   const getContextualSpotlightImage = () => {
     if (article.secondaryImage) return article.secondaryImage;
@@ -880,8 +882,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* Secondary Image (Part 2 at Top, only if explicitly chosen) */}
-            {showSecondaryImage && secondaryPlacement === "top" && (
+            {/* Secondary Image (at Top, only if explicitly chosen) */}
+            {showSecondaryImageTop && (
               <div
                 className="relative w-full h-40 sm:h-48 rounded-md overflow-hidden border shrink-0 shadow-xs"
                 style={{ borderColor: `${primaryColor}40` }}

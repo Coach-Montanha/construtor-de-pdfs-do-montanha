@@ -1,4 +1,4 @@
-import { MagazineArticle, MagazineProject } from "../types/magazine";
+import { Article, MagazineArticle, MagazineProject } from "../types/magazine";
 
 /**
  * Expressão regular que identifica quebras de página manuais inseridas pelo usuário
