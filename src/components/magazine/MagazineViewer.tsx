@@ -6,6 +6,7 @@ import { ContributorsPage } from "./ContributorsPage";
 import { EditorialPage } from "./EditorialPage";
 import { ArticleSpread } from "./ArticleSpread";
 import { BackCoverPage } from "./BackCoverPage";
+import { getEffectiveArticlePageSpan } from "../../lib/magazine-utils";
 import {
   ChevronLeft,
   ChevronRight,
@@ -95,7 +96,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
   project.articles
     .filter((art) => art.enabled !== false)
     .forEach((art) => {
-      const span = Math.max(1, art.pageSpan || 1);
+      const span = getEffectiveArticlePageSpan(art);
       for (let part = 1; part <= span; part++) {
         activePages.push({
           id: span > 1 ? `${art.id}-part${part}` : art.id,

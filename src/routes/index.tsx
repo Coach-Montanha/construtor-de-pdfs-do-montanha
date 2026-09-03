@@ -28,7 +28,7 @@ import { EditionsArchiveView } from "../components/archive/EditionsArchiveView";
 import { getArchivedEditions } from "../lib/editions-archive";
 import { getCurrentUser, logoutUser, UserProfile } from "../lib/auth-state";
 import { analyzeAndDiagramEditorialText, EditorialAnalysisResult } from "../lib/ai-service";
-import { formatPageNumber, countWords } from "../lib/magazine-utils";
+import { formatPageNumber, countWords, getEffectiveArticlePageSpan, calculateRequiredArticlePages } from "../lib/magazine-utils";
 import { RepositoryDocument } from "../types/magazine";
 import {
   Sparkles,
@@ -428,7 +428,7 @@ function Index() {
   project.articles
     .filter((art) => art.enabled !== false)
     .forEach((art) => {
-      const span = Math.max(1, art.pageSpan || 1);
+      const span = getEffectiveArticlePageSpan(art);
       for (let part = 1; part <= span; part++) {
         activePages.push({
           id: span > 1 ? `${art.id}-part${part}` : art.id,
@@ -693,8 +693,8 @@ function Index() {
                 (acc, a) => acc + (a.estimatedReadTime || 4),
                 0
               );
-              const totalMultiPages = activeArts.filter((a) => (a.pageSpan || 1) > 1).length;
-              const totalSinglePages = activeArts.filter((a) => (a.pageSpan || 1) === 1).length;
+              const totalMultiPages = activeArts.filter((a) => getEffectiveArticlePageSpan(a) > 1).length;
+              const totalSinglePages = activeArts.filter((a) => getEffectiveArticlePageSpan(a) === 1).length;
 
               return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -758,7 +758,7 @@ function Index() {
               {project.articles.map((art, idx) => {
                 const calculatedPageNum = activePages.findIndex((p) => p.id === art.id || p.id === `${art.id}-part1`) + 1;
                 const pageNum = calculatedPageNum > 0 ? calculatedPageNum : idx + 4;
-                const span = Math.max(1, art.pageSpan || 1);
+                const span = getEffectiveArticlePageSpan(art);
                 const isMulti = span > 1;
                 const isEnabled = art.enabled !== false;
 

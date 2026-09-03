@@ -11,6 +11,7 @@ import {
 } from "../../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../../lib/sample-data";
 import { ArticleSpread } from "../magazine/ArticleSpread";
+import { calculateRequiredArticlePages, getEffectiveArticlePageSpan, MANUAL_PAGE_BREAK_REGEX } from "../../lib/magazine-utils";
 import {
   Dialog,
   DialogContent,
@@ -585,8 +586,32 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 <option value={6}>6 Páginas A4 (Edição Especial Estendida)</option>
               </select>
               <p className="text-[10px] opacity-75 leading-tight">
-                Selecione a quantidade ideal de páginas para o artigo. O texto fluirá automaticamente em colunas ou você poderá diagramar cada página manualmente com quebras de página.
+                Selecione a quantidade ideal de páginas para o artigo. O texto fluirá continuamente preenchendo cada página ao máximo.
               </p>
+
+              {(() => {
+                const reqPages = calculateRequiredArticlePages(formData);
+                if (reqPages > (formData.pageSpan || 1)) {
+                  return (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-amber-500/15 border-2 border-amber-500/40 text-[11px] gap-2">
+                      <span className="text-amber-800 dark:text-amber-300 font-medium">
+                        ⚡ <strong>Fluxo Contínuo Total:</strong> Com {(formData.content || "").length.toLocaleString("pt-BR")} caracteres, este texto requer <strong>{reqPages} páginas</strong> para exibir 100% das palavras sem cortes.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, pageSpan: reqPages });
+                          if (previewPagePart > reqPages) setPreviewPagePart(1);
+                        }}
+                        className="px-2.5 py-1 rounded bg-amber-400 text-black font-mono font-black text-[10px] uppercase cursor-pointer hover:bg-amber-300 shadow-xs shrink-0 self-end sm:self-auto"
+                      >
+                        Ajustar para {reqPages} Páginas
+                      </button>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             {/* Featured on Cover Switch */}
@@ -1267,46 +1292,51 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     ) : (
       /* Live WYSIWYG Page Preview (A4 Magazine Spread) */
       <div className="my-4 space-y-3 animate-fadeIn">
-        {/* Top Toolbar in Preview Mode */}
-        <div className="p-3 rounded-xl border-2 theme-app-card-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-          {/* Sub-tab selector for Multi-Page Articles */}
-          {(formData.pageSpan || 1) > 1 ? (
-            <div className="flex flex-wrap items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700">
-              {Array.from({ length: formData.pageSpan || 1 }).map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setPreviewPagePart(idx + 1);
-                    setPreviewViewAll(false);
-                  }}
-                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
-                    !previewViewAll && previewPagePart === idx + 1
-                      ? "bg-amber-400 text-black font-black shadow-xs"
-                      : "text-slate-300 hover:text-white"
-                  }`}
-                >
-                  📄 Pág. {idx + 1} {idx === 0 ? "(Abertura)" : idx === (formData.pageSpan || 1) - 1 ? "(Conclusão)" : ""}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setPreviewViewAll(!previewViewAll)}
-                className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
-                  previewViewAll
-                    ? "bg-amber-400 text-black font-black shadow-xs"
-                    : "text-slate-300 hover:text-white"
-                }`}
-              >
-                📖 Todas Lado a Lado ({formData.pageSpan || 1} Págs)
-              </button>
-            </div>
-          ) : (
-            <div className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5" />
-              <span>PRÉVIA FIEL WYSIWYG • PÁGINA ÚNICA A4</span>
-            </div>
-          )}
+        {(() => {
+          const effectivePreviewSpan = getEffectiveArticlePageSpan(formData);
+
+          return (
+            <>
+              {/* Top Toolbar in Preview Mode */}
+              <div className="p-3 rounded-xl border-2 theme-app-card-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                {/* Sub-tab selector for Multi-Page Articles */}
+                {effectivePreviewSpan > 1 ? (
+                  <div className="flex flex-wrap items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700">
+                    {Array.from({ length: effectivePreviewSpan }).map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setPreviewPagePart(idx + 1);
+                          setPreviewViewAll(false);
+                        }}
+                        className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
+                          !previewViewAll && previewPagePart === idx + 1
+                            ? "bg-amber-400 text-black font-black shadow-xs"
+                            : "text-slate-300 hover:text-white"
+                        }`}
+                      >
+                        📄 Pág. {idx + 1} {idx === 0 ? "(Abertura)" : idx === effectivePreviewSpan - 1 ? "(Conclusão)" : ""}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setPreviewViewAll(!previewViewAll)}
+                      className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
+                        previewViewAll
+                          ? "bg-amber-400 text-black font-black shadow-xs"
+                          : "text-slate-300 hover:text-white"
+                      }`}
+                    >
+                      📖 Todas Lado a Lado ({effectivePreviewSpan} Págs)
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>PRÉVIA FIEL WYSIWYG • PÁGINA ÚNICA A4</span>
+                  </div>
+                )}
 
           {/* Quick Adjustments during Preview */}
           <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -1385,13 +1415,13 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
 
         {/* A4 Magazine Spread Page Frame */}
         <div className="bg-slate-950 p-3 sm:p-6 rounded-xl border-2 border-amber-500/30 flex justify-center items-start overflow-x-auto shadow-2xl custom-scrollbar min-h-[580px]">
-          {(formData.pageSpan || 1) > 1 && previewViewAll ? (
+          {effectivePreviewSpan > 1 && previewViewAll ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full max-w-7xl">
-              {Array.from({ length: formData.pageSpan || 1 }).map((_, idx) => (
+              {Array.from({ length: effectivePreviewSpan }).map((_, idx) => (
                 <div key={idx} className="flex flex-col items-center">
                   <span className="text-[10px] font-mono font-bold text-amber-500 mb-1.5">
-                    // PÁGINA {idx + 1} DE {formData.pageSpan || 1}{" "}
-                    {idx === 0 ? "(ABERTURA)" : idx === (formData.pageSpan || 1) - 1 ? "(CONCLUSÃO)" : "(CONTINUAÇÃO)"}
+                    // PÁGINA {idx + 1} DE {effectivePreviewSpan}{" "}
+                    {idx === 0 ? "(ABERTURA)" : idx === effectivePreviewSpan - 1 ? "(CONCLUSÃO)" : "(CONTINUAÇÃO)"}
                   </span>
                   <div className="w-full aspect-[1/1.414] rounded-lg shadow-2xl border border-slate-700 overflow-hidden bg-slate-900">
                     <ArticleSpread
@@ -1400,7 +1430,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                       theme={effectiveTheme}
                       pageNumber={4 + idx}
                       pagePart={idx + 1}
-                      totalPagesForArticle={formData.pageSpan || 1}
+                      totalPagesForArticle={effectivePreviewSpan}
                     />
                   </div>
                 </div>
@@ -1409,11 +1439,11 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           ) : (
             <div className="flex flex-col items-center w-full max-w-[580px]">
               <span className="text-[10px] font-mono font-bold text-amber-500 mb-1.5">
-                {(formData.pageSpan || 1) > 1
-                  ? `// PÁGINA ${previewPagePart} DE ${formData.pageSpan || 1} ${
+                {effectivePreviewSpan > 1
+                  ? `// PÁGINA ${previewPagePart} DE ${effectivePreviewSpan} ${
                       previewPagePart === 1
                         ? "(ABERTURA)"
-                        : previewPagePart === (formData.pageSpan || 1)
+                        : previewPagePart === effectivePreviewSpan
                         ? "(CONCLUSÃO)"
                         : "(CONTINUAÇÃO)"
                     }`
@@ -1426,14 +1456,17 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                   theme={effectiveTheme}
                   pageNumber={3 + previewPagePart}
                   pagePart={previewPagePart}
-                  totalPagesForArticle={formData.pageSpan || 1}
+                  totalPagesForArticle={effectivePreviewSpan}
                 />
               </div>
             </div>
           )}
         </div>
-      </div>
-    )}
+      </>
+    );
+  })()}
+</div>
+)}
 
         {/* Footer Actions */}
         <DialogFooter className="border-t pt-4 flex items-center justify-between">

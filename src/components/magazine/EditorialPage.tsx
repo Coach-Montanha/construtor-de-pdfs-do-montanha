@@ -1,7 +1,7 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
-import { formatPageNumber } from "../../lib/magazine-utils";
+import { formatPageNumber, getEffectiveArticlePageSpan } from "../../lib/magazine-utils";
 import { Zap, Feather, Award } from "lucide-react";
 
 interface EditorialPageProps {
@@ -43,7 +43,7 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
     .filter((art) => art.enabled !== false)
     .map((art) => {
       const startPage = currentOffset;
-      const span = Math.max(1, art.pageSpan || 1);
+      const span = getEffectiveArticlePageSpan(art);
       currentOffset += span;
       return {
         article: art,

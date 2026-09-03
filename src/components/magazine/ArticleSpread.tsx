@@ -1,7 +1,7 @@
 import React from "react";
 import { Article, MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
-import { formatPageNumber } from "../../lib/magazine-utils";
+import { formatPageNumber, getEffectiveArticlePageSpan, MANUAL_PAGE_BREAK_REGEX } from "../../lib/magazine-utils";
 import {
   Quote,
   Clock,
@@ -19,8 +19,8 @@ interface ArticleSpreadProps {
   theme: MagazineTheme;
   pageNumber: number;
   isPrintMode?: boolean;
-  pagePart?: 1 | 2; // For 2-page spreads (Part 1 or Part 2)
-  totalPagesForArticle?: 1 | 2;
+  pagePart?: number;
+  totalPagesForArticle?: number;
 }
 
 export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
@@ -54,17 +54,19 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const borderColor = theme.borderColor;
   const brandTitle = project.editorialInfo?.headerBrandTitle || project.title;
 
-  const isMultiPage = totalPagesForArticle > 1;
+  const effectiveTotalPages = Math.max(
+    totalPagesForArticle || 1,
+    getEffectiveArticlePageSpan(article)
+  );
+
+  const isMultiPage = effectiveTotalPages > 1;
   const isFirstPage = pagePart === 1;
-  const isLastPage = pagePart === totalPagesForArticle;
-  const isIntermediatePage = pagePart > 1 && pagePart < totalPagesForArticle;
+  const isLastPage = pagePart === effectiveTotalPages;
+  const isIntermediatePage = pagePart > 1 && pagePart < effectiveTotalPages;
 
   // Split content into clean paragraph chunks
-  // Check for manual page break delimiter (Diagramação Manual)
-  const manualSplitRegex = /\n?\s*(?:---|===)\s*(?:QUEBRA DE P[ÁA]GINA|PAGE\s*BREAK)\s*(?:---|===)\s*\n?/i;
-  const hasManualSplit = manualSplitRegex.test(article.content || "");
-
-  const cleanRawContent = (article.content || "").replace(manualSplitRegex, "\n\n");
+  const hasManualSplit = MANUAL_PAGE_BREAK_REGEX.test(article.content || "");
+  const cleanRawContent = (article.content || "").replace(MANUAL_PAGE_BREAK_REGEX, "\n\n");
   const allRawChunks = cleanRawContent
     .split("\n\n")
     .map((c) => c.trim())
@@ -73,15 +75,13 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   // Hero Image layout styling (needed early to calculate available text capacity)
   const heroLayout = article.heroImageLayout || "banner";
   const heroSize = article.heroImageHeight || "large";
-  const showHeroImage = article.heroImage && heroLayout !== "hidden" && isFirstPage;
-  const secondaryPlacement = article.secondaryImagePlacement || "bottom";
-  const showSecondaryImage = Boolean(article.secondaryImage && isMultiPage && isLastPage);
+  const showHeroImage = Boolean(article.heroImage && heroLayout !== "hidden" && isFirstPage);
 
-  // Determine page chunks (Manual diagramming has 100% precedence, otherwise layout-capacity balanced)
+  // Determine page chunks (Manual diagramming has 100% precedence, otherwise greedy continuous packing)
   let pageChunks: string[] = [];
-  if (isMultiPage) {
+  if (effectiveTotalPages > 1) {
     if (hasManualSplit) {
-      const parts = (article.content || "").split(manualSplitRegex);
+      const parts = (article.content || "").split(MANUAL_PAGE_BREAK_REGEX);
       const targetContent = parts[pagePart - 1] || "";
       pageChunks = targetContent
         .split("\n\n")
@@ -90,63 +90,69 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     } else if (allRawChunks.length <= 1) {
       pageChunks = isFirstPage ? allRawChunks : [];
     } else {
-      const N = totalPagesForArticle;
-      const totalAllChars = allRawChunks.reduce((acc, c) => acc + c.length, 0);
+      const N = effectiveTotalPages;
 
-      // Define capacity weights for each page
-      const hasHero = Boolean(article.heroImage && heroLayout !== "hidden");
-      const pageCapacities: number[] = [];
-      for (let p = 1; p <= N; p++) {
-        if (p === 1) {
-          pageCapacities.push(hasHero ? 1150 : 1600);
-        } else if (p === N) {
-          pageCapacities.push(1250);
-        } else {
-          pageCapacities.push(1800);
-        }
-      }
-      const totalCapacity = pageCapacities.reduce((a, b) => a + b, 0);
+      // Real visual capacity per page in 2-column editorial layout:
+      // Page 1: has title, subtitle, author, and optional hero image.
+      // Fits ~1,350 to 1,500 chars with hero, or ~2,200 chars without hero.
+      const page1Cap = showHeroImage
+        ? heroSize === "large"
+          ? 1350
+          : heroSize === "medium"
+          ? 1450
+          : 1600
+        : 2200;
 
-      // Determine cut indices [0, cut1, cut2, ..., allRawChunks.length]
-      const cutIndices: number[] = [0];
-      let currentChunkIdx = 0;
-      let runningCharsTotal = 0;
-      let targetCumulative = 0;
+      // Intermediate pages: full height 2 columns = ~2,200 to 2,400 chars.
+      const intermediateCap = 2300;
 
-      for (let p = 0; p < N - 1; p++) {
-        const targetForThisPage = (pageCapacities[p] / totalCapacity) * totalAllChars;
-        targetCumulative += targetForThisPage;
+      // Last page: leaves space for closing image at bottom (~180px) + pull quote = ~1,400 chars.
+      const lastPageCap = 1400;
 
-        while (
-          currentChunkIdx < allRawChunks.length - (N - 1 - p) &&
-          runningCharsTotal + allRawChunks[currentChunkIdx].length < targetCumulative
-        ) {
-          runningCharsTotal += allRawChunks[currentChunkIdx].length;
-          currentChunkIdx++;
-        }
+      const pageSlices: string[][] = Array.from({ length: N }, () => []);
+      let p = 0;
+      let currentChars = 0;
 
-        // Guarantee progress of at least 1 chunk per page
-        if (currentChunkIdx <= cutIndices[p]) {
-          currentChunkIdx = cutIndices[p] + 1;
-        }
+      for (let i = 0; i < allRawChunks.length; i++) {
+        const chunk = allRawChunks[i];
+        const remainingChunks = allRawChunks.length - i;
+        const remainingPages = N - p;
 
-        // Avoid leaving an orphaned subheader (###) at the bottom of the page
-        if (currentChunkIdx > 1 && currentChunkIdx < allRawChunks.length) {
-          const chunkAtCut = allRawChunks[currentChunkIdx - 1] || "";
-          if (chunkAtCut.startsWith("###") || chunkAtCut.startsWith("##")) {
-            if (currentChunkIdx - 1 > cutIndices[p]) {
-              currentChunkIdx--;
-            }
+        const currentCap = p === 0 ? page1Cap : p === N - 1 ? lastPageCap : intermediateCap;
+
+        // Advance if remaining chunks are needed to ensure each remaining page gets at least 1 chunk
+        const mustAdvanceForPages = remainingChunks < remainingPages && p < N - 1;
+
+        // Or advance if current page is full and we have pages left to spill into
+        const isPageFull =
+          p < N - 1 &&
+          pageSlices[p].length > 0 &&
+          currentChars + chunk.length > currentCap;
+
+        if (mustAdvanceForPages || isPageFull) {
+          // Avoid leaving an orphaned subheader (### or ##) at the bottom of the page
+          const lastAdded = pageSlices[p][pageSlices[p].length - 1];
+          if (
+            lastAdded &&
+            (lastAdded.startsWith("###") || lastAdded.startsWith("##")) &&
+            pageSlices[p].length > 1
+          ) {
+            pageSlices[p].pop();
+            p++;
+            pageSlices[p] = [lastAdded, chunk];
+            currentChars = lastAdded.length + chunk.length;
+            continue;
           }
+
+          p++;
+          currentChars = 0;
         }
 
-        cutIndices.push(currentChunkIdx);
+        pageSlices[p].push(chunk);
+        currentChars += chunk.length;
       }
-      cutIndices.push(allRawChunks.length);
 
-      const startIdx = cutIndices[pagePart - 1] ?? 0;
-      const endIdx = cutIndices[pagePart] ?? allRawChunks.length;
-      pageChunks = allRawChunks.slice(startIdx, endIdx);
+      pageChunks = pageSlices[pagePart - 1] || [];
     }
   } else {
     pageChunks = allRawChunks;
@@ -321,20 +327,20 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     );
   };
 
-  // Quote & Takeaways visibility (at the end of the article)
+  // Quote & Takeaways visibility (always at the very end of the article)
   const hasPullQuote = article.pullQuotes && article.pullQuotes.length > 0;
   const hasTakeaways = article.keyTakeaways && article.keyTakeaways.length > 0;
-  const showQuoteOnThisPage = hasPullQuote && (!isMultiPage || isLastPage);
-  const showTakeawaysOnThisPage = hasTakeaways && (!isMultiPage || isLastPage);
+  const showQuoteOnThisPage = hasPullQuote && isLastPage;
+  const showTakeawaysOnThisPage = hasTakeaways && isLastPage;
 
-  // Visual Spotlight for small articles (fills empty space dynamically with high-end photography)
-  const shouldShowArticleSpotlight =
-    (!isMultiPage && totalPageChars < 950) ||
-    (isMultiPage && isFirstPage && (!showHeroImage || totalPageChars < 700));
+  // Closing Editorial Image condition:
+  // Rendered on the LAST page of EVERY article whenever there is space to occupy,
+  // guaranteeing no dark holes anywhere in the magazine.
+  const showClosingImage = isLastPage && (!isFirstPage || !showHeroImage || totalPageChars < 1350);
 
   const getContextualSpotlightImage = () => {
+    if (article.secondaryImage) return article.secondaryImage;
     if (article.bottomSpotlightImage) return article.bottomSpotlightImage;
-    if (!isMultiPage && article.secondaryImage) return article.secondaryImage;
 
     const hero = article.heroImage || "";
     const textContent = (article.title + " " + (article.content || "")).toLowerCase();
@@ -896,7 +902,9 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
             {/* Multi-Column Fluid Narrative Flow (Equilibrado e alinhado à esquerda sem distorção) */}
             <div
-              className={`columns-1 sm:columns-2 gap-5 flex-1 text-left min-h-0 overflow-hidden ${bodyFontClass}`}
+              className={`columns-1 sm:columns-2 gap-5 text-left min-h-0 overflow-hidden ${bodyFontClass} ${
+                showClosingImage ? "shrink-0 max-h-[58%]" : "flex-1"
+              }`}
               style={{
                 columnFill: "balance",
               }}
@@ -904,68 +912,35 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
             </div>
 
-            {/* Secondary Image (Last Page at Bottom: Ocupa o espaço restante da página ao final do artigo) */}
-            {isMultiPage && isLastPage && secondaryPlacement === "bottom" && (
+            {/* Closing Editorial Image (Ocupa o espaço restante ao final da matéria em todos os artigos) */}
+            {showClosingImage && (
               <div
-                className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 ${
+                className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 ${
                   isVeryDenseText
-                    ? "h-24 sm:h-28"
+                    ? "min-h-[140px] sm:min-h-[160px]"
                     : isDenseText
-                    ? "h-32 sm:h-36"
-                    : "flex-1 min-h-[170px] sm:min-h-[210px] md:min-h-[250px]"
+                    ? "min-h-[160px] sm:min-h-[190px]"
+                    : "min-h-[180px] sm:min-h-[220px] md:min-h-[250px]"
                 }`}
                 style={{ borderColor: `${primaryColor}40` }}
               >
                 <img
-                  src={article.secondaryImage || spotlightImageToUse}
-                  alt="Foto de Apoio Editorial"
+                  src={article.secondaryImage || article.bottomSpotlightImage || spotlightImageToUse}
+                  alt="Foto Editorial de Fechamento"
                   className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
-                  style={{ objectPosition: article.secondaryImagePosition || "50% 50%" }}
+                  style={{ objectPosition: article.secondaryImagePosition || article.bottomSpotlightPosition || "50% 50%" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end justify-between p-2.5">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5">
                   <span
                     className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
                     style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
                   >
                     // REGISTRO DE PERFORMANCE
                   </span>
-                  {(article.secondaryImageCaption || spotlightCaptionToUse) && (
+                  {(article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse) && (
                     <span className="text-[8px] font-mono italic text-slate-200 line-clamp-1 max-w-[70%]">
-                      "{article.secondaryImageCaption || spotlightCaptionToUse}"
+                      "{article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse}"
                     </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Bottom Visual Spotlight (Acrescenta imagem exclusiva para artigos pequenos preenchendo o vazio escuro) */}
-            {shouldShowArticleSpotlight && (
-              <div
-                className="relative w-full flex-1 min-h-[160px] sm:min-h-[190px] md:min-h-[220px] rounded-lg overflow-hidden border shrink-0 mt-2 shadow-md group"
-                style={{ borderColor: `${primaryColor}50` }}
-              >
-                <img
-                  src={spotlightImageToUse}
-                  alt={article.title}
-                  className="w-full h-full object-cover filter contrast-115 brightness-90 group-hover:scale-105 transition-transform duration-700"
-                  style={{ objectPosition: article.bottomSpotlightPosition || "50% 50%" }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
-                      style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
-                    >
-                      // VISUAL SPOTLIGHT
-                    </span>
-                    <span className="text-[8px] font-mono uppercase text-slate-300">
-                      REGISTRO EDITORIAL • {project.title}
-                    </span>
-                  </div>
-                  {spotlightCaptionToUse && (
-                    <p className="text-[10px] sm:text-xs font-bold text-white mt-1 italic line-clamp-1">
-                      "{spotlightCaptionToUse}"
-                    </p>
                   )}
                 </div>
               </div>
