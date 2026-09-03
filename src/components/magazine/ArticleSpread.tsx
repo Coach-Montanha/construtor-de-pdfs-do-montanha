@@ -163,15 +163,18 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   }
 
   const totalPageChars = pageChunks.reduce((sum, c) => sum + c.length, 0);
-  const isVeryDenseText = totalPageChars > 1900;
-  const isDenseText = totalPageChars > 1350;
+  const isExtremeDenseText = totalPageChars > 2500;
+  const isVeryDenseText = totalPageChars > 1800;
+  const isDenseText = totalPageChars > 1300;
   const isShortPageText = totalPageChars < 850;
 
   // Dynamic Text Density / Font Sizing based on explicit density AND real text volume
   const density = article.textDensity || "normal";
   const bodyTextSizeClass =
-    density === "compact" || isVeryDenseText
-      ? "text-[10px] leading-[1.55] sm:text-[10.5px] sm:leading-[1.55] mb-2"
+    density === "compact" || isExtremeDenseText
+      ? "text-[8.5px] leading-[1.38] sm:text-[9px] sm:leading-[1.42] mb-1.5"
+      : isVeryDenseText
+      ? "text-[9.5px] leading-[1.5] sm:text-[10px] sm:leading-[1.5] mb-2"
       : density === "spacious" || isShortPageText
       ? "text-[12px] leading-[1.75] sm:text-[12.5px] sm:leading-[1.75] mb-3.5"
       : isDenseText
@@ -356,16 +359,39 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const showQuoteOnThisPage = hasPullQuote && isLastPage;
   const showTakeawaysOnThisPage = hasTakeaways && isLastPage;
 
-  // Visual features across pages:
-  // 1. Apenas a ÚLTIMA página recebe a imagem de fechamento editorial para preencher o que sobrar de espaço:
-  const showClosingImage = isLastPage && !showSecondaryImageTop;
+  // Permissão explícita para o usuário remover ou desativar a imagem final do artigo:
+  const isClosingImageExplicitlyDisabled = article.showClosingImage === false;
 
-  // 2. Artigos de 1 página curtos (< 1.100 caracteres) recebem spotlight inferior para preenchimento:
-  const showSinglePageFeature = !isMultiPage && totalPageChars < 1100;
+  const heroImg = article.heroImage || "";
+  const configuredClosingImage =
+    (article.secondaryImage && article.secondaryImage !== heroImg ? article.secondaryImage : "") ||
+    (article.bottomSpotlightImage && article.bottomSpotlightImage !== heroImg ? article.bottomSpotlightImage : "");
 
-  // Páginas intermediárias e Página 1 de matérias multi-página NUNCA recebem imagem inferior.
-  // Isso garante colunas 100% limpas de texto contínuo, máximo aproveitamento de espaço e evita repetição de fotos!
-  const hasBottomFeature = showClosingImage || showSinglePageFeature;
+  const hasUserConfiguredClosingImage = Boolean(configuredClosingImage);
+
+  // Apenas a ÚLTIMA página recebe a imagem de fechamento editorial se:
+  // 1. O usuário NÃO desativou a imagem final (article.showClosingImage !== false)
+  // 2. Não está com foto secundária no topo
+  // 3. Em matérias de 1 página: apenas se o texto for curto (< 1.400 caracteres) E o usuário configurou imagem.
+  //    Se o texto for denso (ex: 3.200 caracteres), NUNCA força imagem final para liberar 100% da altura para o texto!
+  const showClosingImage =
+    !isClosingImageExplicitlyDisabled &&
+    !showSecondaryImageTop &&
+    (isMultiPage
+      ? isLastPage
+      : (totalPageChars < 1400 && hasUserConfiguredClosingImage));
+
+  const getClosingPhotoUrl = (): string => {
+    if (configuredClosingImage) return configuredClosingImage;
+    // Em artigos multi-página, usa fallback temático apenas se a imagem final estiver habilitada
+    if (isMultiPage && !isClosingImageExplicitlyDisabled) {
+      return getContextualSpotlightImage();
+    }
+    return "";
+  };
+
+  const finalClosingPhotoUrl = getClosingPhotoUrl();
+  const hasBottomFeature = showClosingImage && Boolean(finalClosingPhotoUrl);
 
   const getContextualSpotlightImage = () => {
     const hero = article.heroImage || "";
@@ -940,9 +966,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
             </div>
 
-            {/* Visual Feature: Apenas na última página para completar o espaço restante, ou em artigo curto de página única */}
-            {/* 1. Imagem Editorial de Fechamento da Página Final */}
-            {showClosingImage && (
+            {/* Imagem Editorial de Fechamento da Página Final (Opcional - pode ser removida pelo usuário para liberar espaço) */}
+            {hasBottomFeature && finalClosingPhotoUrl && (
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 ${
                   isVeryDenseText
@@ -954,7 +979,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                 style={{ borderColor: `${primaryColor}40` }}
               >
                 <img
-                  src={article.secondaryImage || article.bottomSpotlightImage || spotlightImageToUse}
+                  src={finalClosingPhotoUrl}
                   alt="Foto Editorial de Fechamento"
                   className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
                   style={{ objectPosition: article.secondaryImagePosition || article.bottomSpotlightPosition || "50% 50%" }}
@@ -976,37 +1001,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                     {(article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse) && (
                       <span className="text-[8.5px] font-mono italic text-slate-100 line-clamp-1 max-w-[65%] text-right font-medium">
                         "{article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse}"
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 2. Destaque Visual em Artigo Curto de Página Única */}
-            {showSinglePageFeature && !showClosingImage && (
-              <div
-                className="relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 min-h-[160px] sm:min-h-[190px]"
-                style={{ borderColor: `${primaryColor}40` }}
-              >
-                <img
-                  src={article.bottomSpotlightImage || getContextualSpotlightImage()}
-                  alt="Destaque Visual do Artigo"
-                  className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
-                  style={{ objectPosition: article.bottomSpotlightPosition || "50% 50%" }}
-                />
-                {/* Faixa protetora de contraste com fundo sólido translúcido ao fundo do texto */}
-                <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
-                  <div className="bg-black/90 backdrop-blur-md px-3 py-1.5 rounded border border-white/15 flex items-center justify-between shadow-xl">
-                    <span
-                      className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm"
-                      style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
-                    >
-                      // VISUAL SPOTLIGHT
-                    </span>
-                    {spotlightCaptionToUse && (
-                      <span className="text-[8.5px] font-mono italic text-slate-100 line-clamp-1 max-w-[70%] font-medium">
-                        "{spotlightCaptionToUse}"
                       </span>
                     )}
                   </div>

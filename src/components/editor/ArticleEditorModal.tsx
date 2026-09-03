@@ -698,17 +698,46 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               />
             </div>
 
+            {/* Closing Image Visibility Toggle */}
+            <div className="flex items-center justify-between p-3 rounded-lg border-2 theme-app-card-subtle">
+              <div className="space-y-0.5">
+                <Label className="text-xs font-bold flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
+                  <span>EXIBIR IMAGEM FINAL DE FECHAMENTO</span>
+                </Label>
+                <p className="text-[10px] opacity-75">
+                  Desative para remover a foto final e liberar 100% da altura da página para o texto.
+                </p>
+              </div>
+              <Switch
+                checked={formData.showClosingImage !== false}
+                onCheckedChange={(val) => setFormData({ ...formData, showClosingImage: val })}
+              />
+            </div>
+
             {/* Secondary Image for Multi-Page Articles */}
-            {(formData.pageSpan || 1) > 1 && (
+            {formData.showClosingImage !== false && (formData.pageSpan || 1) > 1 && (
               <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2 bg-amber-400/5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs font-bold flex items-center gap-1.5">
                     <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
                     <span>FOTO SECUNDÁRIA (FECHAMENTO DA MATÉRIA)</span>
                   </Label>
-                  <span className="text-[9px] font-mono text-amber-600 font-bold uppercase">
-                    Página {formData.pageSpan} (Conclusão)
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {formData.secondaryImage && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, secondaryImage: "", secondaryImageCaption: "" })}
+                        className="text-[10px] text-red-500 hover:text-red-600 font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Remover Foto
+                      </button>
+                    )}
+                    <span className="text-[9px] font-mono text-amber-600 font-bold uppercase">
+                      Página {formData.pageSpan} (Conclusão)
+                    </span>
+                  </div>
                 </div>
 
                 <div>
@@ -740,28 +769,49 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             )}
 
             {/* Visual Spotlight Image (para matérias curtas ou preenchimento de rodapé) */}
-            <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2">
-              <Label className="text-xs font-bold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>VISUAL SPOTLIGHT (DESTAQUE INFERIOR / ARTIGOS CURTOS)</span>
-              </Label>
-              <ImagePicker
-                label="Imagem do Visual Spotlight (Opcional)"
-                value={formData.bottomSpotlightImage || ""}
-                onChange={(url) => setFormData({ ...formData, bottomSpotlightImage: url, bottomSpotlightPosition: formData.bottomSpotlightPosition || "50% 50%" })}
-                position={formData.bottomSpotlightPosition || "50% 50%"}
-                onPositionChange={(pos) => setFormData({ ...formData, bottomSpotlightPosition: pos })}
-                aspectRatio="landscape"
-                placeholderPrompt="Fotografia editorial temática em alta definição para preencher o rodapé..."
-                helperText="Preenche automaticamente o espaço inferior quando a matéria for curta"
-              />
-              <Input
-                value={formData.bottomSpotlightCaption || ""}
-                onChange={(e) => setFormData({ ...formData, bottomSpotlightCaption: e.target.value })}
-                placeholder="Legenda ou frase do Visual Spotlight (Opcional)"
-                className="theme-app-input text-xs mt-1 border"
-              />
-            </div>
+            {formData.showClosingImage !== false && (
+              <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>VISUAL SPOTLIGHT (DESTAQUE INFERIOR / ARTIGOS CURTOS)</span>
+                  </Label>
+                  {formData.bottomSpotlightImage && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, bottomSpotlightImage: "", bottomSpotlightCaption: "" })}
+                      className="text-[10px] text-red-500 hover:text-red-600 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Remover Spotlight
+                    </button>
+                  )}
+                </div>
+                <ImagePicker
+                  label="Imagem do Visual Spotlight (Opcional)"
+                  value={formData.bottomSpotlightImage || ""}
+                  onChange={(url) => setFormData({ ...formData, bottomSpotlightImage: url, bottomSpotlightPosition: formData.bottomSpotlightPosition || "50% 50%" })}
+                  position={formData.bottomSpotlightPosition || "50% 50%"}
+                  onPositionChange={(pos) => setFormData({ ...formData, bottomSpotlightPosition: pos })}
+                  aspectRatio="landscape"
+                  placeholderPrompt="Fotografia editorial temática em alta definição para preencher o rodapé..."
+                  helperText="Preenche automaticamente o espaço inferior quando a matéria for curta"
+                />
+                <Input
+                  value={formData.bottomSpotlightCaption || ""}
+                  onChange={(e) => setFormData({ ...formData, bottomSpotlightCaption: e.target.value })}
+                  placeholder="Legenda ou frase do Visual Spotlight (Opcional)"
+                  className="theme-app-input text-xs mt-1 border"
+                />
+              </div>
+            )}
+
+            {formData.showClosingImage === false && (
+              <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+                <span>✓</span>
+                <span><strong>Imagem final desativada:</strong> Todo o espaço vertical da página será dedicado ao fluxo de texto contínuo.</span>
+              </div>
+            )}
 
             {/* Pull Quotes Manager */}
             <div className="theme-app-card-subtle p-3.5 rounded-lg border-2 space-y-2">

@@ -53,45 +53,24 @@ export function calculateRequiredArticlePages(article: MagazineArticle): number 
 }
 
 /**
- * Retorna o pageSpan efetivo de um artigo. Se o usuário definiu um valor manual maior,
- * respeita esse valor (a menos que o artigo seja curto, onde múltiplas páginas
- * criariam páginas vazias com apenas 2 linhas).
+ * Retorna o pageSpan efetivo de um artigo.
+ * A escolha do usuário tem precedência absoluta: se o usuário selecionou 1 página,
+ * ela será mantida em 1 página mesmo quando o sistema recomendar 2, permitindo testar
+ * o enquadramento do texto sem que o sistema force páginas extras.
  */
 export function getEffectiveArticlePageSpan(article: MagazineArticle): number {
-  const content = (article.content || "").replace(MANUAL_PAGE_BREAK_REGEX, "\n\n").trim();
-  const totalChars = content.length;
-
   // Se o artigo tem quebra manual de página, respeita estritamente o número de partes
   if (MANUAL_PAGE_BREAK_REGEX.test(article.content || "")) {
     const parts = (article.content || "").split(MANUAL_PAGE_BREAK_REGEX);
     return Math.max(1, parts.length);
   }
 
-  const required = calculateRequiredArticlePages(article);
-  const configured = Math.max(1, article.pageSpan || 1);
-
-  // Artigos muito curtos (< 1.100 caracteres) NUNCA devem ter mais de 1 página
-  // para evitar páginas com apenas 1 ou 2 linhas de texto.
-  if (totalChars < 1100) {
-    return 1;
+  // Se o usuário selecionou manualmente uma quantidade de páginas (1, 2, 3...), respeita integralmente!
+  if (typeof article.pageSpan === "number" && article.pageSpan >= 1) {
+    return article.pageSpan;
   }
 
-  // Para artigos moderados (1.100 a 2.000 caracteres), permitir no máximo 2 páginas se configurado
-  if (totalChars <= 2000) {
-    return Math.min(2, Math.max(required, configured));
-  }
-
-  // Para artigos de 2.001 a 5.000 caracteres, permitir no máximo 2 páginas (ou 3 se configurado)
-  if (totalChars <= 5000) {
-    return Math.min(3, Math.max(required, configured));
-  }
-
-  // Para artigos de 5.001 a 8.000 caracteres, permitir no máximo 3 páginas (ou 4 se configurado)
-  if (totalChars <= 8000) {
-    return Math.min(4, Math.max(required, configured));
-  }
-
-  return Math.max(required, configured);
+  return calculateRequiredArticlePages(article);
 }
 
 /**

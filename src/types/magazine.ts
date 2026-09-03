@@ -215,6 +215,7 @@ export interface Article {
   bottomSpotlightImage?: string;
   bottomSpotlightCaption?: string;
   bottomSpotlightPosition?: string;
+  showClosingImage?: boolean; // Permite ao usuário desativar ou remover a imagem final para liberar 100% de espaço ao texto
   pageSpan?: number; // 1 = Página Única, 2 = Página Dupla, 3, 4, 5, 6+ páginas
   quotePlacement?: "end" | "side" | "none"; // Posição da citação (Padrão: no final do artigo)
   textDensity?: "compact" | "normal" | "spacious";

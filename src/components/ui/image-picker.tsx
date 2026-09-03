@@ -163,7 +163,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
                 <button
                   type="button"
                   onClick={clearImage}
-                  className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer"
+                  className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-md shadow-lg cursor-pointer z-10 hover:scale-105 active:scale-95 transition-all"
                   title="Remover Imagem"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
