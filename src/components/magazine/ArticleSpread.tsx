@@ -381,18 +381,6 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       ? isLastPage
       : (totalPageChars < 1400 && hasUserConfiguredClosingImage));
 
-  const getClosingPhotoUrl = (): string => {
-    if (configuredClosingImage) return configuredClosingImage;
-    // Em artigos multi-página, usa fallback temático apenas se a imagem final estiver habilitada
-    if (isMultiPage && !isClosingImageExplicitlyDisabled) {
-      return getContextualSpotlightImage();
-    }
-    return "";
-  };
-
-  const finalClosingPhotoUrl = getClosingPhotoUrl();
-  const hasBottomFeature = showClosingImage && Boolean(finalClosingPhotoUrl);
-
   const getContextualSpotlightImage = () => {
     const hero = article.heroImage || "";
     // Garantir que a imagem de fechamento nunca seja idêntica à imagem de abertura (evita repetição)
@@ -438,6 +426,17 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     return fallbacks.find((u) => u !== hero) || fallbacks[0];
   };
 
+  const getClosingPhotoUrl = (): string => {
+    if (configuredClosingImage) return configuredClosingImage;
+    // Em artigos multi-página, usa fallback temático apenas se a imagem final estiver habilitada
+    if (isMultiPage && !isClosingImageExplicitlyDisabled) {
+      return getContextualSpotlightImage();
+    }
+    return "";
+  };
+
+  const finalClosingPhotoUrl = getClosingPhotoUrl();
+  const hasBottomFeature = showClosingImage && Boolean(finalClosingPhotoUrl);
   const spotlightImageToUse = getContextualSpotlightImage();
   const spotlightCaptionToUse =
     article.bottomSpotlightCaption ||
