@@ -413,9 +413,9 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           >
             {article.category || "MONTANHA DOSSIER"}
           </span>
-          {isTwoPage && (
+          {isMultiPage && (
             <span className="font-mono text-[8.5px] font-bold opacity-75 hidden sm:inline">
-              // PARTE {pagePart} DE 2
+              // PARTE {pagePart} DE {totalPagesForArticle}
             </span>
           )}
         </div>
