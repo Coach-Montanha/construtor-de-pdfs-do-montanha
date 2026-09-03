@@ -1,7 +1,7 @@
 import React from "react";
 import { Article, MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
-import { formatPageNumber, getEffectiveArticlePageSpan, MANUAL_PAGE_BREAK_REGEX } from "../../lib/magazine-utils";
+import { formatPageNumber, getEffectiveArticlePageSpan, MANUAL_PAGE_BREAK_REGEX, MANUAL_COLUMN_BREAK_REGEX } from "../../lib/magazine-utils";
 import {
   Quote,
   Clock,
@@ -181,6 +181,51 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       ? "text-[10.5px] leading-[1.6] sm:text-[11px] sm:leading-[1.6] mb-2.5"
       : "text-[11px] leading-[1.65] sm:text-[11.5px] sm:leading-[1.65] mb-2.5";
 
+  // Split pageChunks into Coluna 1 (prioritária / esquerda) e Coluna 2 (direita)
+  const hasManualColumnBreak = pageChunks.some((c) => MANUAL_COLUMN_BREAK_REGEX.test(c));
+
+  let col1Chunks: string[] = [];
+  let col2Chunks: string[] = [];
+
+  if (hasManualColumnBreak) {
+    let passedBreak = false;
+    for (const chunk of pageChunks) {
+      if (MANUAL_COLUMN_BREAK_REGEX.test(chunk)) {
+        const parts = chunk.split(MANUAL_COLUMN_BREAK_REGEX).map((p) => p.trim()).filter(Boolean);
+        if (parts.length > 0 && parts[0]) col1Chunks.push(parts[0]);
+        if (parts.length > 1 && parts[1]) col2Chunks.push(parts[1]);
+        passedBreak = true;
+        continue;
+      }
+      if (!passedBreak) {
+        col1Chunks.push(chunk);
+      } else {
+        col2Chunks.push(chunk);
+      }
+    }
+  } else {
+    // A PRIMEIRA COLUNA É A PRIORIDADE ABSOLUTA:
+    // Se o texto for curto (até 2 parágrafos ou <= 900 caracteres), fica 100% na Coluna 1!
+    if (pageChunks.length <= 2 || totalPageChars <= 900) {
+      col1Chunks = pageChunks;
+      col2Chunks = [];
+    } else {
+      // Para textos mais longos, prioriza a Coluna 1 preenchendo cerca de 55% do volume:
+      const targetCol1Chars = totalPageChars * 0.55;
+      let accumChars = 0;
+      let splitIdx = 0;
+      for (let i = 0; i < pageChunks.length - 1; i++) {
+        accumChars += pageChunks[i]!.length;
+        splitIdx = i + 1;
+        if (accumChars >= targetCol1Chars) {
+          break;
+        }
+      }
+      col1Chunks = pageChunks.slice(0, splitIdx);
+      col2Chunks = pageChunks.slice(splitIdx);
+    }
+  }
+
   // Helper to parse inline rich typography tokens (bold, italic, underline, mark, quotes)
   const renderInlineFormatted = (rawText: string) => {
     // Tokenize: ==highlight==, **bold**, <b>bold</b>, <u>underline</u>, __underline__, *italic*, <i>italic</i>, "quotes", “quotes”
@@ -279,17 +324,30 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       );
     }
 
-    // Section Tags or Uppercase Subheaders starting with "//" (ex: "// POR QUE O REMO FUNCIONA?" ou "// CONCLUSÃO.")
+    // Section Tags or Uppercase Subheaders starting with "//" (ex: "// POR QUE O REMO FUNCIONA?", "// CONCLUSÃO.", "// REFERÊNCIAS.")
     if (chunk.startsWith("//")) {
       const cleanTitle = chunk.replace(/^\/+\s*/, "").replace(/[*_]/g, "").trim();
+      const isRef = cleanTitle.toUpperCase().startsWith("REFERÊNCIAS") || cleanTitle.toUpperCase().startsWith("REFERENCIAS");
       return (
-        <div key={idx} className="mt-3 mb-1.5 pb-0.5 border-b break-inside-avoid break-inside-avoid-column flex items-center gap-1.5" style={{ borderColor: `${primaryColor}40` }}>
-          <span className="text-[7.5px] font-mono font-black uppercase px-1.5 py-0.5 rounded" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
-            // SEÇÃO
+        <div
+          key={idx}
+          className={`mt-2.5 mb-1 pb-0.5 border-b break-inside-avoid flex items-center gap-1.5 ${
+            isRef ? "pt-1 border-amber-500/50" : ""
+          }`}
+          style={{ borderColor: `${primaryColor}40` }}
+        >
+          <span
+            className="text-[7.5px] font-mono font-black uppercase px-1.5 py-0.5 rounded shadow-xs"
+            style={{
+              backgroundColor: isRef ? "#F59E0B" : `${primaryColor}20`,
+              color: isRef ? "#000000" : primaryColor,
+            }}
+          >
+            {isRef ? "★ FONTE / CIÊNCIA" : "// SEÇÃO"}
           </span>
           <h4
-            className={`text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider ${headlineFontClass}`}
-            style={{ color: primaryColor }}
+            className={`text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider ${headlineFontClass}`}
+            style={{ color: isRef ? "#F59E0B" : primaryColor }}
           >
             {cleanTitle}
           </h4>
@@ -953,16 +1011,21 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* Multi-Column Fluid Narrative Flow (Equilibrado e alinhado à esquerda sem distorção) */}
+            {/* Dual Column Narrative Grid (Coluna 1 prioritária + Quebra Manual por botão) */}
             <div
-              className={`columns-1 sm:columns-2 gap-5 text-left min-h-0 overflow-hidden ${bodyFontClass} ${
-                hasBottomFeature ? "shrink-0 max-h-[50%] sm:max-h-[54%]" : "flex-1"
+              className={`grid grid-cols-1 sm:grid-cols-2 gap-5 text-left min-h-0 ${bodyFontClass} ${
+                hasBottomFeature ? "shrink-0 max-h-[52%]" : "flex-1"
               }`}
-              style={{
-                columnFill: "balance",
-              }}
             >
-              {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
+              {/* Coluna 1 (Esquerda - Prioritária) */}
+              <div className="flex flex-col min-h-0 space-y-2">
+                {col1Chunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
+              </div>
+
+              {/* Coluna 2 (Direita - Fluxo Contínuo / Quebra Manual) */}
+              <div className="flex flex-col min-h-0 space-y-2">
+                {col2Chunks.map((chunk, idx) => renderSingleChunk(chunk, idx + col1Chunks.length, false))}
+              </div>
             </div>
 
             {/* Imagem Editorial de Fechamento da Página Final (Opcional - pode ser removida pelo usuário para liberar espaço) */}

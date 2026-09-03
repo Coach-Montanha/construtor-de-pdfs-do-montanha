@@ -11,7 +11,7 @@ import {
 } from "../../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../../lib/sample-data";
 import { ArticleSpread } from "../magazine/ArticleSpread";
-import { calculateRequiredArticlePages, getEffectiveArticlePageSpan, MANUAL_PAGE_BREAK_REGEX } from "../../lib/magazine-utils";
+import { calculateRequiredArticlePages, getEffectiveArticlePageSpan, MANUAL_PAGE_BREAK_REGEX, MANUAL_COLUMN_BREAK_REGEX } from "../../lib/magazine-utils";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +49,7 @@ import {
   AlertCircle,
   Scissors,
   BookOpen,
+  Columns,
 } from "lucide-react";
 import {
   polishEditorialText,
@@ -590,27 +591,52 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </p>
 
               {(() => {
-                const reqPages = calculateRequiredArticlePages(formData);
-                if (reqPages > (formData.pageSpan || 1)) {
+                const isSingle = (formData.pageSpan || 1) === 1;
+                const recPages = calculateRequiredArticlePages(formData);
+
+                if (isSingle) {
                   return (
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-amber-500/15 border-2 border-amber-500/40 text-[11px] gap-2">
-                      <span className="text-amber-800 dark:text-amber-300 font-medium">
-                        ⚡ <strong>Fluxo Contínuo Total:</strong> Com {(formData.content || "").length.toLocaleString("pt-BR")} caracteres, este texto requer <strong>{reqPages} páginas</strong> para exibir 100% das palavras sem cortes.
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-emerald-500/15 border-2 border-emerald-500/40 text-[11px] gap-2">
+                      <span className="text-emerald-800 dark:text-emerald-300 font-medium flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span>✓ <strong>Modo 1 Página A4 Ativo:</strong> Todo o texto será condensado nesta página única sem cortes.</span>
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, pageSpan: reqPages });
-                          if (previewPagePart > reqPages) setPreviewPagePart(1);
-                        }}
-                        className="px-2.5 py-1 rounded bg-amber-400 text-black font-mono font-black text-[10px] uppercase cursor-pointer hover:bg-amber-300 shadow-xs shrink-0 self-end sm:self-auto"
-                      >
-                        Ajustar para {reqPages} Páginas
-                      </button>
+                      {recPages > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, pageSpan: recPages });
+                            if (previewPagePart > recPages) setPreviewPagePart(1);
+                          }}
+                          className="px-2 py-0.5 rounded bg-amber-400 text-black font-mono font-bold text-[9.5px] uppercase cursor-pointer hover:bg-amber-300 shadow-xs shrink-0 self-end sm:self-auto"
+                          title="Expandir para 2 ou mais páginas se desejar um layout mais espaçoso"
+                        >
+                          Expandir ({recPages} Págs)
+                        </button>
+                      )}
                     </div>
                   );
                 }
-                return null;
+
+                return (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-amber-500/15 border-2 border-amber-500/40 text-[11px] gap-2">
+                    <span className="text-amber-800 dark:text-amber-300 font-medium flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span>Matéria configurada para <strong>{formData.pageSpan} Páginas</strong>.</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, pageSpan: 1 });
+                        setPreviewPagePart(1);
+                      }}
+                      className="px-2 py-0.5 rounded bg-emerald-500 text-white font-mono font-bold text-[9.5px] uppercase cursor-pointer hover:bg-emerald-600 shadow-xs shrink-0 self-end sm:self-auto"
+                      title="Condensar todo o texto em apenas 1 página única"
+                    >
+                      Condensar em 1 Página
+                    </button>
+                  </div>
+                );
               })()}
             </div>
 
@@ -1233,6 +1259,17 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               <span>Lista</span>
             </button>
 
+            {/* Botão de Quebrar Colunas (Coluna 1 -> Coluna 2) */}
+            <button
+              type="button"
+              onClick={() => applyFormatting("\n\n[QUEBRA_COLUNA]\n\n", "", "")}
+              className="px-2.5 py-1 rounded border-2 border-emerald-500 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/30 font-black flex items-center gap-1 cursor-pointer shadow-xs"
+              title="Inserir quebra de coluna: o texto antes da quebra preenche a Coluna 1 (Esquerda) e o texto após vai para a Coluna 2 (Direita)"
+            >
+              <Columns className="w-3.5 h-3.5" />
+              <span>Quebrar Coluna</span>
+            </button>
+
             {(formData.pageSpan || 1) > 1 && (
               <button
                 type="button"
@@ -1245,6 +1282,30 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </button>
             )}
           </div>
+
+          {/* Indicador de Quebra de Coluna Manual */}
+          {MANUAL_COLUMN_BREAK_REGEX.test(formData.content || "") && (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] text-emerald-700 dark:text-emerald-300">
+              <div className="flex items-center gap-1.5 font-medium">
+                <Columns className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>
+                  ✂️ <strong>Quebra de Coluna Ativa:</strong> O texto antes de <code>[QUEBRA_COLUNA]</code> preenche a Coluna 1 (Esquerda); o texto após vai para a Coluna 2 (Direita).
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({
+                    ...formData,
+                    content: (formData.content || "").replace(MANUAL_COLUMN_BREAK_REGEX, "\n\n"),
+                  });
+                }}
+                className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer ml-2 shrink-0"
+              >
+                Remover Quebra
+              </button>
+            </div>
+          )}
 
           {(formData.pageSpan || 1) > 1 && (() => {
             const splitRegex = /\n?\s*(?:---|===)\s*(?:QUEBRA DE P[ÁA]GINA|PAGE\s*BREAK)\s*(?:---|===)\s*\n?/i;

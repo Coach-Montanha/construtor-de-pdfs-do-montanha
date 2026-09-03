@@ -53,10 +53,17 @@ export function calculateRequiredArticlePages(article: MagazineArticle): number 
 }
 
 /**
+ * Expressão regular que identifica quebras manuais de coluna inseridas pelo usuário.
+ * Tokens aceitos: [QUEBRA_COLUNA], <!-- quebra-coluna -->, <!-- columnbreak -->, [COLUNA_2]
+ */
+export const MANUAL_COLUMN_BREAK_REGEX = /\n?\s*(?:\[QUEBRA_COLUNA\]|<!--\s*quebra[-_]coluna\s*-->|<!--\s*columnbreak\s*-->|\[COLUNA_2\])\s*\n?/i;
+
+/**
  * Retorna o pageSpan efetivo de um artigo.
  * A escolha do usuário tem precedência absoluta: se o usuário selecionou 1 página,
  * ela será mantida em 1 página mesmo quando o sistema recomendar 2, permitindo testar
  * o enquadramento do texto sem que o sistema force páginas extras.
+ * Por padrão, retorna 1 (Página Única), dando ao usuário total liberdade de condensar.
  */
 export function getEffectiveArticlePageSpan(article: MagazineArticle): number {
   // Se o artigo tem quebra manual de página, respeita estritamente o número de partes
@@ -70,7 +77,8 @@ export function getEffectiveArticlePageSpan(article: MagazineArticle): number {
     return article.pageSpan;
   }
 
-  return calculateRequiredArticlePages(article);
+  // Padrão editorial: 1 Página A4 (permite condensar o artigo em 1 página sem forçar páginas extras)
+  return 1;
 }
 
 /**
