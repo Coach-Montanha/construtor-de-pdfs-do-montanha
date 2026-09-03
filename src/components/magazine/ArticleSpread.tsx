@@ -19,8 +19,8 @@ interface ArticleSpreadProps {
   theme: MagazineTheme;
   pageNumber: number;
   isPrintMode?: boolean;
-  pagePart?: 1 | 2; // For 2-page spreads (Part 1 or Part 2)
-  totalPagesForArticle?: 1 | 2;
+  pagePart?: number; // For multi-page spreads
+  totalPagesForArticle?: number;
 }
 
 export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
@@ -119,22 +119,22 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
         while (
           currentChunkIdx < allRawChunks.length - (N - 1 - p) &&
-          runningCharsTotal + allRawChunks[currentChunkIdx].length < targetCumulative
+          runningCharsTotal + (allRawChunks[currentChunkIdx]?.length ?? 0) < targetCumulative
         ) {
-          runningCharsTotal += allRawChunks[currentChunkIdx].length;
+          runningCharsTotal += allRawChunks[currentChunkIdx]?.length ?? 0;
           currentChunkIdx++;
         }
 
         // Guarantee progress of at least 1 chunk per page
-        if (currentChunkIdx <= cutIndices[p]) {
-          currentChunkIdx = cutIndices[p] + 1;
+        if (currentChunkIdx <= (cutIndices[p] ?? 0)) {
+          currentChunkIdx = (cutIndices[p] ?? 0) + 1;
         }
 
         // Avoid leaving an orphaned subheader (###) at the bottom of the page
         if (currentChunkIdx > 1 && currentChunkIdx < allRawChunks.length) {
           const chunkAtCut = allRawChunks[currentChunkIdx - 1] || "";
           if (chunkAtCut.startsWith("###") || chunkAtCut.startsWith("##")) {
-            if (currentChunkIdx - 1 > cutIndices[p]) {
+            if (currentChunkIdx - 1 > (cutIndices[p] ?? 0)) {
               currentChunkIdx--;
             }
           }
