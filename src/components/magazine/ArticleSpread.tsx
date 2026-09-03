@@ -19,7 +19,7 @@ interface ArticleSpreadProps {
   theme: MagazineTheme;
   pageNumber: number;
   isPrintMode?: boolean;
-  pagePart?: number;
+  pagePart?: number; // For multi-page spreads
   totalPagesForArticle?: number;
 }
 
@@ -152,7 +152,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         currentChars += chunk.length;
       }
 
-      pageChunks = pageSlices[pagePart - 1] || [];
+      pageChunks = pageSlices[(pagePart ?? 1) - 1] || [];
     }
   } else {
     pageChunks = allRawChunks;
@@ -419,9 +419,9 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           >
             {article.category || "MONTANHA DOSSIER"}
           </span>
-          {isTwoPage && (
+          {isMultiPage && (
             <span className="font-mono text-[8.5px] font-bold opacity-75 hidden sm:inline">
-              // PARTE {pagePart} DE 2
+              // PARTE {pagePart} DE {totalPagesForArticle}
             </span>
           )}
         </div>

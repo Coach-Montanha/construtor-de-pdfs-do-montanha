@@ -7,7 +7,7 @@ import {
   ProductPromotion,
   FacilitySpotlight,
   MagazineProject,
-  PublicationTheme,
+  MagazineTheme,
 } from "../../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../../lib/sample-data";
 import { ArticleSpread } from "../magazine/ArticleSpread";
@@ -104,7 +104,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   const [previewViewAll, setPreviewViewAll] = useState<boolean>(false);
 
   const effectiveProject: MagazineProject = project || INITIAL_MAGAZINE_PROJECT;
-  const effectiveTheme: PublicationTheme =
+  const effectiveTheme: MagazineTheme =
     MAGAZINE_THEMES.find((t) => t.id === effectiveProject.themeId) || MAGAZINE_THEMES[0]!;
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -402,7 +402,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
       <DialogContent
         data-testid="article-modal"
         className={`theme-app-card ${
-          activeModalTab === "preview" && previewViewMode === "both"
+          activeModalTab === "preview" && previewViewAll
             ? "max-w-6xl"
             : "max-w-4xl"
         } max-h-[92vh] overflow-y-auto p-4 sm:p-6 custom-scrollbar font-sans border-2 shadow-2xl transition-all duration-200`}
