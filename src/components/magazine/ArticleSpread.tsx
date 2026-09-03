@@ -67,7 +67,14 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     .map((c) => c.trim())
     .filter(Boolean);
 
-  // Determine page chunks (Manual diagramming has 100% precedence, otherwise character-balanced)
+  // Hero Image layout styling (needed early to calculate available text capacity)
+  const heroLayout = article.heroImageLayout || "banner";
+  const heroSize = article.heroImageHeight || "large";
+  const showHeroImage = article.heroImage && heroLayout !== "hidden" && pagePart === 1;
+  const secondaryPlacement = article.secondaryImagePlacement || "bottom";
+  const showSecondaryImage = article.secondaryImage && isTwoPage && pagePart === 2;
+
+  // Determine page chunks (Manual diagramming has 100% precedence, otherwise layout-capacity balanced)
   let pageChunks: string[] = [];
   if (isTwoPage) {
     if (hasManualSplit) {
@@ -81,19 +88,43 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       pageChunks = pagePart === 1 ? allRawChunks : [];
     } else {
       const totalAllChars = allRawChunks.reduce((acc, c) => acc + c.length, 0);
-      const targetHalf = totalAllChars / 2;
+
+      // Page 1 has Title, Deck/Subtitle, Author and Hero Banner.
+      // Page 1 text capacity is ~400-550 chars (when hero is large) or ~700-850 chars (when hero is compact/medium).
+      // Page 2 has NO title and NO hero banner, having capacity for 1600-2400 chars!
+      let targetPage1Chars = totalAllChars * 0.5;
+      const hasHero = Boolean(article.heroImage && heroLayout !== "hidden");
+      if (hasHero) {
+        if (heroSize === "large") {
+          targetPage1Chars = Math.min(totalAllChars * 0.28, 520);
+        } else if (heroSize === "medium") {
+          targetPage1Chars = Math.min(totalAllChars * 0.38, 750);
+        } else {
+          targetPage1Chars = Math.min(totalAllChars * 0.45, 950);
+        }
+      }
+
       let runningChars = 0;
       let splitIdx = 1;
 
       for (let i = 0; i < allRawChunks.length - 1; i++) {
         runningChars += allRawChunks[i].length;
-        if (runningChars >= targetHalf) {
-          const diffCurrent = Math.abs(runningChars - targetHalf);
-          const diffPrev = Math.abs((runningChars - allRawChunks[i].length) - targetHalf);
+        if (runningChars >= targetPage1Chars) {
+          const diffCurrent = Math.abs(runningChars - targetPage1Chars);
+          const diffPrev = Math.abs((runningChars - allRawChunks[i].length) - targetPage1Chars);
           splitIdx = diffCurrent < diffPrev ? i + 1 : Math.max(1, i);
           break;
         }
         splitIdx = i + 1;
+      }
+
+      // CRITICAL: Prevent leaving an orphaned subheader (###) at the very bottom of Page 1!
+      // If the chunk immediately before the split is a subheader (### or ##), move it to Page 2!
+      if (splitIdx > 1 && splitIdx < allRawChunks.length) {
+        const lastChunkOnPage1 = allRawChunks[splitIdx - 1] || "";
+        if (lastChunkOnPage1.startsWith("###") || lastChunkOnPage1.startsWith("##")) {
+          splitIdx = Math.max(1, splitIdx - 1);
+        }
       }
 
       pageChunks = pagePart === 1 ? allRawChunks.slice(0, splitIdx) : allRawChunks.slice(splitIdx);
@@ -103,18 +134,21 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   }
 
   const totalPageChars = pageChunks.reduce((sum, c) => sum + c.length, 0);
-  const isDenseText = totalPageChars > 1150;
-  const isMediumText = totalPageChars > 750;
+  const isVeryDenseText = totalPageChars > 1500;
+  const isDenseText = totalPageChars > 1050;
+  const isMediumText = totalPageChars > 650;
 
   // Dynamic Text Density / Font Sizing based on explicit density AND real text volume
   const density = article.textDensity || "normal";
   const bodyTextSizeClass =
-    density === "compact" || isDenseText
-      ? "text-[9px] leading-tight sm:text-[9.5px] sm:leading-snug mb-1.5"
+    density === "compact" || isVeryDenseText
+      ? "text-[8.5px] leading-tight sm:text-[9px] sm:leading-snug mb-1"
       : density === "spacious" && !isMediumText
       ? "text-[11.5px] leading-relaxed sm:text-[12px] sm:leading-relaxed mb-3"
+      : isDenseText
+      ? "text-[9.5px] leading-snug sm:text-[10px] sm:leading-snug mb-1.5"
       : isTwoPage && !isDenseText
-      ? "text-[10px] leading-snug sm:text-[10.5px] sm:leading-snug mb-2"
+      ? "text-[10px] leading-snug sm:text-[10.5px] sm:leading-snug mb-1.5"
       : "text-[10px] leading-snug sm:text-[10.5px] sm:leading-snug mb-2";
 
   // Helper to parse inline rich typography tokens (bold, italic, underline, mark, quotes)
@@ -276,15 +310,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const showQuoteOnThisPage = hasPullQuote && (!isTwoPage || pagePart === 2);
   const showTakeawaysOnThisPage = hasTakeaways && (!isTwoPage || pagePart === 2);
 
-  // Hero Image layout styling
-  const heroLayout = article.heroImageLayout || "banner";
-  const heroSize = article.heroImageHeight || "large";
-  const showHeroImage = article.heroImage && heroLayout !== "hidden" && pagePart === 1;
-  const secondaryPlacement = article.secondaryImagePlacement || "bottom";
-  const showSecondaryImage = article.secondaryImage && isTwoPage && pagePart === 2;
-
   // Visual Spotlight for small articles (fills empty space dynamically when no secondary image is present)
-  const isShortContent = pageChunks.length <= 5 && totalPageChars < 1150;
+  const isShortContent = pageChunks.length <= 4 && totalPageChars < 850;
   const shouldShowArticleSpotlight =
     isShortContent &&
     (!showHeroImage || heroLayout === "compact") &&
@@ -786,16 +813,30 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* Hero Image (Part 1 or Single Page): 2x a 3x maior para impacto editorial */}
+            {/* Hero Image (Part 1 or Single Page): Altura adaptativa inteligente */}
             {showHeroImage && (
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-sm ${
-                  heroLayout === "contain"
-                    ? "h-56 sm:h-64 md:h-72 bg-black/60"
+                  isTwoPage
+                    ? isVeryDenseText
+                      ? "h-24 sm:h-28"
+                      : isDenseText
+                      ? "h-32 sm:h-36"
+                      : heroSize === "compact"
+                      ? "h-28 sm:h-32"
+                      : heroSize === "medium"
+                      ? "h-36 sm:h-40 md:h-44"
+                      : "h-44 sm:h-48 md:h-52"
+                    : isVeryDenseText
+                    ? "h-28 sm:h-32"
+                    : isDenseText
+                    ? "h-36 sm:h-40 md:h-44"
+                    : heroLayout === "contain"
+                    ? "h-52 sm:h-60 bg-black/60"
                     : heroSize === "compact"
-                    ? "h-32 sm:h-36 md:h-40"
+                    ? "h-32 sm:h-36"
                     : heroSize === "medium"
-                    ? "h-44 sm:h-52 md:h-60"
+                    ? "h-44 sm:h-52"
                     : "h-56 sm:h-64 md:h-72"
                 }`}
                 style={{ borderColor: `${primaryColor}40` }}
@@ -819,7 +860,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             {/* Secondary Image (Part 2 at Top, only if explicitly chosen) */}
             {showSecondaryImage && secondaryPlacement === "top" && (
               <div
-                className="relative w-full h-44 sm:h-52 md:h-60 rounded-md overflow-hidden border shrink-0 shadow-xs"
+                className="relative w-full h-40 sm:h-48 rounded-md overflow-hidden border shrink-0 shadow-xs"
                 style={{ borderColor: `${primaryColor}40` }}
               >
                 <img
@@ -838,7 +879,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
             {/* Multi-Column Fluid Narrative Flow (Equilibrado e alinhado à esquerda sem distorção) */}
             <div
-              className={`columns-1 sm:columns-2 gap-5 flex-1 text-left overflow-hidden ${bodyFontClass}`}
+              className={`columns-1 sm:columns-2 gap-5 flex-1 text-left ${bodyFontClass}`}
               style={{
                 columnFill: "balance",
               }}
@@ -849,7 +890,13 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             {/* Secondary Image (Part 2 at Bottom: Ocupa o espaço restante da página ao final do artigo) */}
             {showSecondaryImage && secondaryPlacement === "bottom" && (
               <div
-                className="relative w-full rounded-md overflow-hidden border flex-1 min-h-[190px] sm:min-h-[230px] md:min-h-[260px] shrink-0 shadow-md group mt-2"
+                className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 ${
+                  isVeryDenseText
+                    ? "h-20 sm:h-24"
+                    : isDenseText
+                    ? "h-28 sm:h-32"
+                    : "flex-1 min-h-[160px] sm:min-h-[190px]"
+                }`}
                 style={{ borderColor: `${primaryColor}40` }}
               >
                 <img

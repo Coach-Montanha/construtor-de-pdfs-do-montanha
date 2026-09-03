@@ -1158,16 +1158,48 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             )}
           </div>
 
-          {formData.pageSpan === 2 && (
-            <div className="flex items-center justify-between p-2 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-              <span className="flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 shrink-0" />
-                <span>
-                  <strong>Diagramação Manual de 2 Páginas:</strong> Use o botão <em>"Dividir Pág. 1 // Pág. 2"</em> para definir onde a página 1 termina e a página 2 começa, eliminando qualquer buraco sem texto.
-                </span>
-              </span>
-            </div>
-          )}
+          {formData.pageSpan === 2 && (() => {
+            const splitRegex = /\n?\s*(?:---|===)\s*(?:QUEBRA DE P[ÁA]GINA|PAGE\s*BREAK)\s*(?:---|===)\s*\n?/i;
+            const hasSplit = splitRegex.test(formData.content || "");
+            const parts = (formData.content || "").split(splitRegex);
+            const charsP1 = hasSplit ? (parts[0] || "").length : 0;
+            const charsP2 = hasSplit ? (parts[1] || "").length : 0;
+
+            return (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-amber-500/10 border-2 border-amber-500/30 text-[11px] gap-2">
+                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+                  <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                  <span>
+                    {hasSplit ? (
+                      <>
+                        <strong>Divisão Manual Ativa:</strong> Pág. 1 ({charsP1} carac.) • Pág. 2 ({charsP2} carac.)
+                      </>
+                    ) : (
+                      <>
+                        <strong>Divisão Automática Inteligente Ativa.</strong> Use o botão <em>"Dividir Pág. 1 // Pág. 2"</em> para fixar exatamente onde a primeira página termina.
+                      </>
+                    )}
+                  </span>
+                </div>
+                {hasSplit ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const merged = (formData.content || "").replace(splitRegex, "\n\n");
+                      setFormData({ ...formData, content: merged });
+                    }}
+                    className="text-[10px] font-bold underline text-amber-700 dark:text-amber-300 hover:text-amber-500 self-end sm:self-auto cursor-pointer"
+                  >
+                    Desfazer Divisão Manual
+                  </button>
+                ) : (
+                  <span className="text-[10px] font-mono text-amber-600/80 shrink-0">
+                    Capacidade: Pág 1 (~500 carac.) / Pág 2 (~1800 carac.)
+                  </span>
+                )}
+              </div>
+            );
+          })()}
 
           {!previewFormatted ? (
             <Textarea
