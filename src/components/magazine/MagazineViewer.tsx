@@ -95,56 +95,21 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
   project.articles
     .filter((art) => art.enabled !== false)
     .forEach((art) => {
-      const isTwoPage = art.pageSpan === 2;
-      if (isTwoPage) {
-        // Page Part 1
+      const span = Math.max(1, art.pageSpan || 1);
+      for (let part = 1; part <= span; part++) {
         activePages.push({
-          id: `${art.id}-part1`,
-          title: `${art.title} (Parte 1)`,
+          id: span > 1 ? `${art.id}-part${part}` : art.id,
+          title: span > 1 ? `${art.title} (Parte ${part}/${span})` : art.title,
           render: (pNum, isPrint) => (
             <ArticleSpread
-              key={`${art.id}-part1`}
+              key={`${art.id}-part${part}`}
               article={art}
               project={project}
               theme={theme}
               pageNumber={pNum}
               isPrintMode={isPrint ?? false}
-              pagePart={1}
-              totalPagesForArticle={2}
-            />
-          ),
-        });
-        // Page Part 2
-        activePages.push({
-          id: `${art.id}-part2`,
-          title: `${art.title} (Parte 2)`,
-          render: (pNum, isPrint) => (
-            <ArticleSpread
-              key={`${art.id}-part2`}
-              article={art}
-              project={project}
-              theme={theme}
-              pageNumber={pNum}
-              isPrintMode={isPrint ?? false}
-              pagePart={2}
-              totalPagesForArticle={2}
-            />
-          ),
-        });
-      } else {
-        activePages.push({
-          id: art.id,
-          title: art.title,
-          render: (pNum, isPrint) => (
-            <ArticleSpread
-              key={art.id}
-              article={art}
-              project={project}
-              theme={theme}
-              pageNumber={pNum}
-              isPrintMode={isPrint ?? false}
-              pagePart={1}
-              totalPagesForArticle={1}
+              pagePart={part}
+              totalPagesForArticle={span}
             />
           ),
         });

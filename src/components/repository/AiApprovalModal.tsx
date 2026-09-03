@@ -63,7 +63,7 @@ export const AiApprovalModal: React.FC<AiApprovalModalProps> = ({
   const [category, setCategory] = useState<string>(initialCategory);
   const [author, setAuthor] = useState<string>(analysis.author);
   const [authorBio, setAuthorBio] = useState<string>(analysis.authorBio);
-  const [pageSpan, setPageSpan] = useState<1 | 2>(analysis.recommendedPageSpan);
+  const [pageSpan, setPageSpan] = useState<number>(analysis.recommendedPageSpan || 1);
   const [layoutTemplate, setLayoutTemplate] = useState<LayoutTemplate>(
     analysis.recommendedTemplate as LayoutTemplate
   );
@@ -195,11 +195,13 @@ export const AiApprovalModal: React.FC<AiApprovalModalProps> = ({
                 <Label className="text-xs font-bold">EXTENSÃO DO ARTIGO NA REVISTA</Label>
                 <select
                   value={pageSpan}
-                  onChange={(e) => setPageSpan(parseInt(e.target.value) as 1 | 2)}
+                  onChange={(e) => setPageSpan(parseInt(e.target.value) || 1)}
                   className="w-full theme-app-input text-xs font-black mt-1 border-2 p-2 rounded cursor-pointer"
                 >
                   <option value={1}>1 Página A4 (Compacto / Padrão)</option>
-                  <option value={2}>2 Páginas A4 (Página Dupla Especial - Recomendado para textos longos)</option>
+                  <option value={2}>2 Páginas A4 (Página Dupla Especial)</option>
+                  <option value={3}>3 Páginas A4 (Matéria Aprofundada)</option>
+                  <option value={4}>4 Páginas A4 (Dossiê Especial / Reportagem Completa)</option>
                 </select>
               </div>
 
@@ -323,7 +325,7 @@ export const AiApprovalModal: React.FC<AiApprovalModalProps> = ({
               />
             </div>
 
-            {pageSpan === 2 && (
+            {pageSpan > 1 && (
               <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
                 <ImagePicker
                   label="Foto Secundária (Página 2)"

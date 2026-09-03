@@ -54,7 +54,10 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const borderColor = theme.borderColor;
   const brandTitle = project.editorialInfo?.headerBrandTitle || project.title;
 
-  const isTwoPage = totalPagesForArticle === 2;
+  const isMultiPage = totalPagesForArticle > 1;
+  const isFirstPage = pagePart === 1;
+  const isLastPage = pagePart === totalPagesForArticle;
+  const isIntermediatePage = pagePart > 1 && pagePart < totalPagesForArticle;
 
   // Split content into clean paragraph chunks
   // Check for manual page break delimiter (Diagramação Manual)
@@ -70,78 +73,80 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   // Hero Image layout styling (needed early to calculate available text capacity)
   const heroLayout = article.heroImageLayout || "banner";
   const heroSize = article.heroImageHeight || "large";
-  const showHeroImage = article.heroImage && heroLayout !== "hidden" && pagePart === 1;
+  const showHeroImage = article.heroImage && heroLayout !== "hidden" && isFirstPage;
   const secondaryPlacement = article.secondaryImagePlacement || "bottom";
-  const showSecondaryImage = article.secondaryImage && isTwoPage && pagePart === 2;
+  const showSecondaryImage = Boolean(article.secondaryImage && isMultiPage && isLastPage);
 
   // Determine page chunks (Manual diagramming has 100% precedence, otherwise layout-capacity balanced)
   let pageChunks: string[] = [];
-  if (isTwoPage) {
+  if (isMultiPage) {
     if (hasManualSplit) {
       const parts = (article.content || "").split(manualSplitRegex);
-      const targetContent = pagePart === 1 ? parts[0] || "" : parts[1] || "";
+      const targetContent = parts[pagePart - 1] || "";
       pageChunks = targetContent
         .split("\n\n")
         .map((c) => c.trim())
         .filter(Boolean);
     } else if (allRawChunks.length <= 1) {
-      pageChunks = pagePart === 1 ? allRawChunks : [];
+      pageChunks = isFirstPage ? allRawChunks : [];
     } else {
+      const N = totalPagesForArticle;
       const totalAllChars = allRawChunks.reduce((acc, c) => acc + c.length, 0);
 
-      // Page 1 capacity:
-      // With Title + Deck + Hero (~180px), Page 1 comfortably fits 950-1300 chars of text in 2 columns.
-      // Without Hero, Page 1 can fit up to 1800 chars.
-      // Page 2 has top strip and secondary photo at base, fitting 1100-1800 chars.
-      let targetPage1Ratio = 0.46;
-      let maxPage1Chars = 1350;
+      // Define capacity weights for each page
       const hasHero = Boolean(article.heroImage && heroLayout !== "hidden");
-      if (!hasHero) {
-        targetPage1Ratio = 0.50;
-        maxPage1Chars = 1800;
-      } else if (heroSize === "large") {
-        targetPage1Ratio = 0.42;
-        maxPage1Chars = 1100;
-      } else if (heroSize === "medium") {
-        targetPage1Ratio = 0.45;
-        maxPage1Chars = 1250;
-      } else {
-        targetPage1Ratio = 0.48;
-        maxPage1Chars = 1400;
-      }
-
-      const targetPage1Chars = Math.min(totalAllChars * targetPage1Ratio, maxPage1Chars);
-
-      let runningChars = 0;
-      let splitIdx = 1;
-
-      for (let i = 0; i < allRawChunks.length - 1; i++) {
-        runningChars += allRawChunks[i].length;
-        if (runningChars >= targetPage1Chars) {
-          const diffCurrent = Math.abs(runningChars - targetPage1Chars);
-          const diffPrev = Math.abs((runningChars - allRawChunks[i].length) - targetPage1Chars);
-          splitIdx = diffCurrent < diffPrev ? i + 1 : Math.max(1, i);
-          break;
+      const pageCapacities: number[] = [];
+      for (let p = 1; p <= N; p++) {
+        if (p === 1) {
+          pageCapacities.push(hasHero ? 1150 : 1600);
+        } else if (p === N) {
+          pageCapacities.push(1250);
+        } else {
+          pageCapacities.push(1800);
         }
-        splitIdx = i + 1;
       }
+      const totalCapacity = pageCapacities.reduce((a, b) => a + b, 0);
 
-      // Ensure Page 1 has at least 1 chunk, and Page 2 has at least 1 chunk
-      splitIdx = Math.max(1, Math.min(splitIdx, allRawChunks.length - 1));
+      // Determine cut indices [0, cut1, cut2, ..., allRawChunks.length]
+      const cutIndices: number[] = [0];
+      let currentChunkIdx = 0;
+      let runningCharsTotal = 0;
+      let targetCumulative = 0;
 
-      // CRITICAL: Prevent leaving an orphaned subheader (###) at the very bottom of Page 1!
-      // If the chunk immediately before the split is a subheader (### or ##), move it to Page 2
-      // ONLY if moving it still leaves Page 1 with at least 1 text chunk!
-      if (splitIdx > 1 && splitIdx < allRawChunks.length) {
-        const lastChunkOnPage1 = allRawChunks[splitIdx - 1] || "";
-        if (lastChunkOnPage1.startsWith("###") || lastChunkOnPage1.startsWith("##")) {
-          if (splitIdx - 1 >= 1) {
-            splitIdx = splitIdx - 1;
+      for (let p = 0; p < N - 1; p++) {
+        const targetForThisPage = (pageCapacities[p] / totalCapacity) * totalAllChars;
+        targetCumulative += targetForThisPage;
+
+        while (
+          currentChunkIdx < allRawChunks.length - (N - 1 - p) &&
+          runningCharsTotal + allRawChunks[currentChunkIdx].length < targetCumulative
+        ) {
+          runningCharsTotal += allRawChunks[currentChunkIdx].length;
+          currentChunkIdx++;
+        }
+
+        // Guarantee progress of at least 1 chunk per page
+        if (currentChunkIdx <= cutIndices[p]) {
+          currentChunkIdx = cutIndices[p] + 1;
+        }
+
+        // Avoid leaving an orphaned subheader (###) at the bottom of the page
+        if (currentChunkIdx > 1 && currentChunkIdx < allRawChunks.length) {
+          const chunkAtCut = allRawChunks[currentChunkIdx - 1] || "";
+          if (chunkAtCut.startsWith("###") || chunkAtCut.startsWith("##")) {
+            if (currentChunkIdx - 1 > cutIndices[p]) {
+              currentChunkIdx--;
+            }
           }
         }
-      }
 
-      pageChunks = pagePart === 1 ? allRawChunks.slice(0, splitIdx) : allRawChunks.slice(splitIdx);
+        cutIndices.push(currentChunkIdx);
+      }
+      cutIndices.push(allRawChunks.length);
+
+      const startIdx = cutIndices[pagePart - 1] ?? 0;
+      const endIdx = cutIndices[pagePart] ?? allRawChunks.length;
+      pageChunks = allRawChunks.slice(startIdx, endIdx);
     }
   } else {
     pageChunks = allRawChunks;
@@ -316,20 +321,20 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     );
   };
 
-  // Quote & Takeaways visibility
+  // Quote & Takeaways visibility (at the end of the article)
   const hasPullQuote = article.pullQuotes && article.pullQuotes.length > 0;
   const hasTakeaways = article.keyTakeaways && article.keyTakeaways.length > 0;
-  const showQuoteOnThisPage = hasPullQuote && (!isTwoPage || pagePart === 2);
-  const showTakeawaysOnThisPage = hasTakeaways && (!isTwoPage || pagePart === 2);
+  const showQuoteOnThisPage = hasPullQuote && (!isMultiPage || isLastPage);
+  const showTakeawaysOnThisPage = hasTakeaways && (!isMultiPage || isLastPage);
 
   // Visual Spotlight for small articles (fills empty space dynamically with high-end photography)
   const shouldShowArticleSpotlight =
-    (!isTwoPage && totalPageChars < 950) ||
-    (isTwoPage && pagePart === 1 && (!showHeroImage || totalPageChars < 700));
+    (!isMultiPage && totalPageChars < 950) ||
+    (isMultiPage && isFirstPage && (!showHeroImage || totalPageChars < 700));
 
   const getContextualSpotlightImage = () => {
     if (article.bottomSpotlightImage) return article.bottomSpotlightImage;
-    if (!isTwoPage && article.secondaryImage) return article.secondaryImage;
+    if (!isMultiPage && article.secondaryImage) return article.secondaryImage;
 
     const hero = article.heroImage || "";
     const textContent = (article.title + " " + (article.content || "")).toLowerCase();
@@ -779,8 +784,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
         ) : (
           /* ----------------- 4. TEMPLATE: EDITORIAL ARTICLE SPREAD ----------------- */
           <div className="flex-1 flex flex-col justify-start space-y-2.5 overflow-hidden min-h-0">
-            {/* Header Area (Part 1: Title, Subtitle, Author / Part 2: Continuing Header) */}
-            {pagePart === 1 ? (
+            {/* Header Area (Part 1: Title, Subtitle, Author / Part 2+: Continuing Header) */}
+            {isFirstPage ? (
               <div className="shrink-0">
                 <h2
                   className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight leading-[0.95] mb-1 ${headlineFontClass}`}
@@ -818,7 +823,9 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             ) : (
               <div className="shrink-0 flex items-center justify-between border-b pb-1 text-xs font-mono font-black" style={{ borderColor: `${primaryColor}40` }}>
-                <span className="uppercase text-amber-500">// {article.title} (PARTE 2 // CONCLUSÃO)</span>
+                <span className="uppercase text-amber-500">
+                  // {article.title} ({isLastPage ? `PARTE ${pagePart} // CONCLUSÃO` : `PARTE ${pagePart} // CONTINUAÇÃO`})
+                </span>
                 <span className="text-[9px] opacity-75 font-semibold uppercase">{article.author}</span>
               </div>
             )}
@@ -827,7 +834,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             {showHeroImage && (
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-sm ${
-                  isTwoPage
+                  isMultiPage
                     ? isVeryDenseText
                       ? "h-24 sm:h-28"
                       : isDenseText
@@ -897,8 +904,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
             </div>
 
-            {/* Secondary Image (Part 2 at Bottom: Ocupa o espaço restante da página ao final do artigo) */}
-            {isTwoPage && pagePart === 2 && secondaryPlacement === "bottom" && (
+            {/* Secondary Image (Last Page at Bottom: Ocupa o espaço restante da página ao final do artigo) */}
+            {isMultiPage && isLastPage && secondaryPlacement === "bottom" && (
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 ${
                   isVeryDenseText
@@ -1018,7 +1025,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       >
         <div className="flex items-center gap-2">
           <span>{project.title} • {project.coverConfig?.editionNumber || project.editionNumber ? `ED. #${project.coverConfig?.editionNumber || project.editionNumber}` : "ED. #01"}</span>
-          {isTwoPage && pagePart === 1 && (
+          {isMultiPage && !isLastPage && (
             <span className="text-amber-500 font-black animate-pulse">
               (CONTINUA NA PÁGINA {formatPageNumber(pageNumber + 1)} ▸)
             </span>

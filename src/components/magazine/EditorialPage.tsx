@@ -43,14 +43,14 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
     .filter((art) => art.enabled !== false)
     .map((art) => {
       const startPage = currentOffset;
-      const isTwoPage = art.pageSpan === 2;
-      const span = isTwoPage ? 2 : 1;
+      const span = Math.max(1, art.pageSpan || 1);
       currentOffset += span;
       return {
         article: art,
         startPage,
         endPage: startPage + span - 1,
-        isTwoPage,
+        isMultiPage: span > 1,
+        span,
       };
     });
 

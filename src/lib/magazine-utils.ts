@@ -32,7 +32,7 @@ export function calculateMagazineTotalPages(project: MagazineProject): number {
 
   const activeArticles = (project.articles || []).filter((a) => a.enabled !== false);
   activeArticles.forEach((art) => {
-    count += art.pageSpan === 2 ? 2 : 1;
+    count += Math.max(1, art.pageSpan || 1);
   });
 
   if (vis.showBackCover) count++;

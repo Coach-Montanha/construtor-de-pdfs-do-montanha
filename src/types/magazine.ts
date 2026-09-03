@@ -214,7 +214,7 @@ export interface Article {
   bottomSpotlightImage?: string;
   bottomSpotlightCaption?: string;
   bottomSpotlightPosition?: string;
-  pageSpan?: 1 | 2; // 1 = Página Única, 2 = Página Dupla / Artigo Longo
+  pageSpan?: number; // 1 = Página Única, 2 = Página Dupla, 3, 4, 5, 6+ páginas
   quotePlacement?: "end" | "side" | "none"; // Posição da citação (Padrão: no final do artigo)
   textDensity?: "compact" | "normal" | "spacious";
   content: string; // Markdown or raw text paragraphs

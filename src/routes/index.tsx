@@ -325,7 +325,7 @@ function Index() {
       pullQuotes: [],
       keyTakeaways: [],
       layoutTemplate: doc.wordCount > 550 ? "editorial-lead" : "two-column-quote",
-      pageSpan: doc.wordCount > 550 ? 2 : 1,
+      pageSpan: doc.wordCount > 1100 ? 3 : doc.wordCount > 550 ? 2 : 1,
       quotePlacement: "end",
       textDensity: "normal",
       tags: [doc.category || "Geral", "Alta Performance"],
@@ -428,56 +428,21 @@ function Index() {
   project.articles
     .filter((art) => art.enabled !== false)
     .forEach((art) => {
-      const isTwoPage = art.pageSpan === 2;
-      if (isTwoPage) {
-        // Page Part 1
+      const span = Math.max(1, art.pageSpan || 1);
+      for (let part = 1; part <= span; part++) {
         activePages.push({
-          id: `${art.id}-part1`,
-          title: `${art.title} (Parte 1)`,
+          id: span > 1 ? `${art.id}-part${part}` : art.id,
+          title: span > 1 ? `${art.title} (Parte ${part}/${span})` : art.title,
           render: (pNum, isPrint) => (
             <ArticleSpread
-              key={`${art.id}-part1`}
+              key={`${art.id}-part${part}`}
               article={art}
               project={project}
               theme={currentPublicationTheme}
               pageNumber={pNum}
               isPrintMode={isPrint ?? false}
-              pagePart={1}
-              totalPagesForArticle={2}
-            />
-          ),
-        });
-        // Page Part 2
-        activePages.push({
-          id: `${art.id}-part2`,
-          title: `${art.title} (Parte 2)`,
-          render: (pNum, isPrint) => (
-            <ArticleSpread
-              key={`${art.id}-part2`}
-              article={art}
-              project={project}
-              theme={currentPublicationTheme}
-              pageNumber={pNum}
-              isPrintMode={isPrint ?? false}
-              pagePart={2}
-              totalPagesForArticle={2}
-            />
-          ),
-        });
-      } else {
-        activePages.push({
-          id: art.id,
-          title: art.title,
-          render: (pNum, isPrint) => (
-            <ArticleSpread
-              key={art.id}
-              article={art}
-              project={project}
-              theme={currentPublicationTheme}
-              pageNumber={pNum}
-              isPrintMode={isPrint ?? false}
-              pagePart={1}
-              totalPagesForArticle={1}
+              pagePart={part}
+              totalPagesForArticle={span}
             />
           ),
         });
@@ -728,8 +693,8 @@ function Index() {
                 (acc, a) => acc + (a.estimatedReadTime || 4),
                 0
               );
-              const totalDoublePages = activeArts.filter((a) => a.pageSpan === 2).length;
-              const totalSinglePages = activeArts.filter((a) => a.pageSpan !== 2).length;
+              const totalMultiPages = activeArts.filter((a) => (a.pageSpan || 1) > 1).length;
+              const totalSinglePages = activeArts.filter((a) => (a.pageSpan || 1) === 1).length;
 
               return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -742,7 +707,7 @@ function Index() {
                       <span>{totalPages} Páginas A4</span>
                     </div>
                     <span className="text-[9px] opacity-60 block">
-                      {totalSinglePages} simples + {totalDoublePages} duplas
+                      {totalSinglePages} simples + {totalMultiPages} estendidas
                     </span>
                   </div>
 
@@ -793,7 +758,8 @@ function Index() {
               {project.articles.map((art, idx) => {
                 const calculatedPageNum = activePages.findIndex((p) => p.id === art.id || p.id === `${art.id}-part1`) + 1;
                 const pageNum = calculatedPageNum > 0 ? calculatedPageNum : idx + 4;
-                const isDouble = art.pageSpan === 2;
+                const span = Math.max(1, art.pageSpan || 1);
+                const isMulti = span > 1;
                 const isEnabled = art.enabled !== false;
 
                 return (
@@ -824,13 +790,13 @@ function Index() {
                             {art.category}
                           </span>
                           <span className="text-[10px] font-mono font-black text-amber-600">
-                            {isDouble
-                              ? `PÁG. ${formatPageNumber(pageNum)}-${formatPageNumber(pageNum + 1)}`
+                            {isMulti
+                              ? `PÁG. ${formatPageNumber(pageNum)}-${formatPageNumber(pageNum + span - 1)}`
                               : `PÁG. ${formatPageNumber(pageNum)}`}
                           </span>
-                          {isDouble && (
+                          {isMulti && (
                             <span className="bg-black text-amber-400 font-mono text-[8px] font-black px-1.5 py-0.2 rounded border border-black uppercase">
-                              PÁGINA DUPLA
+                              {span === 2 ? "PÁGINA DUPLA" : `${span} PÁGINAS`}
                             </span>
                           )}
                           <span className="text-[10px] opacity-75 font-semibold flex items-center gap-1">
