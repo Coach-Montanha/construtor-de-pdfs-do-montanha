@@ -1007,6 +1007,7 @@ function Index() {
         onClose={() => setIsArticleModalOpen(false)}
         article={editingArticle}
         onSave={handleSaveArticle}
+        project={project}
       />
 
       <AiStudioDialog

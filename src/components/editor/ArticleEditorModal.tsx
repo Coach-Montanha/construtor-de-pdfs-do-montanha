@@ -6,7 +6,11 @@ import {
   WorkoutExercise,
   ProductPromotion,
   FacilitySpotlight,
+  MagazineProject,
+  PublicationTheme,
 } from "../../types/magazine";
+import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../../lib/sample-data";
+import { ArticleSpread } from "../magazine/ArticleSpread";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +60,7 @@ interface ArticleEditorModalProps {
   onClose: () => void;
   article: Article | null;
   onSave: (article: Article) => void;
+  project?: MagazineProject;
 }
 
 export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
@@ -63,6 +68,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   onClose,
   article,
   onSave,
+  project,
 }) => {
   const [formData, setFormData] = useState<Article>({
     id: "art-" + Date.now(),
@@ -90,6 +96,14 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
   const [aiStatusMsg, setAiStatusMsg] = useState<string>("");
   const [previewFormatted, setPreviewFormatted] = useState<boolean>(false);
+
+  // Live WYSIWYG Page Preview States
+  const [activeModalTab, setActiveModalTab] = useState<"edit" | "preview">("edit");
+  const [previewViewMode, setPreviewViewMode] = useState<"part1" | "part2" | "both">("part1");
+
+  const effectiveProject: MagazineProject = project || INITIAL_MAGAZINE_PROJECT;
+  const effectiveTheme: PublicationTheme =
+    MAGAZINE_THEMES.find((t) => t.id === effectiveProject.themeId) || MAGAZINE_THEMES[0]!;
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -385,13 +399,46 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         data-testid="article-modal"
-        className="theme-app-card max-w-4xl max-h-[90vh] overflow-y-auto p-6 custom-scrollbar font-sans border-2 shadow-2xl"
+        className={`theme-app-card ${
+          activeModalTab === "preview" && previewViewMode === "both"
+            ? "max-w-6xl"
+            : "max-w-4xl"
+        } max-h-[92vh] overflow-y-auto p-4 sm:p-6 custom-scrollbar font-sans border-2 shadow-2xl transition-all duration-200`}
       >
-        <DialogHeader className="border-b-2 border-current pb-3">
-          <DialogTitle className="text-xl font-black flex items-center gap-2 uppercase">
+        <DialogHeader className="border-b-2 border-current pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <DialogTitle className="text-base sm:text-lg font-black flex items-center gap-2 uppercase">
             <Wand2 className="w-5 h-5 text-amber-500" />
-            <span>Editor Editorial de Artigos, Treinos & Anúncios</span>
+            <span>Editor Editorial de Artigos</span>
           </DialogTitle>
+
+          {/* Segmented Mode Switcher: Editor vs Prévia WYSIWYG */}
+          <div className="flex items-center gap-1.5 p-1 rounded-lg bg-slate-900/80 border border-slate-700 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveModalTab("edit")}
+              className={`px-3 py-1.5 rounded-md text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeModalTab === "edit"
+                  ? "bg-amber-400 text-black shadow-xs border border-black"
+                  : "text-slate-300 hover:text-white"
+              }`}
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Editar Conteúdo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveModalTab("preview")}
+              className={`px-3 py-1.5 rounded-md text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeModalTab === "preview"
+                  ? "bg-amber-400 text-black shadow-xs border border-black"
+                  : "text-slate-300 hover:text-white"
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Prévia da Revista (A4)</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+          </div>
         </DialogHeader>
 
         {/* Validation Error Alert */}
@@ -413,7 +460,9 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4">
+        {activeModalTab === "edit" ? (
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4">
           {/* Left Column: Basic Details & Titles */}
           <div className="space-y-4">
             <div>
@@ -1169,6 +1218,183 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             </div>
           )}
         </div>
+      </div>
+    ) : (
+      /* Live WYSIWYG Page Preview (A4 Magazine Spread) */
+      <div className="my-4 space-y-3 animate-fadeIn">
+        {/* Top Toolbar in Preview Mode */}
+        <div className="p-3 rounded-xl border-2 theme-app-card-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          {/* If 2 pages, sub-tab selector */}
+          {formData.pageSpan === 2 ? (
+            <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700">
+              <button
+                type="button"
+                onClick={() => setPreviewViewMode("part1")}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
+                  previewViewMode === "part1"
+                    ? "bg-amber-400 text-black font-black shadow-xs"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                📄 Pág. 1 (Abertura)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewViewMode("part2")}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
+                  previewViewMode === "part2"
+                    ? "bg-amber-400 text-black font-black shadow-xs"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                📄 Pág. 2 (Conclusão)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewViewMode("both")}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
+                  previewViewMode === "both"
+                    ? "bg-amber-400 text-black font-black shadow-xs"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                📖 Ambas Lado a Lado
+              </button>
+            </div>
+          ) : (
+            <div className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5" />
+              <span>PRÉVIA FIEL WYSIWYG • PÁGINA ÚNICA A4</span>
+            </div>
+          )}
+
+          {/* Quick Adjustments during Preview */}
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-mono opacity-70 font-bold uppercase">Densidade:</span>
+              <select
+                value={formData.textDensity || "normal"}
+                onChange={(e) => setFormData({ ...formData, textDensity: e.target.value as any })}
+                className="theme-app-input text-xs py-0.5 px-1.5 rounded border"
+              >
+                <option value="compact">Compacto</option>
+                <option value="normal">Normal</option>
+                <option value="spacious">Espaçoso</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-mono opacity-70 font-bold uppercase">Foto Hero:</span>
+              <select
+                value={formData.heroImageHeight || "large"}
+                onChange={(e) => setFormData({ ...formData, heroImageHeight: e.target.value as any })}
+                className="theme-app-input text-xs py-0.5 px-1.5 rounded border"
+              >
+                <option value="large">Grande (2-3x)</option>
+                <option value="medium">Média</option>
+                <option value="compact">Compacta</option>
+              </select>
+            </div>
+
+            {formData.pageSpan === 2 && (
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-mono opacity-70 font-bold uppercase">Foto Pág 2:</span>
+                <select
+                  value={formData.secondaryImagePlacement || "bottom"}
+                  onChange={(e) => setFormData({ ...formData, secondaryImagePlacement: e.target.value as any })}
+                  className="theme-app-input text-xs py-0.5 px-1.5 rounded border"
+                >
+                  <option value="bottom">Ao Final (Base)</option>
+                  <option value="top">No Topo</option>
+                </select>
+              </div>
+            )}
+
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-mono opacity-70 font-bold uppercase">Extensão:</span>
+              <select
+                value={formData.pageSpan || 1}
+                onChange={(e) => setFormData({ ...formData, pageSpan: parseInt(e.target.value) as 1 | 2 })}
+                className="theme-app-input text-xs py-0.5 px-1.5 rounded border"
+              >
+                <option value={1}>1 Página</option>
+                <option value={2}>2 Páginas</option>
+              </select>
+            </div>
+
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setActiveModalTab("edit")}
+              className="h-7 text-xs font-bold flex items-center gap-1 border border-current cursor-pointer"
+            >
+              <Edit3 className="w-3 h-3 text-amber-500" />
+              <span>Ajustar Texto</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* A4 Magazine Spread Page Frame */}
+        <div className="bg-slate-950 p-3 sm:p-6 rounded-xl border-2 border-amber-500/30 flex justify-center items-start overflow-x-auto shadow-2xl custom-scrollbar min-h-[580px]">
+          {formData.pageSpan === 2 && previewViewMode === "both" ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full max-w-5xl">
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-mono font-bold text-amber-500 mb-1.5">
+                  // PÁGINA 1 DE 2 (ABERTURA)
+                </span>
+                <div className="w-full aspect-[1/1.414] rounded-lg shadow-2xl border border-slate-700 overflow-hidden bg-slate-900">
+                  <ArticleSpread
+                    article={formData}
+                    project={effectiveProject}
+                    theme={effectiveTheme}
+                    pageNumber={4}
+                    pagePart={1}
+                    totalPagesForArticle={2}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-mono font-bold text-amber-500 mb-1.5">
+                  // PÁGINA 2 DE 2 (CONCLUSÃO)
+                </span>
+                <div className="w-full aspect-[1/1.414] rounded-lg shadow-2xl border border-slate-700 overflow-hidden bg-slate-900">
+                  <ArticleSpread
+                    article={formData}
+                    project={effectiveProject}
+                    theme={effectiveTheme}
+                    pageNumber={5}
+                    pagePart={2}
+                    totalPagesForArticle={2}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center w-full max-w-[580px]">
+              <span className="text-[10px] font-mono font-bold text-amber-500 mb-1.5">
+                // {formData.pageSpan === 2
+                  ? previewViewMode === "part2"
+                    ? "PÁGINA 2 DE 2 (CONCLUSÃO)"
+                    : "PÁGINA 1 DE 2 (ABERTURA)"
+                  : "PÁGINA ÚNICA DA REVISTA (A4)"}
+              </span>
+              <div className="w-full aspect-[1/1.414] rounded-lg shadow-2xl border border-slate-700 overflow-hidden bg-slate-900">
+                <ArticleSpread
+                  article={formData}
+                  project={effectiveProject}
+                  theme={effectiveTheme}
+                  pageNumber={formData.pageSpan === 2 && previewViewMode === "part2" ? 5 : 4}
+                  pagePart={formData.pageSpan === 2 && previewViewMode === "part2" ? 2 : 1}
+                  totalPagesForArticle={formData.pageSpan || 1}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
 
         {/* Footer Actions */}
         <DialogFooter className="border-t pt-4 flex items-center justify-between">
