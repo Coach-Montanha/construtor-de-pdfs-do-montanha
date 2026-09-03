@@ -79,7 +79,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const secondaryPlacement = article.secondaryImagePlacement || "bottom";
   const showSecondaryImageTop = Boolean(article.secondaryImage && isMultiPage && isLastPage && secondaryPlacement === "top");
 
-  // Determine page chunks (Manual diagramming has 100% precedence, otherwise greedy continuous packing)
+  // Determine page chunks (Manual diagramming has 100% precedence, otherwise balanced proportional packing)
   let pageChunks: string[] = [];
   if (effectiveTotalPages > 1) {
     if (hasManualSplit) {
@@ -93,65 +93,67 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       pageChunks = isFirstPage ? allRawChunks : [];
     } else {
       const N = effectiveTotalPages;
+      const totalAllChars = allRawChunks.reduce((acc, c) => acc + c.length, 0);
 
-      // Real visual capacity per page in 2-column editorial layout:
-      // Page 1: has title, subtitle, author, and optional hero image.
-      // Fits ~1,350 to 1,500 chars with hero, or ~2,200 chars without hero.
-      const page1Cap = showHeroImage
-        ? heroSize === "large"
-          ? 1350
-          : heroSize === "medium"
-          ? 1450
-          : 1600
-        : 2200;
+      // Balanced proportional distribution:
+      // Page 1 with hero banner has relative capacity 1.0 (~1.600-2.000 chars)
+      // Intermediate pages have full column height capacity 1.4 (~2.400-2.800 chars)
+      // Final page with closing photo + takeaways has capacity 1.0 (~1.600-2.000 chars)
+      const pageWeights: number[] = [];
+      for (let p = 0; p < N; p++) {
+        if (p === 0) {
+          pageWeights.push(showHeroImage ? 1.0 : 1.4);
+        } else if (p === N - 1) {
+          pageWeights.push(1.0);
+        } else {
+          pageWeights.push(1.4);
+        }
+      }
+      const sumWeights = pageWeights.reduce((a, b) => a + b, 0);
 
-      // Intermediate pages: full height 2 columns = ~2,200 to 2,400 chars.
-      const intermediateCap = 2300;
-
-      // Last page: leaves space for closing image at bottom (~180px) + pull quote = ~1,400 chars.
-      const lastPageCap = 1400;
-
+      // Distribute chunks so each page gets its proportional target:
       const pageSlices: string[][] = Array.from({ length: N }, () => []);
-      let p = 0;
-      let currentChars = 0;
+      let currentSlice = 0;
+      let currentSliceChars = 0;
+      let targetCumulative = (pageWeights[0]! / sumWeights) * totalAllChars;
 
       for (let i = 0; i < allRawChunks.length; i++) {
-        const chunk = allRawChunks[i];
+        const chunk = allRawChunks[i]!;
         const remainingChunks = allRawChunks.length - i;
-        const remainingPages = N - p;
+        const remainingPages = N - currentSlice;
 
-        const currentCap = p === 0 ? page1Cap : p === N - 1 ? lastPageCap : intermediateCap;
+        // Ensure each remaining page gets at least 1 chunk
+        const mustAdvanceForPages = remainingChunks < remainingPages && currentSlice < N - 1;
 
-        // Advance if remaining chunks are needed to ensure each remaining page gets at least 1 chunk
-        const mustAdvanceForPages = remainingChunks < remainingPages && p < N - 1;
+        // Advance if current slice has reached its proportional target and we have pages left
+        const hasReachedTarget =
+          currentSlice < N - 1 &&
+          pageSlices[currentSlice]!.length > 0 &&
+          currentSliceChars + chunk.length > targetCumulative;
 
-        // Or advance if current page is full and we have pages left to spill into
-        const isPageFull =
-          p < N - 1 &&
-          pageSlices[p].length > 0 &&
-          currentChars + chunk.length > currentCap;
-
-        if (mustAdvanceForPages || isPageFull) {
-          // Avoid leaving an orphaned subheader (### or ##) at the bottom of the page
-          const lastAdded = pageSlices[p][pageSlices[p].length - 1];
+        if (mustAdvanceForPages || hasReachedTarget) {
+          // Avoid leaving an orphaned heading (###, ##, or //) at the bottom of the page
+          const lastAdded = pageSlices[currentSlice]![pageSlices[currentSlice]!.length - 1];
           if (
             lastAdded &&
-            (lastAdded.startsWith("###") || lastAdded.startsWith("##")) &&
-            pageSlices[p].length > 1
+            (lastAdded.match(/^#{1,4}\s/) || lastAdded.startsWith("//")) &&
+            pageSlices[currentSlice]!.length > 1
           ) {
-            pageSlices[p].pop();
-            p++;
-            pageSlices[p] = [lastAdded, chunk];
-            currentChars = lastAdded.length + chunk.length;
+            pageSlices[currentSlice]!.pop();
+            currentSlice++;
+            pageSlices[currentSlice] = [lastAdded, chunk];
+            currentSliceChars = lastAdded.length + chunk.length;
+            targetCumulative += (pageWeights[currentSlice]! / sumWeights) * totalAllChars;
             continue;
           }
 
-          p++;
-          currentChars = 0;
+          currentSlice++;
+          currentSliceChars = 0;
+          targetCumulative += (pageWeights[currentSlice]! / sumWeights) * totalAllChars;
         }
 
-        pageSlices[p].push(chunk);
-        currentChars += chunk.length;
+        pageSlices[currentSlice]!.push(chunk);
+        currentSliceChars += chunk.length;
       }
 
       pageChunks = pageSlices[(pagePart ?? 1) - 1] || [];
@@ -161,20 +163,20 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   }
 
   const totalPageChars = pageChunks.reduce((sum, c) => sum + c.length, 0);
-  const isVeryDenseText = totalPageChars > 1650;
-  const isDenseText = totalPageChars > 1150;
-  const isShortPageText = totalPageChars < 750;
+  const isVeryDenseText = totalPageChars > 1900;
+  const isDenseText = totalPageChars > 1350;
+  const isShortPageText = totalPageChars < 850;
 
   // Dynamic Text Density / Font Sizing based on explicit density AND real text volume
   const density = article.textDensity || "normal";
   const bodyTextSizeClass =
     density === "compact" || isVeryDenseText
-      ? "text-[9.5px] leading-snug sm:text-[10px] sm:leading-snug mb-1.5"
+      ? "text-[10px] leading-[1.55] sm:text-[10.5px] sm:leading-[1.55] mb-2"
       : density === "spacious" || isShortPageText
-      ? "text-[11px] leading-relaxed sm:text-[11.5px] sm:leading-relaxed mb-3"
+      ? "text-[12px] leading-[1.75] sm:text-[12.5px] sm:leading-[1.75] mb-3.5"
       : isDenseText
-      ? "text-[10px] leading-snug sm:text-[10.5px] sm:leading-snug mb-2"
-      : "text-[10.5px] leading-relaxed sm:text-[11px] sm:leading-relaxed mb-2.5";
+      ? "text-[10.5px] leading-[1.6] sm:text-[11px] sm:leading-[1.6] mb-2.5"
+      : "text-[11px] leading-[1.65] sm:text-[11.5px] sm:leading-[1.65] mb-2.5";
 
   // Helper to parse inline rich typography tokens (bold, italic, underline, mark, quotes)
   const renderInlineFormatted = (rawText: string) => {
@@ -257,17 +259,36 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
   // Render individual paragraph chunks with markdown and rich formatting support
   const renderSingleChunk = (chunk: string, idx: number, isFirstOverall: boolean) => {
-    // Standalone H2 / Subheaders (### or ##)
-    if (chunk.startsWith("### ") || chunk.startsWith("## ")) {
-      const cleanTitle = chunk.replace(/^#+\s*/, "");
+    // Standalone Headings (###, ##, # with or without space, ex: "###Objetivo do treino.")
+    const headingMatch = chunk.match(/^#{1,4}\s*(.*)/);
+    if (headingMatch && headingMatch[1]?.trim()) {
+      const cleanTitle = headingMatch[1].replace(/[*_#]/g, "").trim();
       return (
-        <div key={idx} className="mt-2 mb-1 pb-0.5 border-b break-inside-avoid break-inside-avoid-column" style={{ borderColor: `${primaryColor}50` }}>
+        <div key={idx} className="mt-3 mb-1.5 pb-1 border-b break-inside-avoid break-inside-avoid-column flex items-center gap-1.5" style={{ borderColor: `${primaryColor}40` }}>
+          <span className="text-[9px] font-mono font-black" style={{ color: primaryColor }}>//</span>
           <h4
-            className={`text-[10.5px] sm:text-[11px] font-black uppercase tracking-tight flex items-center gap-1 ${headlineFontClass}`}
+            className={`text-[11px] sm:text-[11.5px] font-black uppercase tracking-wide ${headlineFontClass}`}
             style={{ color: primaryColor }}
           >
-            <span>//</span>
-            <span>{cleanTitle}</span>
+            {cleanTitle}
+          </h4>
+        </div>
+      );
+    }
+
+    // Section Tags or Uppercase Subheaders starting with "//" (ex: "// POR QUE O REMO FUNCIONA?" ou "// CONCLUSÃO.")
+    if (chunk.startsWith("//")) {
+      const cleanTitle = chunk.replace(/^\/+\s*/, "").replace(/[*_]/g, "").trim();
+      return (
+        <div key={idx} className="mt-3 mb-1.5 pb-0.5 border-b break-inside-avoid break-inside-avoid-column flex items-center gap-1.5" style={{ borderColor: `${primaryColor}40` }}>
+          <span className="text-[7.5px] font-mono font-black uppercase px-1.5 py-0.5 rounded" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
+            // SEÇÃO
+          </span>
+          <h4
+            className={`text-[10.5px] sm:text-[11px] font-black uppercase tracking-wider ${headlineFontClass}`}
+            style={{ color: primaryColor }}
+          >
+            {cleanTitle}
           </h4>
         </div>
       );
@@ -330,15 +351,29 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   };
 
   // Quote & Takeaways visibility (always at the very end of the article)
-  const hasPullQuote = article.pullQuotes && article.pullQuotes.length > 0;
-  const hasTakeaways = article.keyTakeaways && article.keyTakeaways.length > 0;
+  const hasPullQuote = Boolean(article.pullQuotes && article.pullQuotes.length > 0 && article.pullQuotes[0]?.trim());
+  const hasTakeaways = Boolean(article.keyTakeaways && article.keyTakeaways.length > 0 && article.keyTakeaways.some(t => t.trim()));
   const showQuoteOnThisPage = hasPullQuote && isLastPage;
   const showTakeawaysOnThisPage = hasTakeaways && isLastPage;
 
-  // Closing Editorial Image condition:
-  // Rendered on the LAST page of EVERY article whenever there is space to occupy,
-  // guaranteeing no dark holes anywhere in the magazine.
-  const showClosingImage = isLastPage && !showSecondaryImageTop && (!isFirstPage || !showHeroImage || totalPageChars < 1350);
+  // Visual features across ALL pages to eliminate dark voids completely:
+  // 1. Last Page: always receives closing editorial image (unless user explicitly put a secondary image at the top)
+  const showClosingImage = isLastPage && !showSecondaryImageTop;
+
+  // 2. Page 1 of multi-page articles: if text doesn't fill the space below hero (< 1.600 chars), display supporting feature
+  const showPage1Feature = isFirstPage && isMultiPage && totalPageChars < 1600;
+
+  // 3. Intermediate pages: if text doesn't fill the full 950px column height (< 2.200 chars), display supporting photo
+  const showIntermediateFeature = isIntermediatePage && totalPageChars < 2200;
+
+  // 4. Single-page articles: if text is short (< 1.400 chars), display visual spotlight
+  const showSinglePageFeature = !isMultiPage && totalPageChars < 1400;
+
+  const hasBottomFeature =
+    showClosingImage ||
+    showPage1Feature ||
+    showIntermediateFeature ||
+    showSinglePageFeature;
 
   const getContextualSpotlightImage = () => {
     if (article.secondaryImage) return article.secondaryImage;
@@ -905,7 +940,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             {/* Multi-Column Fluid Narrative Flow (Equilibrado e alinhado à esquerda sem distorção) */}
             <div
               className={`columns-1 sm:columns-2 gap-5 text-left min-h-0 overflow-hidden ${bodyFontClass} ${
-                showClosingImage ? "shrink-0 max-h-[58%]" : "flex-1"
+                hasBottomFeature ? "shrink-0 max-h-[50%] sm:max-h-[54%]" : "flex-1"
               }`}
               style={{
                 columnFill: "balance",
@@ -914,7 +949,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
             </div>
 
-            {/* Closing Editorial Image (Ocupa o espaço restante ao final da matéria em todos os artigos) */}
+            {/* Visual Features: Preenchimento Visual Garantido em TODAS as páginas sem buracos pretos */}
+            {/* 1. Imagem de Fechamento da Página Final */}
             {showClosingImage && (
               <div
                 className={`relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 ${
@@ -942,6 +978,88 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                   {(article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse) && (
                     <span className="text-[8px] font-mono italic text-slate-200 line-clamp-1 max-w-[70%]">
                       "{article.secondaryImageCaption || article.bottomSpotlightCaption || spotlightCaptionToUse}"
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 2. Imagem de Apoio das Páginas Intermediárias (Elimina o vazio escuro quando o texto termina antes da base) */}
+            {showIntermediateFeature && !showClosingImage && (
+              <div
+                className="relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 min-h-[170px] sm:min-h-[200px]"
+                style={{ borderColor: `${primaryColor}40` }}
+              >
+                <img
+                  src={getContextualSpotlightImage()}
+                  alt="Registro Editorial de Continuação"
+                  className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
+                  style={{ objectPosition: "50% 40%" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5">
+                  <span
+                    className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                  >
+                    // REGISTRO EDITORIAL • PARTE {pagePart}
+                  </span>
+                  <span className="text-[8px] font-mono uppercase text-slate-300">
+                    {project.title} MAGAZINE
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Destaque Visual da Página 1 (Para matérias de páginas duplas com texto curto na pág 1) */}
+            {showPage1Feature && !showClosingImage && !showIntermediateFeature && (
+              <div
+                className="relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 min-h-[140px] sm:min-h-[170px]"
+                style={{ borderColor: `${primaryColor}40` }}
+              >
+                <img
+                  src={article.secondaryImage || getContextualSpotlightImage()}
+                  alt="Registro Editorial de Abertura"
+                  className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
+                  style={{ objectPosition: "50% 30%" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5">
+                  <span
+                    className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                  >
+                    // VISUAL SPOTLIGHT • {article.category}
+                  </span>
+                  {hasPullQuote && (
+                    <span className="text-[8px] font-mono italic text-slate-200 line-clamp-1 max-w-[65%]">
+                      "{article.pullQuotes![0]}"
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 4. Destaque Visual de Artigos de Página Única Pequenos */}
+            {showSinglePageFeature && !showClosingImage && !showIntermediateFeature && !showPage1Feature && (
+              <div
+                className="relative w-full rounded-md overflow-hidden border shrink-0 shadow-md group mt-2 flex-1 min-h-[160px] sm:min-h-[190px]"
+                style={{ borderColor: `${primaryColor}40` }}
+              >
+                <img
+                  src={article.bottomSpotlightImage || getContextualSpotlightImage()}
+                  alt="Destaque Visual do Artigo"
+                  className="w-full h-full object-cover filter contrast-110 brightness-95 group-hover:scale-105 transition-transform duration-700"
+                  style={{ objectPosition: article.bottomSpotlightPosition || "50% 50%" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex items-end justify-between p-2.5">
+                  <span
+                    className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                  >
+                    // VISUAL SPOTLIGHT
+                  </span>
+                  {spotlightCaptionToUse && (
+                    <span className="text-[8px] font-mono italic text-slate-200 line-clamp-1 max-w-[70%]">
+                      "{spotlightCaptionToUse}"
                     </span>
                   )}
                 </div>

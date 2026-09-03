@@ -26,30 +26,71 @@ export function calculateRequiredArticlePages(article: MagazineArticle): number 
   const cleanContent = content.replace(MANUAL_PAGE_BREAK_REGEX, "\n\n").trim();
   const totalChars = cleanContent.length;
 
-  const heroLayout = article.heroImageLayout || "banner";
-  const hasHero = Boolean(article.heroImage && heroLayout !== "hidden");
+  const hasHero = Boolean(article.heroImage && (article.heroImageLayout || "banner") !== "hidden");
+  const singlePageLimit = hasHero ? 2200 : 3600;
 
-  // Capacidade útil de texto na Página 1
-  const page1Capacity = hasHero ? 1400 : 2200;
-
-  if (totalChars <= page1Capacity) {
+  if (totalChars <= singlePageLimit) {
     return 1;
   }
 
-  // Para o excedente, cada página subsequente acomoda cerca de 2.000 caracteres
-  const remainingChars = totalChars - page1Capacity;
-  const additionalPages = Math.ceil(remainingChars / 2000);
+  // Multi-page editorial thresholds:
+  // 2 páginas: até 4.800 caracteres
+  if (totalChars <= 4800) {
+    return 2;
+  }
 
-  return Math.min(10, 1 + additionalPages);
+  // 3 páginas: até 7.500 caracteres
+  if (totalChars <= 7500) {
+    return 3;
+  }
+
+  // 4 páginas: até 10.500 caracteres
+  if (totalChars <= 10500) {
+    return 4;
+  }
+
+  return Math.min(6, Math.ceil(totalChars / 2800));
 }
 
 /**
  * Retorna o pageSpan efetivo de um artigo. Se o usuário definiu um valor manual maior,
- * respeita esse valor; caso o texto precise de mais páginas para não truncar, expande automaticamente.
+ * respeita esse valor (a menos que o artigo seja curto, onde múltiplas páginas
+ * criariam páginas vazias com apenas 2 linhas).
  */
 export function getEffectiveArticlePageSpan(article: MagazineArticle): number {
+  const content = (article.content || "").replace(MANUAL_PAGE_BREAK_REGEX, "\n\n").trim();
+  const totalChars = content.length;
+
+  // Se o artigo tem quebra manual de página, respeita estritamente o número de partes
+  if (MANUAL_PAGE_BREAK_REGEX.test(article.content || "")) {
+    const parts = (article.content || "").split(MANUAL_PAGE_BREAK_REGEX);
+    return Math.max(1, parts.length);
+  }
+
   const required = calculateRequiredArticlePages(article);
   const configured = Math.max(1, article.pageSpan || 1);
+
+  // Artigos muito curtos (< 1.100 caracteres) NUNCA devem ter mais de 1 página
+  // para evitar páginas com apenas 1 ou 2 linhas de texto.
+  if (totalChars < 1100) {
+    return 1;
+  }
+
+  // Para artigos moderados (1.100 a 2.200 caracteres), permitir no máximo 2 páginas se configurado
+  if (totalChars <= 2200) {
+    return Math.min(2, Math.max(required, configured));
+  }
+
+  // Para artigos de 2.201 a 4.000 caracteres, permitir no máximo 2 páginas se configurado
+  if (totalChars <= 4000) {
+    return Math.min(2, Math.max(required, configured));
+  }
+
+  // Para artigos de 4.001 a 6.500 caracteres, permitir no máximo 3 páginas se configurado
+  if (totalChars <= 6500) {
+    return Math.min(3, Math.max(required, configured));
+  }
+
   return Math.max(required, configured);
 }
 

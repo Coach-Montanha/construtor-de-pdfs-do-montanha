@@ -324,8 +324,11 @@ function Index() {
       content: doc.rawContent,
       pullQuotes: [],
       keyTakeaways: [],
-      layoutTemplate: doc.wordCount > 550 ? "editorial-lead" : "two-column-quote",
-      pageSpan: doc.wordCount > 1100 ? 3 : doc.wordCount > 550 ? 2 : 1,
+      layoutTemplate: doc.wordCount > 650 ? "editorial-lead" : "two-column-quote",
+      pageSpan: calculateRequiredArticlePages({
+        content: doc.rawContent,
+        heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+      } as any),
       quotePlacement: "end",
       textDensity: "normal",
       tags: [doc.category || "Geral", "Alta Performance"],
