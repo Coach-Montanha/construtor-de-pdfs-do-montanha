@@ -24,6 +24,7 @@ interface PdfExportModalProps {
   project: MagazineProject;
   theme: MagazineTheme;
   totalPages?: number;
+  onOpenMockupStudio?: () => void;
 }
 
 export const PdfExportModal: React.FC<PdfExportModalProps> = ({
@@ -32,6 +33,7 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
   project,
   theme,
   totalPages: customTotalPages,
+  onOpenMockupStudio,
 }) => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
@@ -213,6 +215,19 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
                 </div>
               </a>
             </div>
+
+            {onOpenMockupStudio && (
+              <div className="pt-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={onOpenMockupStudio}
+                  className="text-xs font-black text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Quer criar em outros cenários? Abrir Estúdio de Mockups com IA →</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Actions Grid */}

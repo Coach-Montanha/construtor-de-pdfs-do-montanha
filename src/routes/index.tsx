@@ -11,6 +11,7 @@ import { EditorialSettings } from "../components/editor/EditorialSettings";
 import { MagazineSettings } from "../components/editor/MagazineSettings";
 import { AiStudioDialog } from "../components/editor/AiStudioDialog";
 import { PdfExportModal } from "../components/export/PdfExportModal";
+import { MockupStudioModal } from "../components/mockup/MockupStudioModal";
 import { CloudSyncDialog } from "../components/sync/CloudSyncDialog";
 import { CoverPage } from "../components/magazine/CoverPage";
 import { EditorLetterPage } from "../components/magazine/EditorLetterPage";
@@ -85,6 +86,7 @@ function Index() {
   const [isArticleModalOpen, setIsArticleModalOpen] = useState<boolean>(false);
   const [isAiStudioOpen, setIsAiStudioOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isMockupStudioOpen, setIsMockupStudioOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
@@ -499,6 +501,18 @@ function Index() {
             aria-label="Sincronização em Nuvem"
           >
             <Cloud className="w-4 h-4 text-amber-500" />
+          </Button>
+
+          {/* Gerador de Mockups de Divulgação com IA */}
+          <Button
+            size="sm"
+            onClick={() => setIsMockupStudioOpen(true)}
+            className="h-8 sm:h-9 bg-black text-amber-400 hover:bg-zinc-900 border-2 border-amber-500 font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+            title="Criar mockups comerciais da revista para Instagram e redes sociais com IA"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Mockups com IA</span>
+            <span className="sm:hidden">Mockup</span>
           </Button>
 
           <Button
@@ -991,6 +1005,16 @@ function Index() {
         project={project}
         theme={currentPublicationTheme}
         totalPages={totalPages}
+        onOpenMockupStudio={() => {
+          setIsExportModalOpen(false);
+          setIsMockupStudioOpen(true);
+        }}
+      />
+
+      <MockupStudioModal
+        isOpen={isMockupStudioOpen}
+        onClose={() => setIsMockupStudioOpen(false)}
+        project={project}
       />
 
       <CloudSyncDialog

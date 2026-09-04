@@ -281,6 +281,25 @@ export function generateAiImageUrl(prompt: string, width = 1200, height = 800): 
   )}`;
 }
 
+/**
+ * Gerar URL de Mockup Publicitário por IA (Instagram Stories 9:16, Feed 1:1 ou Paisagem 16:9)
+ */
+export function generateAiMockupUrl(
+  prompt: string,
+  format: "stories" | "feed" | "banner" = "stories",
+  magazineTitle = "MONTANHA MAGAZINE"
+): string {
+  const width = format === "stories" ? 1080 : format === "feed" ? 1080 : 1920;
+  const height = format === "stories" ? 1920 : format === "feed" ? 1080 : 1080;
+
+  const basePrompt = `High quality commercial advertising mockup photography of a physical printed magazine with glossy cover titled '${magazineTitle}', sharp crisp in foreground with real paper thickness. Scene: ${prompt.trim()}. Realistic iPhone portrait mode depth of field background bokeh blur f/1.4, commercial fitness lighting, 8k resolution, photorealistic, clean advertising look, no price tags, no dates.`;
+
+  const cleanPrompt = encodeURIComponent(basePrompt);
+  return `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&seed=${Math.floor(
+    Math.random() * 1000000
+  )}`;
+}
+
 export interface EditorialAnalysisResult {
   title: string;
   subtitle: string;
