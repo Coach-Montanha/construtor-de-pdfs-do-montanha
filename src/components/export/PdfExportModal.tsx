@@ -15,6 +15,7 @@ import {
   FileText,
   AlertCircle,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 
 interface PdfExportModalProps {
@@ -163,6 +164,55 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
                 Certifique-se de marcar a opção <strong>"Gráficos de segundo plano"</strong> para que todas as fotos e cores saiam perfeitas.
               </li>
             </ul>
+          </div>
+
+          {/* Mockups de Divulgação Social para Instagram Stories (9:16) */}
+          <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 border-amber-500/30 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <Sparkles className="w-4 h-4" />
+                <span>Kit de Divulgação Social • Mockups em Alta Resolução (Stories 9:16)</span>
+              </span>
+              <span className="text-[10px] font-mono font-bold bg-amber-400/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded">
+                CrossFit & iPhone Blur
+              </span>
+            </div>
+            <p className="text-[11px] opacity-80 leading-relaxed">
+              Baixe os mockups comerciais realistas da revista em cenário de box de CrossFit com efeito de profundidade de campo (bokeh f/1.4 do iPhone), perfeitos para divulgar o <strong>Lançamento Oficial da Montanha Magazine</strong> nos Stories do Instagram.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              <a
+                href="/mockup-stories-1.jpg"
+                download="montanha_magazine_stories_mockup_1.jpg"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 border-black bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all shadow-sm group cursor-pointer"
+              >
+                <div className="w-6 h-10 rounded overflow-hidden border border-white/20 shrink-0">
+                  <img src="/mockup-stories-1.jpg" alt="Mockup 1" className="w-full h-full object-cover" />
+                </div>
+                <div className="text-left leading-tight">
+                  <div className="font-black text-amber-400">Mockup 1 (Mão & Medalhão)</div>
+                  <div className="text-[9.5px] opacity-70">Tamanho Stories (9:16) • Alta Resolução</div>
+                </div>
+              </a>
+
+              <a
+                href="/mockup-stories-2.jpg"
+                download="montanha_magazine_stories_mockup_2.jpg"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 border-black bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-all shadow-sm group cursor-pointer"
+              >
+                <div className="w-6 h-10 rounded overflow-hidden border border-white/20 shrink-0">
+                  <img src="/mockup-stories-2.jpg" alt="Mockup 2" className="w-full h-full object-cover" />
+                </div>
+                <div className="text-left leading-tight">
+                  <div className="font-black text-amber-400">Mockup 2 (Drop Pad & HUD)</div>
+                  <div className="text-[9.5px] opacity-70">Tamanho Stories (9:16) • Alta Resolução</div>
+                </div>
+              </a>
+            </div>
           </div>
 
           {/* Actions Grid */}
