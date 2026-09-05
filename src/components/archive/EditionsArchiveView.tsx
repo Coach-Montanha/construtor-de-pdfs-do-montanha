@@ -55,6 +55,13 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
   const [archiveStatus, setArchiveStatus] = useState<"approved" | "published" | "archived">("approved");
   const [customEdNumber, setCustomEdNumber] = useState(currentProject.editionNumber || "01");
 
+  // Estado para criação guiada da Próxima Edição
+  const [isNextEditionModalOpen, setIsNextEditionModalOpen] = useState(false);
+  const [targetEditionForDuplicate, setTargetEditionForDuplicate] = useState<ArchivedEdition | MagazineProject | null>(null);
+  const [nextEditionNum, setNextEditionNum] = useState("02");
+  const [nextEditionDate, setNextEditionDate] = useState("Outubro 2026");
+  const [duplicateMode, setDuplicateMode] = useState<"keep-articles" | "clean-articles">("keep-articles");
+
   // Reload archive on mount and custom events
   const refreshList = () => {
     setEditions(getArchivedEditions());
@@ -91,14 +98,43 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
     }
   };
 
-  const handleDuplicateNext = (edition: ArchivedEdition) => {
-    const nextProj = duplicateEditionForNextRelease(edition);
-    const confirm = window.confirm(
-      `Deseja criar a nova Edição #${nextProj.editionNumber} a partir desta edição?\n\nEla será aberta no estúdio imediatamente para que você possa iniciar a nova publicação.`
-    );
-    if (confirm) {
-      onLoadEditionIntoStudio(nextProj);
-    }
+  const handleOpenNextEditionModal = (source: ArchivedEdition | MagazineProject) => {
+    setTargetEditionForDuplicate(source);
+    const curNum = "editionNumber" in source ? source.editionNumber : source.editionNumber || "01";
+    const numInt = parseInt(curNum.replace(/\D/g, ""), 10);
+    const nNum = isNaN(numInt) ? "02" : numInt + 1 < 10 ? `0${numInt + 1}` : `${numInt + 1}`;
+    setNextEditionNum(nNum);
+
+    const currentYear = new Date().getFullYear();
+    const months = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    const nextMonthIdx = (new Date().getMonth() + 1) % 12;
+    setNextEditionDate(`${months[nextMonthIdx]} ${currentYear}`);
+    setDuplicateMode("keep-articles");
+    setIsNextEditionModalOpen(true);
+  };
+
+  const handleConfirmCreateNextEdition = () => {
+    if (!targetEditionForDuplicate) return;
+
+    // Arquiva a edição atual no acervo automaticamente para segurança total
+    archiveCurrentProject(currentProject, {
+      notes: `Edição #${currentProject.editionNumber || "01"} arquivada automaticamente antes de iniciar a Edição #${nextEditionNum}.`,
+      status: "approved",
+      customEditionNumber: currentProject.editionNumber || "01",
+    });
+
+    const newProj = duplicateEditionForNextRelease(targetEditionForDuplicate, {
+      customNextNumber: nextEditionNum,
+      customDate: nextEditionDate,
+      mode: duplicateMode,
+    });
+
+    setIsNextEditionModalOpen(false);
+    refreshList();
+    onLoadEditionIntoStudio(newProj);
   };
 
   const handleDelete = (edition: ArchivedEdition) => {
@@ -139,6 +175,16 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => handleOpenNextEditionModal(currentProject)}
+            className="h-9 bg-black text-amber-400 hover:bg-zinc-900 font-black text-xs border-2 border-amber-500 flex items-center gap-1.5 shadow-xs cursor-pointer"
+            title="Criar a próxima edição sequencial utilizando a estrutura atual como modelo"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span>Criar Próxima Edição a Partir Desta</span>
+          </Button>
+
           <Button
             size="sm"
             onClick={handleOpenArchiveCurrent}
@@ -339,7 +385,7 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDuplicateNext(edition)}
+                      onClick={() => handleOpenNextEditionModal(edition)}
                       className="h-8 font-bold text-xs border-2 flex items-center gap-1 cursor-pointer"
                       title="Usar esta edição como matriz para a próxima edição sequencial"
                     >
@@ -447,6 +493,98 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
               className="bg-amber-400 hover:bg-amber-500 text-black font-black"
             >
               Salvar no Acervo de Edições
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Assistente de Criação da Próxima Edição */}
+      <Dialog open={isNextEditionModalOpen} onOpenChange={setIsNextEditionModalOpen}>
+        <DialogContent className="theme-app-card max-w-lg p-6 border-2 shadow-2xl font-sans">
+          <DialogHeader className="border-b-2 border-current pb-3">
+            <DialogTitle className="text-base font-black flex items-center gap-2 uppercase">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              <span>Iniciar Nova Edição da Montanha Magazine</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 my-4">
+            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-300">
+              ✓ <strong>Backup Automático:</strong> O conteúdo da sua edição atual será arquivado com segurança no acervo antes de iniciar a nova edição.
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs font-black uppercase">Número da Nova Edição</Label>
+                <Input
+                  value={nextEditionNum}
+                  onChange={(e) => setNextEditionNum(e.target.value)}
+                  placeholder="Ex: 02"
+                  className="font-mono font-bold text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-black uppercase">Mês & Ano da Publicação</Label>
+                <Input
+                  value={nextEditionDate}
+                  onChange={(e) => setNextEditionDate(e.target.value)}
+                  placeholder="Ex: Outubro 2026"
+                  className="font-bold text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-black uppercase">Como você prefere iniciar os artigos?</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div
+                  onClick={() => setDuplicateMode("keep-articles")}
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    duplicateMode === "keep-articles"
+                      ? "border-amber-500 bg-amber-500/15"
+                      : "theme-app-card-subtle hover:border-black/30"
+                  }`}
+                >
+                  <div className="font-black text-xs flex items-center gap-1.5 mb-1">
+                    <Copy className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Manter Artigos como Modelo</span>
+                  </div>
+                  <p className="text-[10.5px] opacity-75 leading-tight">
+                    Mantém o esqueleto das 4 matérias para você apenas substituir os textos e fotos um por um.
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setDuplicateMode("clean-articles")}
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    duplicateMode === "clean-articles"
+                      ? "border-amber-500 bg-amber-500/15"
+                      : "theme-app-card-subtle hover:border-black/30"
+                  }`}
+                >
+                  <div className="font-black text-xs flex items-center gap-1.5 mb-1">
+                    <FileText className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Estrutura Limpa</span>
+                  </div>
+                  <p className="text-[10.5px] opacity-75 leading-tight">
+                    Mantém Capa, Expediente e Carta do Editor, e deixa 1 matéria base para você criar as novas.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="border-t-2 border-current pt-3 flex items-center justify-between">
+            <Button variant="ghost" onClick={() => setIsNextEditionModalOpen(false)} className="text-xs font-bold">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmCreateNextEdition}
+              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs h-10 px-5 border-2 border-black shadow-md flex items-center gap-1.5 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Iniciar Edição #{nextEditionNum} no Estúdio</span>
             </Button>
           </DialogFooter>
         </DialogContent>

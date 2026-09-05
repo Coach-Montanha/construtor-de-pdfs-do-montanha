@@ -163,31 +163,72 @@ export function updateArchivedEdition(
 }
 
 /**
- * Duplica uma edição arquivada como base para a próxima edição
+ * Duplica uma edição arquivada ou projeto atual como base para a próxima edição
  */
-export function duplicateEditionForNextRelease(sourceEdition: ArchivedEdition): MagazineProject {
-  const snapshot: MagazineProject = JSON.parse(JSON.stringify(sourceEdition.projectSnapshot));
+export function duplicateEditionForNextRelease(
+  source: ArchivedEdition | MagazineProject,
+  options?: {
+    customNextNumber?: string;
+    customDate?: string;
+    mode?: "keep-articles" | "clean-articles";
+  }
+): MagazineProject {
+  const isArchived = "projectSnapshot" in source;
+  const snapshot: MagazineProject = JSON.parse(
+    JSON.stringify(isArchived ? source.projectSnapshot : source)
+  );
+
+  const currentEdNum = isArchived ? source.editionNumber : source.editionNumber || "01";
   
   // Calcular próximo número
-  const numInt = parseInt(sourceEdition.editionNumber.replace(/\D/g, ""), 10);
-  const nextNum = isNaN(numInt) ? "02" : numInt + 1 < 10 ? `0${numInt + 1}` : `${numInt + 1}`;
+  let nextNum = options?.customNextNumber;
+  if (!nextNum) {
+    const numInt = parseInt(currentEdNum.replace(/\D/g, ""), 10);
+    nextNum = isNaN(numInt) ? "02" : numInt + 1 < 10 ? `0${numInt + 1}` : `${numInt + 1}`;
+  }
 
   const currentYear = new Date().getFullYear();
   const months = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
   ];
-  const currentMonth = months[new Date().getMonth()] ?? "Janeiro";
+  const nextMonthIdx = (new Date().getMonth() + 1) % 12;
+  const defaultNextDate = `${months[nextMonthIdx]} ${currentYear}`;
+  const nextDate = options?.customDate || defaultNextDate;
+
+  // Se o usuário escolheu modo 'clean-articles', mantém 1 artigo de exemplo para preenchimento
+  let nextArticles = snapshot.articles;
+  if (options?.mode === "clean-articles") {
+    nextArticles = [
+      {
+        id: `article-ed${nextNum}-01`,
+        title: "NOVA MATÉRIA PRINCIPAL",
+        subtitle: "Subtítulo da matéria de capa para esta nova edição",
+        category: "FITNESS",
+        content: "Insira o conteúdo do seu novo artigo aqui. Você também pode importar do seu acervo ou usar a IA para redigir matérias completas.",
+        author: snapshot.articles[0]?.author || "Coach Montanha",
+        estimatedReadTime: 3,
+        pageSpan: 1,
+        enabled: true,
+      },
+    ];
+  }
 
   const duplicatedProject: MagazineProject = {
     ...snapshot,
     id: `proj-edition-${nextNum}-${Date.now()}`,
     editionNumber: nextNum,
-    date: `${currentMonth} ${currentYear}`,
+    date: nextDate,
+    articles: nextArticles,
     coverConfig: {
       ...snapshot.coverConfig,
       issueBadge: `EDIÇÃO #${nextNum}`,
-      issueDate: `${currentMonth.toUpperCase()} ${currentYear}`,
+      issueDate: nextDate.toUpperCase(),
+      editionNumber: nextNum,
+      mainHeadline:
+        options?.mode === "clean-articles"
+          ? "MANCHETE PRINCIPAL DA NOVA EDIÇÃO"
+          : snapshot.coverConfig.mainHeadline,
     },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
