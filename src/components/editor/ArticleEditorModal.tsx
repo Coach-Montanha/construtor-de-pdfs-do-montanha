@@ -669,7 +669,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               onPositionChange={(pos) => setFormData({ ...formData, heroImagePosition: pos })}
               aspectRatio="landscape"
               placeholderPrompt="Fotografia editorial em 8k de atleta em treino intenso..."
-              helperText="Upload do PC, IA ou URL"
+              helperText="Banco Real, IA Flux, Upload ou URL"
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

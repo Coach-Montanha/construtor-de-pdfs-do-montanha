@@ -88,7 +88,10 @@ export const AiStudioDialog: React.FC<AiStudioDialogProps> = ({
     if (!generatedResult) return;
 
     const heroImage = generateAiImageUrl(
-      generatedResult.suggestedImagePrompt || `${generatedResult.title} dark fitness gym 8k`
+      generatedResult.suggestedImagePrompt || `${generatedResult.title} treino esportivo de alta performance em academia iluminada`,
+      1200,
+      800,
+      "realistic"
     );
 
     const newArticle: Article = {

@@ -270,15 +270,70 @@ export function getEditorialCuratedImage(category: string, index: number = 0): s
 }
 
 /**
- * Gerar URL de Imagem gerada por IA via Pollinations AI (Instantânea, sem custo)
+ * Dicionário inteligente de tradução e enriquecimento editorial fitness
+ * Converte termos em português para prompts fotográficos profissionais em inglês,
+ * eliminando estética de anime, 3D e tons preto e branco não intencionais.
  */
-export function generateAiImageUrl(prompt: string, width = 1200, height = 800): string {
-  const cleanPrompt = encodeURIComponent(
-    `${prompt}, high quality editorial magazine photography, 8k resolution, photorealistic, cinematic lighting`
+export function enrichEditorialPrompt(
+  userPrompt: string,
+  style: "realistic" | "action" | "portrait" | "gym" = "realistic"
+): string {
+  let prompt = userPrompt.trim();
+
+  // Dicionário de tradução e especialização esportiva PT -> EN
+  const mappings: [RegExp, string][] = [
+    [/barra fixa/gi, "strict pull-ups on an overhead gym pull-up bar, defined back and lats muscles"],
+    [/kettlebell/gi, "cast iron kettlebell swing, explosive athletic hip drive"],
+    [/supino/gi, "barbell bench press on flat bench with heavy weight"],
+    [/agachamento/gi, "barbell back squat with Olympic barbell"],
+    [/levantamento terra|deadlift/gi, "conventional barbell deadlift off the floor"],
+    [/musculação|hipertrofia/gi, "heavy strength weightlifting athletic workout"],
+    [/academia/gi, "modern high-end commercial strength training gym with warm natural light"],
+    [/treinador|coach/gi, "experienced athletic fitness coach, confident expression, professional athletic wear"],
+    [/mulher|atleta feminina/gi, "fit athletic woman, strong muscle tone"],
+    [/homem|atleta masculino/gi, "athletic muscular man, defined physique"],
+    [/corrida|correndo|sprint/gi, "powerful sprint running outdoors on athletics track"],
+    [/alimentação|nutrição|dieta/gi, "clean athletic nutrition meal, grilled steak and vegetables, fresh ingredients"],
+    [/chiaroscuro|b&w|black and white/gi, "vibrant natural colors, warm studio lighting"],
+  ];
+
+  for (const [regex, replacement] of mappings) {
+    prompt = prompt.replace(regex, replacement);
+  }
+
+  // Modificadores de estilo fotográfico ultrarrealistas em cores vivas
+  const styleModifiers: Record<string, string> = {
+    realistic:
+      "authentic full color documentary sports photography, real human athlete, natural skin texture with subtle perspiration, natural bright daytime lighting, rich vibrant natural colors, shot on 35mm DSLR, Canon EOS R5, 50mm f/1.8 lens, sharp focus on subject, real gym background with depth of field, Men's Health and Sports Illustrated editorial award-winning photo",
+    action:
+      "dynamic high-speed action sports photography, frozen motion, defined muscle tension, high shutter speed 1/2000s, rich colors, authentic athletic indoor lighting, sharp crisp detail",
+    portrait:
+      "editorial athlete portrait photography, direct confident eye contact, charismatic fitness coach, warm softbox studio lighting, natural skin tones, beautiful creamy bokeh background, GQ magazine aesthetic",
+    gym:
+      "commercial architectural photography of modern strength training gym, Olympic barbells, iron plates, clean industrial aesthetic, natural daylight and warm accent lights, depth of field",
+  };
+
+  return `${prompt}, ${styleModifiers[style] || styleModifiers.realistic}`;
+}
+
+/**
+ * Gerar URL de Imagem gerada por IA via Pollinations AI (Flux / Ultrarrealista, Cores Vivas, Sem Anime)
+ */
+export function generateAiImageUrl(
+  prompt: string,
+  width = 1200,
+  height = 800,
+  style: "realistic" | "action" | "portrait" | "gym" = "realistic"
+): string {
+  const enriched = enrichEditorialPrompt(prompt, style);
+  const cleanPrompt = encodeURIComponent(enriched);
+  const negative = encodeURIComponent(
+    "anime, cartoon, comic, illustration, drawing, sketch, 3d render, digital painting, cgi, black and white, monochrome, grayscale, dark chiaroscuro, desaturated, zombie, disfigured, deformed face, bad anatomy, blur, mutated, unnatural skin"
   );
-  return `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&seed=${Math.floor(
+
+  return `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&model=flux&nologo=true&seed=${Math.floor(
     Math.random() * 100000
-  )}`;
+  )}&negative=${negative}`;
 }
 
 /**

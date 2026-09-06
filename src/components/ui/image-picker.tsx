@@ -12,8 +12,11 @@ import {
   CheckCircle2,
   Wand2,
   MoveVertical,
+  Camera,
+  Check,
 } from "lucide-react";
 import { generateAiImageUrl } from "../../lib/ai-service";
+import { EDITORIAL_STOCK_PHOTOS, StockPhoto } from "../../lib/stock-photos";
 
 interface ImagePickerProps {
   label: string;
@@ -34,13 +37,15 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
   position,
   onPositionChange,
   aspectRatio = "landscape",
-  placeholderPrompt = "Foto atlética profissional de força não-convencional...",
+  placeholderPrompt = "Foto de atleta em barra fixa strict, cores vivas...",
   helperText,
   className = "",
 }) => {
-  const [activeMode, setActiveMode] = useState<"upload" | "ai" | "url">("upload");
+  const [activeMode, setActiveMode] = useState<"upload" | "editorial" | "ai" | "url">("editorial");
   const [promptText, setPromptText] = useState<string>("");
   const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
+  const [aiStyle, setAiStyle] = useState<"realistic" | "action" | "portrait" | "gym">("realistic");
+  const [stockCategory, setStockCategory] = useState<string>("todos");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Helper to extract vertical percentage from position string (e.g. "50% 20%", "top", "center", "bottom")
@@ -100,7 +105,7 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
     try {
       const width = aspectRatio === "square" ? 800 : aspectRatio === "portrait" ? 800 : 1200;
       const height = aspectRatio === "square" ? 800 : aspectRatio === "portrait" ? 1000 : 800;
-      const aiUrl = generateAiImageUrl(targetPrompt, width, height);
+      const aiUrl = generateAiImageUrl(targetPrompt, width, height, aiStyle);
 
       // Pre-load image to verify
       const img = new Image();
@@ -131,6 +136,11 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
       fileInputRef.current.value = "";
     }
   };
+
+  const filteredStockPhotos =
+    stockCategory === "todos"
+      ? EDITORIAL_STOCK_PHOTOS
+      : EDITORIAL_STOCK_PHOTOS.filter((p) => p.category === stockCategory);
 
   return (
     <div className={`space-y-2 font-sans ${className}`}>
@@ -177,26 +187,26 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
             )}
           </div>
 
-          {/* Action Modality Switcher (Upload / IA / URL) */}
+          {/* Action Modality Switcher (Banco Real / Upload / IA / URL) */}
           <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-1 theme-app-card-subtle p-0.5 rounded-lg border">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 theme-app-card-subtle p-1 rounded-lg border">
               <button
                 type="button"
-                onClick={() => setActiveMode("upload")}
-                className={`flex-1 py-1 px-2 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                  activeMode === "upload"
+                onClick={() => setActiveMode("editorial")}
+                className={`py-1 px-2 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  activeMode === "editorial"
                     ? "bg-amber-400 text-black font-black border border-black shadow-xs"
                     : "opacity-75 hover:opacity-100"
                 }`}
               >
-                <Upload className="w-3 h-3" />
-                <span>Upload PC</span>
+                <Camera className="w-3 h-3 text-black" />
+                <span>Banco Real</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveMode("ai")}
-                className={`flex-1 py-1 px-2 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                className={`py-1 px-2 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
                   activeMode === "ai"
                     ? "bg-amber-400 text-black font-black border border-black shadow-xs"
                     : "opacity-75 hover:opacity-100"
@@ -208,8 +218,21 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
 
               <button
                 type="button"
+                onClick={() => setActiveMode("upload")}
+                className={`py-1 px-2 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  activeMode === "upload"
+                    ? "bg-amber-400 text-black font-black border border-black shadow-xs"
+                    : "opacity-75 hover:opacity-100"
+                }`}
+              >
+                <Upload className="w-3 h-3" />
+                <span>Upload PC</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveMode("url")}
-                className={`flex-1 py-1 px-2 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                className={`py-1 px-2 text-[11px] font-bold rounded-md transition-all flex items-center justify-center gap-1 cursor-pointer ${
                   activeMode === "url"
                     ? "bg-amber-400 text-black font-black border border-black shadow-xs"
                     : "opacity-75 hover:opacity-100"
@@ -245,7 +268,35 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
             )}
 
             {activeMode === "ai" && (
-              <div className="space-y-1.5">
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                  <span>Motor Flux Foto: Cores vivas, pessoas reais, sem aspecto anime/desenho e sem P&B.</span>
+                </div>
+
+                {/* Estilo Fotográfico */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
+                  {[
+                    { id: "realistic", label: "📸 Cores Reais" },
+                    { id: "action", label: "⚡ Ação" },
+                    { id: "portrait", label: "👤 Retrato" },
+                    { id: "gym", label: "🏋️ Academia" },
+                  ].map((style) => (
+                    <button
+                      key={style.id}
+                      type="button"
+                      onClick={() => setAiStyle(style.id as any)}
+                      className={`text-[9px] font-bold px-2 py-0.5 rounded border transition-all cursor-pointer whitespace-nowrap ${
+                        aiStyle === style.id
+                          ? "bg-amber-500 text-black border-black font-black"
+                          : "theme-app-card-subtle opacity-75 hover:opacity-100"
+                      }`}
+                    >
+                      {style.label}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="flex gap-1.5">
                   <Input
                     value={promptText}
@@ -274,12 +325,15 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
                     <span>{isGeneratingAi ? "Criando..." : "Gerar"}</span>
                   </Button>
                 </div>
+
                 <div className="flex flex-wrap gap-1">
                   {[
-                    "Retrato Coach B&W",
+                    "Barra Fixa Strict",
                     "Ação Kettlebell",
-                    "Estúdio Alta Luz",
-                    "Equipamento Ferro",
+                    "Treino de Dorsais",
+                    "Agachamento com Barra",
+                    "Retrato do Treinador",
+                    "Halteres de Ferro",
                   ].map((quick, idx) => (
                     <button
                       key={idx}
@@ -292,6 +346,76 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
                       + {quick}
                     </button>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {activeMode === "editorial" && (
+              <div className="space-y-2">
+                {/* Categorias do Banco Real */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px] font-bold">
+                  {[
+                    { id: "todos", label: "Todas" },
+                    { id: "barra-fixa", label: "Barra Fixa" },
+                    { id: "kettlebell", label: "Kettlebell" },
+                    { id: "musculacao", label: "Musculação" },
+                    { id: "coach", label: "Treinador" },
+                    { id: "academia", label: "Academia" },
+                    { id: "nutricao", label: "Nutrição" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setStockCategory(cat.id)}
+                      className={`px-2 py-0.5 rounded border whitespace-nowrap cursor-pointer transition-all ${
+                        stockCategory === cat.id
+                          ? "bg-amber-400 text-black border-black font-black"
+                          : "theme-app-card-subtle opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Grid de Fotos Reais Selecionáveis */}
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-44 overflow-y-auto p-1.5 rounded-lg border bg-slate-950/20 dark:bg-black/30">
+                  {filteredStockPhotos.map((photo) => {
+                    const isSelected = value === photo.url;
+                    return (
+                      <button
+                        key={photo.id}
+                        type="button"
+                        onClick={() => {
+                          onChange(photo.url);
+                          if (onPositionChange && !position) {
+                            onPositionChange("50% 50%");
+                          }
+                        }}
+                        className={`group relative rounded-md overflow-hidden border-2 aspect-[4/3] cursor-pointer transition-all hover:scale-[1.02] ${
+                          isSelected
+                            ? "border-amber-500 ring-2 ring-amber-400 shadow-md"
+                            : "border-slate-300 dark:border-slate-700 hover:border-amber-400"
+                        }`}
+                        title={`${photo.title} (${photo.author})`}
+                      >
+                        <img
+                          src={photo.thumbnail}
+                          alt={photo.title}
+                          className="w-full h-full object-cover group-hover:contrast-110 transition-all"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-black/70 p-1 text-[8px] font-bold text-white truncate text-left">
+                          {photo.title}
+                        </div>
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 bg-amber-400 text-black rounded-full p-0.5 shadow">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
