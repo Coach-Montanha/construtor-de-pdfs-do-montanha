@@ -79,6 +79,44 @@ ${text}
 }
 
 /**
+ * Corrigir erros de digitação, falhas ortográficas e pontuação com IA
+ * Preserva 100% da autoria, vocabulário e formatação markdown rica original
+ */
+export async function proofreadEditorialText(
+  text: string,
+  apiKey?: string
+): Promise<string> {
+  const system = `Você é um revisor sênior de texto e preparador de originais de grandes revistas de prestígio (como Vogue, Time e Men's Health).
+Sua missão é identificar e CORRIGIR estritamente:
+1. Erros de digitação (typos, letras trocadas, duplicadas por engano ou caracteres ausentes).
+2. Falhas ortográficas e acentuação gráfica segundo o Novo Acordo Ortográfico da Língua Portuguesa (ex: crases incorretas, falta de acentos agudos, circunflexos e til).
+3. Concordância verbal e nominal, regência e pontuação essencial (vírgulas, pontos finais, travessões).
+4. Termos de treino, musculação, nutrição ou medidas grafados com erros.
+
+DIRETRIZES OBRIGATÓRIAS E INEGOCIÁVEIS:
+1. PRESERVE 100% DA AUTORIA, DO VOCABULÁRIO, DAS PALAVRAS E DO ESTILO DO AUTOR. NÃO reescreva o texto, NÃO mude o tom, NÃO resuma e NÃO adicione novos conteúdos.
+2. PRESERVE RIGOROSAMENTE TODAS AS FORMATAÇÕES MARKDOWN E TAGS ESPECIAIS:
+   - Manter **negrito**, *itálico*, ==destaque==, <u>sublinhado</u>
+   - Manter subtítulos (### SUBTÍTULO)
+   - Manter quebras de linha duplas entre parágrafos
+   - Manter listas (- item)
+   - Manter tags especiais como [QUEBRA_COLUNA] ou [DIVISAO_PAGINAS] intactas se existirem
+3. Responda DIRETAMENTE com o texto corrigido em Português do Brasil, sem qualquer introdução, sem notas explicativas e sem aspas.`;
+
+  const prompt = `Texto a ser revisado e corrigido ortograficamente:
+"""
+${text}
+"""`;
+
+  try {
+    return await callGeminiApi(prompt, apiKey, system);
+  } catch (error) {
+    console.warn("AI fallback ativado para correção ortográfica:", error);
+    return proofreadTextOfflineFallback(text);
+  }
+}
+
+/**
  * Gerar Títulos e Chapéus de Capa
  */
 export async function generateEditorialHeadlines(
@@ -939,6 +977,85 @@ function polishTextOfflineFallback(text: string, tone: string): string {
   }
 
   return processedParagraphs.join("\n\n");
+}
+
+function proofreadTextOfflineFallback(text: string): string {
+  if (!text || !text.trim()) return text;
+
+  let fixed = text;
+
+  // 1. Correções de erros de digitação e falhas ortográficas frequentes
+  const typoReplacements: [RegExp, string][] = [
+    [/\bposss[íi]veis\b/gi, "possíveis"],
+    [/\bposivel\b/gi, "possível"],
+    [/\bpossiveis\b/gi, "possíveis"],
+    [/\bfalhar ortogr[áa]ficas\b/gi, "falhas ortográficas"],
+    [/\bintelig[êe]ncia artifical\b/gi, "inteligência artificial"],
+    [/\bexerc[íi]cio\b/gi, "exercício"],
+    [/\bexerc[íi]cios\b/gi, "exercícios"],
+    [/\bmusculo\b/gi, "músculo"],
+    [/\bmusculos\b/gi, "músculos"],
+    [/\bserie\b/gi, "série"],
+    [/\bseries\b/gi, "séries"],
+    [/\brepeticao\b/gi, "repetição"],
+    [/\brepeticoes\b/gi, "repetições"],
+    [/\bpadrao\b/gi, "padrão"],
+    [/\bpadroes\b/gi, "padrões"],
+    [/\bperiodo\b/gi, "período"],
+    [/\bperiodos\b/gi, "períodos"],
+    [/\bnumero\b/gi, "número"],
+    [/\bnumeros\b/gi, "números"],
+    [/\bfisico\b/gi, "físico"],
+    [/\bfisicos\b/gi, "físicos"],
+    [/\bsaude\b/gi, "saúde"],
+    [/\bnutricao\b/gi, "nutrição"],
+    [/\bavaliacao\b/gi, "avaliação"],
+    [/\bavaliacoes\b/gi, "avaliações"],
+    [/\bposicao\b/gi, "posição"],
+    [/\bposicoes\b/gi, "posições"],
+    [/\bmetabolico\b/gi, "metabólico"],
+    [/\bmetabolica\b/gi, "metabólica"],
+    [/\boxigenio\b/gi, "oxigênio"],
+    [/\bresistencia\b/gi, "resistência"],
+    [/\bfrequencia\b/gi, "frequência"],
+    [/\bpotencia\b/gi, "potência"],
+    [/\bmaximo\b/gi, "máximo"],
+    [/\bmaxima\b/gi, "máxima"],
+    [/\bminimo\b/gi, "mínimo"],
+    [/\bminima\b/gi, "mínima"],
+    [/\bciencia\b/gi, "ciência"],
+    [/\bmetodo\b/gi, "método"],
+    [/\bmetodos\b/gi, "métodos"],
+    [/\bprincipio\b/gi, "princípio"],
+    [/\bprincipios\b/gi, "princípios"],
+    [/\bestrategia\b/gi, "estratégia"],
+    [/\bestrategias\b/gi, "estratégias"],
+    [/\bvoce\b/gi, "você"],
+    [/\bvoces\b/gi, "vocês"],
+    [/\btambem\b/gi, "também"],
+    [/\bate\b/gi, "até"],
+    [/\bja\b/gi, "já"],
+    [/\bnao\b/gi, "não"],
+    [/\bentao\b/gi, "então"],
+    [/\balem\b/gi, "além"],
+    [/\bconseq[üu][êe]ncia\b/gi, "consequência"],
+    [/\bfreq[üu][êe]ncia\b/gi, "frequência"],
+  ];
+
+  for (const [pattern, replacement] of typoReplacements) {
+    fixed = fixed.replace(pattern, (match) => {
+      if (match[0] === match[0]?.toUpperCase() && match[0] !== match[0]?.toLowerCase()) {
+        return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+      }
+      return replacement;
+    });
+  }
+
+  // 2. Ajuste de pontuação e espaçamento (sem quebrar markdown)
+  fixed = fixed.replace(/(\S)\s+([,.;:!?])(?!\S)/g, "$1$2");
+  fixed = fixed.replace(/([a-zA-ZÀ-ÿ])([,;:])([a-zA-ZÀ-ÿ])/g, "$1$2 $3");
+
+  return fixed;
 }
 
 /**

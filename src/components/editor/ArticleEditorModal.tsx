@@ -50,9 +50,12 @@ import {
   Scissors,
   BookOpen,
   Columns,
+  SpellCheck,
+  Undo2,
 } from "lucide-react";
 import {
   polishEditorialText,
+  proofreadEditorialText,
   generateEditorialHeadlines,
   extractPullQuotes,
 } from "../../lib/ai-service";
@@ -135,6 +138,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   };
 
   const [polishSuccess, setPolishSuccess] = useState<string | null>(null);
+  const [previousContent, setPreviousContent] = useState<string | null>(null);
 
   useEffect(() => {
     if (article) {
@@ -242,6 +246,34 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
   };
 
   // AI Actions
+  const handleProofreadText = async () => {
+    if (!formData.content) return;
+    setIsAiLoading(true);
+    setPolishSuccess(null);
+    setAiStatusMsg("Identificando e corrigindo erros de digitação e falhas ortográficas com IA...");
+    try {
+      const originalText = formData.content;
+      const corrected = await proofreadEditorialText(originalText);
+      setPreviousContent(originalText);
+      setFormData((prev) => ({ ...prev, content: corrected }));
+      setPolishSuccess("✓ Revisão concluída com sucesso! Erros ortográficos e de digitação corrigidos mantendo sua autoria e formatação.");
+      setTimeout(() => setPolishSuccess(null), 6000);
+    } catch (err: any) {
+      alert("Erro na revisão ortográfica: " + err.message);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleUndoProofread = () => {
+    if (previousContent !== null) {
+      setFormData((prev) => ({ ...prev, content: previousContent }));
+      setPreviousContent(null);
+      setPolishSuccess("✓ Versão anterior restaurada.");
+      setTimeout(() => setPolishSuccess(null), 3000);
+    }
+  };
+
   const handlePolishText = async (tone: "motivational" | "journalistic" | "scientific" = "journalistic") => {
     if (!formData.content) return;
     setIsAiLoading(true);
@@ -1159,7 +1191,37 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Botão de Correção Ortográfica e de Digitação */}
+              <button
+                type="button"
+                onClick={handleProofreadText}
+                disabled={isAiLoading || !formData.content}
+                className="text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded border border-emerald-800 cursor-pointer shadow-xs flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                title="Identifica e corrige erros de digitação, falhas ortográficas e gramática com IA mantendo a sua autoria e formatação intactas"
+              >
+                {isAiLoading && aiStatusMsg.includes("ortográficas") ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                ) : (
+                  <SpellCheck className="w-3.5 h-3.5 text-white" />
+                )}
+                <span>Corrigir Ortografia & Digitação</span>
+              </button>
+
+              {previousContent !== null && (
+                <button
+                  type="button"
+                  onClick={handleUndoProofread}
+                  className="text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-1 rounded border hover:bg-slate-300 dark:hover:bg-slate-600 cursor-pointer flex items-center gap-1 transition-all"
+                  title="Desfazer correção e restaurar texto original"
+                >
+                  <Undo2 className="w-3 h-3" />
+                  <span>Desfazer</span>
+                </button>
+              )}
+
+              <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-0.5 hidden sm:block" />
+
               <span className="text-[10px] font-bold opacity-75 mr-1">Polir com IA:</span>
               <button
                 type="button"
@@ -1268,6 +1330,18 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
             >
               <Columns className="w-3.5 h-3.5" />
               <span>Quebrar Coluna</span>
+            </button>
+
+            {/* Acesso rápido ao Corretor Ortográfico & Digitação */}
+            <button
+              type="button"
+              onClick={handleProofreadText}
+              disabled={isAiLoading || !formData.content}
+              className="px-2.5 py-1 rounded border-2 border-emerald-600 bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600/25 font-bold flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50 transition-all active:scale-95"
+              title="Identifica e corrige erros de digitação e falhas ortográficas com IA mantendo formatação e autoria intactas"
+            >
+              <SpellCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Corretor Ortográfico</span>
             </button>
 
             {(formData.pageSpan || 1) > 1 && (
