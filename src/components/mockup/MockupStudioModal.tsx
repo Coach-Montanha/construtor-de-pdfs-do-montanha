@@ -318,7 +318,7 @@ export const MockupStudioModal: React.FC<MockupStudioModalProps> = ({
           </div>
           <button
             type="button"
-            onClick={() => setCoverUrl(coverUrl === "/real-cover.png" ? project.cover.backgroundImage || "/real-cover.png" : "/real-cover.png")}
+            onClick={() => setCoverUrl(coverUrl === "/real-cover.png" ? project.coverConfig?.backgroundImage || "/real-cover.png" : "/real-cover.png")}
             className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer"
           >
             Alternar Versão

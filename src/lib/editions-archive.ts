@@ -210,6 +210,11 @@ export function duplicateEditionForNextRelease(
         estimatedReadTime: 3,
         pageSpan: 1,
         enabled: true,
+        heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+        pullQuotes: [],
+        layoutTemplate: "editorial-lead",
+        tags: ["FORÇA"],
+        featuredOnCover: true,
       },
     ];
   }

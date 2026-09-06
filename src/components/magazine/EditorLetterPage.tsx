@@ -1,6 +1,6 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
-import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
+import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { formatPageNumber } from "../../lib/magazine-utils";
 import { Feather, Award, Scale, FileText } from "lucide-react";
 
@@ -195,7 +195,7 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
                 </h4>
                 <span
                   className="font-black font-mono text-[8px] px-1.5 py-0.2 rounded uppercase shrink-0"
-                  style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                  style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000" }}
                 >
                   {editorialInfo.editorRole || "EDITOR-CHEFE"}
                 </span>
@@ -225,7 +225,7 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
             return (
               <div
                 className={`columns-1 sm:columns-2 gap-6 text-xs sm:text-[12.5px] leading-relaxed text-left shrink-0 mb-3 ${bodyFontClass}`}
-                style={{ color: isLight ? "#1E293B" : "#CBD5E1", columnFill: "balance" }}
+                style={{ color: isLight ? (textColor || "#0A0A0A") : "#CBD5E1", columnFill: "balance" }}
               >
                 {paragraphs.map((paragraph, idx) => (
                   <p key={idx} className="leading-relaxed mb-3 break-inside-avoid">

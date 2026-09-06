@@ -100,7 +100,7 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
 
   const handleOpenNextEditionModal = (source: ArchivedEdition | MagazineProject) => {
     setTargetEditionForDuplicate(source);
-    const curNum = "editionNumber" in source ? source.editionNumber : source.editionNumber || "01";
+    const curNum = (source as { editionNumber?: string }).editionNumber || "01";
     const numInt = parseInt(curNum.replace(/\D/g, ""), 10);
     const nNum = isNaN(numInt) ? "02" : numInt + 1 < 10 ? `0${numInt + 1}` : `${numInt + 1}`;
     setNextEditionNum(nNum);

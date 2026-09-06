@@ -1,6 +1,6 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
-import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
+import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { Sparkles, Zap, Crosshair } from "lucide-react";
 
 interface CoverPageProps {
@@ -27,6 +27,17 @@ export const CoverPage: React.FC<CoverPageProps> = ({
 
   // Dynamic Text Scale Multiplier (Default: 1.0)
   const scale = (coverConfig.textScale || 100) / 100;
+
+  // Dedicated cover color resolution:
+  // On dark photographic covers, ensure masthead and highlighted fonts are light and distinct!
+  const coverPrimary =
+    theme.coverPrimaryColor ||
+    (theme.isLight && !isPeakPerformance ? "#FFFFFF" : theme.primaryColor);
+
+  const coverBadgeBg = theme.coverBadgeBg || coverPrimary;
+  const coverBadgeTextColor =
+    theme.coverBadgeTextColor ||
+    (isColorLight(coverBadgeBg) ? "#000000" : "#FFFFFF");
 
   /* -------------------------------------------------------------
    * VARIANT: PEAK PERFORMANCE / PRO EDITION (High-Key Studio & Angular Blue)
@@ -537,19 +548,19 @@ export const CoverPage: React.FC<CoverPageProps> = ({
             {/* Hexagon / Tactical Badge */}
             <div
               className="px-2 py-0.5 font-black text-[9px] tracking-tight uppercase rounded-sm flex items-center gap-1 shadow-sm"
-              style={{ backgroundColor: theme.primaryColor, color: "#000000" }}
+              style={{ backgroundColor: coverBadgeBg, color: coverBadgeTextColor }}
             >
-              <Zap className="w-3 h-3 fill-black text-black" />
+              <Zap className="w-3 h-3 fill-current" style={{ color: coverBadgeTextColor }} />
               <span>{coverConfig.hexBadgeText || "VOL. 01 // ISSUE 01"}</span>
             </div>
-            <span className="hidden sm:inline font-bold" style={{ color: theme.primaryColor }}>
+            <span className="hidden sm:inline font-bold" style={{ color: coverPrimary }}>
               {coverConfig.issueBadge}
             </span>
           </div>
           <span className="text-white font-mono">{coverConfig.issueDate}</span>
           <span
             className="border px-2 py-0.5 rounded text-[8.5px] font-mono font-bold"
-            style={{ backgroundColor: "rgba(15,23,42,0.9)", borderColor: theme.primaryColor, color: theme.primaryColor }}
+            style={{ backgroundColor: "rgba(15,23,42,0.9)", borderColor: coverPrimary, color: coverPrimary }}
           >
             {coverConfig.priceBadge}
           </span>
@@ -562,7 +573,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
               className={`font-black tracking-tighter uppercase leading-[0.88] drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] text-center ${headlineFontClass}`}
               style={{
                 fontSize: `clamp(2.4rem, ${10 * scale}cqw, 4.8rem)`,
-                color: theme.primaryColor,
+                color: coverPrimary,
                 letterSpacing: "-0.04em",
                 textShadow: "0 0 25px rgba(0,0,0,0.9), 0 4px 10px rgba(0,0,0,0.9)",
               }}
@@ -577,8 +588,8 @@ export const CoverPage: React.FC<CoverPageProps> = ({
               className="w-full bg-black/90 border-y py-1 px-3 flex items-center justify-between font-mono font-black tracking-[0.2em] uppercase shadow-md"
               style={{
                 fontSize: `${9.5 * scale}px`,
-                borderColor: `${theme.primaryColor}80`,
-                color: theme.primaryColor,
+                borderColor: `${coverPrimary}80`,
+                color: coverPrimary,
               }}
             >
               <span className="text-white/40 hidden sm:inline">///</span>
@@ -597,13 +608,13 @@ export const CoverPage: React.FC<CoverPageProps> = ({
             <div
               key={hl.id}
               className="bg-black/90 border-l-4 p-2.5 rounded-sm shadow-xl backdrop-blur-sm transition-all"
-              style={{ borderLeftColor: theme.primaryColor }}
+              style={{ borderLeftColor: coverPrimary }}
             >
               <span
                 className="font-mono font-black tracking-wider uppercase block"
                 style={{
                   fontSize: `${8.5 * scale}pt`,
-                  color: theme.primaryColor,
+                  color: coverPrimary,
                 }}
               >
                 {hl.tag}
@@ -641,12 +652,12 @@ export const CoverPage: React.FC<CoverPageProps> = ({
 
         {/* Main Cover Story Headline */}
         <div className="bg-black/90 border-l-4 p-3.5 sm:p-4 rounded-sm shadow-2xl backdrop-blur-md"
-          style={{ borderLeftColor: theme.primaryColor }}
+          style={{ borderLeftColor: coverPrimary }}
         >
           <div className="flex items-center gap-2 mb-1">
             <span
               className="font-mono font-black text-[9px] tracking-widest uppercase px-2 py-0.5 rounded-xs"
-              style={{ backgroundColor: theme.primaryColor, color: "#000000" }}
+              style={{ backgroundColor: coverBadgeBg, color: coverBadgeTextColor }}
             >
               {coverConfig.categoryTag || "COVER STORY"}
             </span>

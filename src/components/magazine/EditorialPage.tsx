@@ -1,6 +1,6 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
-import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
+import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { formatPageNumber, getEffectiveArticlePageSpan } from "../../lib/magazine-utils";
 import { Zap, Feather, Award } from "lucide-react";
 
@@ -89,7 +89,7 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
           <div className="flex items-center gap-2 mb-0.5">
             <span
               className="font-black text-[9px] font-mono tracking-widest uppercase px-2 py-0.5 rounded"
-              style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+              style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000" }}
             >
               {project.volume} // {coverConfig.editionNumber ? `ED. #${coverConfig.editionNumber}` : "ED. #01"}
             </span>

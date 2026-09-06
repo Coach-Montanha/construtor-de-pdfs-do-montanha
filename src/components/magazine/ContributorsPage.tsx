@@ -1,6 +1,6 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
-import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
+import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { formatPageNumber } from "../../lib/magazine-utils";
 import { Instagram, Building } from "lucide-react";
 
@@ -66,7 +66,7 @@ export const ContributorsPage: React.FC<ContributorsPageProps> = ({
           <div className="flex items-center gap-2 mb-0.5">
             <span
               className="font-black text-[9px] font-mono tracking-widest uppercase px-2 py-0.5 rounded"
-              style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+              style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000" }}
             >
               EDITORIAL DOSSIER
             </span>

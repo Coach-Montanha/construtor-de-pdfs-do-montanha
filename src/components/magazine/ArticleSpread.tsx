@@ -1,6 +1,6 @@
 import React from "react";
 import { Article, MagazineProject, MagazineTheme } from "../../types/magazine";
-import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
+import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { formatPageNumber, getEffectiveArticlePageSpan, MANUAL_PAGE_BREAK_REGEX, MANUAL_COLUMN_BREAK_REGEX } from "../../lib/magazine-utils";
 import {
   Quote,
@@ -53,6 +53,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   const accentColor = theme.accentColor;
   const borderColor = theme.borderColor;
   const brandTitle = project.editorialInfo?.headerBrandTitle || project.title;
+  // High contrast body text for effortless article reading
+  const articleBodyColor = isLight ? (theme.textColor || "#0A0A0A") : "#CBD5E1";
 
   const effectiveTotalPages = Math.max(
     totalPagesForArticle || 1,
@@ -363,7 +365,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           {items.map((item, itemIdx) => (
             <li key={itemIdx} className={`flex items-start gap-1.5 leading-snug ${bodyTextSizeClass}`}>
               <span className="font-bold shrink-0" style={{ color: primaryColor }}>▸</span>
-              <span style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}>
+              <span style={{ color: articleBodyColor }}>
                 {renderInlineFormatted(item.replace(/^[-•]\s*/, ""))}
               </span>
             </li>
@@ -387,7 +389,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           </h4>
           <p
             className={`${bodyTextSizeClass} text-left leading-relaxed ${bodyFontClass}`}
-            style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
+            style={{ color: articleBodyColor }}
           >
             {renderInlineFormatted(body)}
           </p>
@@ -404,7 +406,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             ? "first-letter:text-3xl sm:first-letter:text-4xl first-letter:font-black first-letter:float-left first-letter:mr-2 first-letter:leading-none"
             : ""
         }`}
-        style={{ color: isLight ? "#1E293B" : "#CBD5E1" }}
+        style={{ color: articleBodyColor }}
       >
         {renderInlineFormatted(chunk)}
       </p>
@@ -481,14 +483,14 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
     ];
-    return fallbacks.find((u) => u !== hero) || fallbacks[0];
+    return fallbacks.find((u) => u !== hero) || fallbacks[0] || "";
   };
 
   const getClosingPhotoUrl = (): string => {
     if (configuredClosingImage) return configuredClosingImage;
     // Em artigos multi-página, usa fallback temático apenas se a imagem final estiver habilitada
     if (isMultiPage && !isClosingImageExplicitlyDisabled) {
-      return getContextualSpotlightImage();
+      return getContextualSpotlightImage() || "";
     }
     return "";
   };
@@ -550,7 +552,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
           <span className="opacity-40">/</span>
           <span
             className="text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase"
-            style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+            style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000" }}
           >
             {article.category || "MONTANHA DOSSIER"}
           </span>
@@ -603,7 +605,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
               <div
                 className="absolute top-3 right-3 px-3 py-1.5 rounded-sm shadow-lg font-mono font-black text-[10px] sm:text-xs uppercase tracking-tight flex items-center gap-1.5"
-                style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000" }}
               >
                 <Tag className="w-3.5 h-3.5" />
                 <span>{promo?.promoBadgeText || "SPECIAL OFFER // 15% OFF"}</span>
@@ -702,7 +704,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                   />
                   <div
                     className="absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-mono font-bold uppercase"
-                    style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                    style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000" }}
                   >
                     SPOTLIGHT #{idx + 1}
                   </div>
@@ -813,7 +815,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               >
                 <div
                   className="px-2 py-1 rounded font-mono font-black text-[9px] uppercase shrink-0"
-                  style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                  style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000" }}
                 >
                   FASE 0 // WARM-UP
                 </div>
@@ -1062,7 +1064,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span
                         className="text-[7.5px] font-mono font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm"
-                        style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000" }}
+                        style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000" }}
                       >
                         // REGISTRO DE PERFORMANCE
                       </span>
@@ -1111,7 +1113,7 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                       <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
                       <span>PONTOS-CHAVE:</span>
                     </div>
-                    <ul className={`text-[9px] flex flex-wrap gap-x-3 gap-y-1 ${bodyFontClass}`} style={{ color: isLight ? "#334155" : "#CBD5E1" }}>
+                    <ul className={`text-[9px] flex flex-wrap gap-x-3 gap-y-1 ${bodyFontClass}`} style={{ color: isLight ? articleBodyColor : "#CBD5E1" }}>
                       {article.keyTakeaways!.slice(0, 3).map((takeaway, idx) => (
                         <li key={idx} className="flex items-center gap-1 leading-tight">
                           <span style={{ color: primaryColor }}>▸</span>

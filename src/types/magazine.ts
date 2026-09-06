@@ -26,7 +26,14 @@ export type MagazineThemeId =
   | "concrete-monolith"    // Heavy Concrete & Industrial Slate
   | "acid-lime-athletic"   // High-Voltage Acid Lime / Cyber Athletic
   | "swiss-helvetica"      // Swiss Minimalist / Alpine Red (Fundo Branco)
-  | "midnight-fintech";    // Midnight Fintech & Violet Glow (Ink-Navy, Layered Violet Glow, Magenta Gradient)
+  | "midnight-fintech"     // Midnight Fintech & Violet Glow (Ink-Navy, Layered Violet Glow, Magenta Gradient)
+  | "clarity-monochrome"   // Editorial Clarity & Black Ink (Alto Contraste Supremo, Fundo Branco)
+  | "montanha-clean-titanium" // Montanha Titanium Light & Industrial Amber (Fundo Titânio Claro)
+  | "oxford-navy-cream"    // Oxford Journal & Royal Navy (Fundo Marfim Editorial)
+  | "tactical-dossier-light" // Tactical Dossier & Charcoal Grid (Fundo Gelo Militar)
+  | "athletic-crimson-light" // Athletic Performance & Deep Crimson (Fundo Branco Esportivo)
+  | "botanic-emerald-light" // Botanic Longevity & Deep Emerald (Fundo Suave Biohacking)
+  | "harbor-slate-light";  // Minimalist Slate & Steel Blue (Fundo Alabastro Polar)
 
 export interface MagazineTheme {
   id: MagazineThemeId;
@@ -44,6 +51,10 @@ export interface MagazineTheme {
   fontBody: string;
   fontSerif: boolean;
   isLight?: boolean;
+  coverPrimaryColor?: string; // Cor de destaque principal na capa (fontes claras e destacadas)
+  coverTextColor?: string;    // Cor do texto de suporte na capa
+  coverBadgeBg?: string;      // Cor de fundo dos selos/badges na capa
+  coverBadgeTextColor?: string;// Cor do texto nos selos/badges da capa
 }
 
 
@@ -218,6 +229,8 @@ export interface Article {
   bottomSpotlightCaption?: string;
   bottomSpotlightPosition?: string;
   showClosingImage?: boolean; // Permite ao usuário desativar ou remover a imagem final para liberar 100% de espaço ao texto
+  backgroundImage?: string;
+  backgroundOpacity?: number;
   pageSpan?: number; // 1 = Página Única, 2 = Página Dupla, 3, 4, 5, 6+ páginas
   quotePlacement?: "end" | "side" | "none"; // Posição da citação (Padrão: no final do artigo)
   textDensity?: "compact" | "normal" | "spacious";

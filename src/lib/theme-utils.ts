@@ -65,3 +65,17 @@ export function getMagazineThemeVariables(theme: MagazineTheme) {
   } as React.CSSProperties;
 }
 
+/**
+ * Determines whether a given hex color is perceptually light (brightness > 135)
+ */
+export function isColorLight(colorHex?: string): boolean {
+  if (!colorHex || !colorHex.startsWith("#")) return true;
+  const hex = colorHex.replace("#", "");
+  if (hex.length < 6) return true;
+  const r = parseInt(hex.substring(0, 2), 16) || 0;
+  const g = parseInt(hex.substring(2, 4), 16) || 0;
+  const b = parseInt(hex.substring(4, 6), 16) || 0;
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 135;
+}
+

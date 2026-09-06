@@ -1,6 +1,6 @@
 import React from "react";
 import { MagazineProject, MagazineTheme } from "../../types/magazine";
-import { getHeadlineFontClass, getBodyFontClass } from "../../lib/theme-utils";
+import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { Globe, Instagram, Youtube, Mail, QrCode, Sparkles } from "lucide-react";
 
 interface BackCoverPageProps {
@@ -89,7 +89,7 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
         </div>
         <h2
           className={`text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-tight mb-2.5 drop-shadow-md ${headlineFontClass}`}
-          style={{ color: "#FFFFFF" }}
+          style={{ color: backCoverConfig.backgroundImage ? "#FFFFFF" : textColor }}
         >
           {backCoverConfig.headline}
         </h2>
@@ -99,14 +99,14 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
         >
           {backCoverConfig.subheadline}
         </p>
-        <p className={`text-xs leading-relaxed max-w-md mx-auto italic mb-4 ${bodyFontClass}`} style={{ color: "#CBD5E1" }}>
+        <p className={`text-xs leading-relaxed max-w-md mx-auto italic mb-4 ${bodyFontClass}`} style={{ color: backCoverConfig.backgroundImage ? "#CBD5E1" : textMutedColor }}>
           "{backCoverConfig.message}"
         </p>
 
         {/* CTA Button */}
         <div
           className="inline-flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider px-5 py-2.5 rounded-md shadow-lg border cursor-pointer"
-          style={{ backgroundColor: primaryColor, color: isLight ? "#FFFFFF" : "#000000", borderColor: "#000000" }}
+          style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000", borderColor: "#000000" }}
         >
           <span>{backCoverConfig.ctaText}</span>
           <Globe className="w-4 h-4" />
