@@ -273,6 +273,23 @@ export const MAGAZINE_THEMES: MagazineTheme[] = [
     fontSerif: false,
     isLight: true,
   },
+  {
+    id: "midnight-fintech",
+    name: "Midnight Fintech & Violet Glow (Design Language)",
+    description: "Midnight dark void (#050A14), brilho radial violeta e magenta (#6958E2 / #7317D5), texto lite-white e cards translúcidos 4%.",
+    category: "dark",
+    primaryColor: "#6958E2",
+    accentColor: "#7317D5",
+    textColor: "#EAEAEA",
+    bgLight: "#F8FAFC",
+    bgDark: "#050A14",
+    cardBg: "#0D1424",
+    borderColor: "#171E2C",
+    fontHeadline: "font-headline-creato",
+    fontBody: "font-body-inter",
+    fontSerif: false,
+    isLight: false,
+  },
 ];
 
 

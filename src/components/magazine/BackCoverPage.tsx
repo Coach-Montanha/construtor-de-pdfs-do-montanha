@@ -42,7 +42,7 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
       }}
     >
       {/* Background Graphic & Mood */}
-      {backCoverConfig.backgroundImage && (
+      {backCoverConfig.backgroundImage ? (
         <div className="absolute inset-0 z-0">
           <img
             src={backCoverConfig.backgroundImage}
@@ -51,7 +51,17 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/85" />
         </div>
-      )}
+      ) : theme.id === "midnight-fintech" ? (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              radial-gradient(ellipse 65% 55% at 50% 30%, rgba(83, 73, 126, 0.35), transparent 60%),
+              radial-gradient(ellipse 70% 35% at 50% 100%, rgba(115, 23, 213, 0.22), transparent 65%)
+            `,
+          }}
+        />
+      ) : null}
 
       {/* Top Header */}
       <div

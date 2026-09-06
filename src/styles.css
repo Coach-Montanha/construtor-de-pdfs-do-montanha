@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@700;900&family=Inter:wght@400;600;800;900&family=Lora:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,900;1,400&family=Montserrat:wght@400;700;900&family=Oswald:wght@500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@700;900&family=Inter:wght@400;600;800;900&family=Lora:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,900;1,400&family=Montserrat:wght@400;700;900&family=Oswald:wght@500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap');
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -13,6 +13,11 @@
 .font-headline-space { font-family: 'Space Grotesk', monospace !important; }
 .font-headline-oswald { font-family: 'Oswald', sans-serif !important; }
 .font-headline-inter { font-family: 'Inter', sans-serif !important; }
+.font-headline-creato {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif !important;
+  letter-spacing: -0.02em !important;
+  font-weight: 800 !important;
+}
 
 .font-body-inter { font-family: 'Inter', sans-serif !important; }
 .font-body-lora { font-family: 'Lora', Georgia, serif !important; }
@@ -191,6 +196,61 @@
   --app-viewer-toolbar: #121212;
 }
 
+/* 6. MODO MIDNIGHT FINTECH & VIOLET GLOW (DESIGN LANGUAGE) */
+.app-theme-midnight-fintech, body.app-theme-midnight-fintech {
+  --app-bg: #050a14;
+  --app-header: #070e1c;
+  --app-subnav: #091325;
+  --app-surface: #0d1424;
+  --app-surface-hover: #131b2e;
+  --app-surface-subtle: rgba(234, 234, 234, 0.04);
+  --app-border: #171e2c;
+  --app-border-subtle: #171e2c;
+  --app-text: #eaeaea;
+  --app-text-heading: #eaeaea;
+  --app-text-muted: #9ea6b6;
+  --app-input-bg: rgba(234, 234, 234, 0.04);
+  --app-input-border: #171e2c;
+  --app-input-text: #eaeaea;
+  --app-accent-bg: #6958e2;
+  --app-accent-text: #ffffff;
+  --app-viewer-bg: #050a14;
+  --app-viewer-toolbar: #0d1424;
+
+  /* Official Design Language Tokens */
+  --color-dark: #050a14;
+  --color-lite-white: #eaeaea;
+  --color-grey: #9ea6b6;
+  --color-stroke: #171e2c;
+  --color-accent-blue: #3898ec;
+  --color-accent-purple: #6958e2;
+  --color-accent-magenta: #7317d5;
+  --color-purple-glow: #53497e;
+  --color-bright-gray-4: rgba(234, 234, 234, 0.04);
+  --color-dropdown-bg: #0d1424;
+
+  /* Gradient Presets */
+  --gradient-cta: linear-gradient(90deg, #6958e2 20%, #7317d5);
+  --gradient-stat-text: linear-gradient(90deg, rgb(105, 88, 226) 20%, rgb(255, 255, 255));
+  --gradient-page-glow:
+    radial-gradient(ellipse 60% 50% at 70% 20%, rgba(83, 73, 126, 0.45), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 30% 10%, rgba(56, 152, 236, 0.15), transparent 55%);
+  --gradient-inset-highlight: inset 0 -4px 6.9px rgba(255, 255, 255, 0.35);
+  --gradient-tab-active-highlight: inset 0 15px 18px rgba(255, 255, 255, 0.55);
+
+  --radius-button: 12px;
+  --radius-card: 18px;
+  --radius-pill: 999px;
+}
+
+body.app-theme-midnight-fintech .theme-app-viewer-canvas {
+  background-color: #050a14 !important;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 70% 20%, rgba(83, 73, 126, 0.45), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 30% 10%, rgba(56, 152, 236, 0.15), transparent 55%) !important;
+  background-attachment: fixed;
+}
+
 /* THEME APPLICATION HELPERS */
 .theme-app-shell {
   background-color: var(--app-bg) !important;
@@ -271,6 +331,49 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--app-border);
   border-radius: 4px;
+}
+
+/* Midnight Fintech Component Utilities */
+.btn-fintech-gradient {
+  background: linear-gradient(90deg, #6958e2 20%, #7317d5);
+  color: #eaeaea;
+  border-radius: 12px;
+  box-shadow: inset 0 -4px 6.9px rgba(255, 255, 255, 0.25);
+  transition: all 0.2s ease;
+}
+.btn-fintech-gradient:hover {
+  opacity: 0.92;
+}
+
+.btn-fintech-ghost {
+  background: transparent;
+  color: #eaeaea;
+  border: 1px solid #171e2c;
+  border-radius: 12px;
+  box-shadow: inset 0 -4px 6.9px rgba(255, 255, 255, 0.15);
+  transition: all 0.2s ease;
+}
+.btn-fintech-ghost:hover {
+  background: rgba(234, 234, 234, 0.05);
+}
+
+.card-fintech-glass {
+  background-color: rgba(234, 234, 234, 0.04);
+  border: 1px solid #171e2c;
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.pill-fintech-tab {
+  border-radius: 999px;
+  box-shadow: inset 0 -4px 6.9px rgba(255, 255, 255, 0.25);
+}
+
+.glow-fintech-portal {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 70% 20%, rgba(83, 73, 126, 0.45), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 30% 10%, rgba(56, 152, 236, 0.15), transparent 55%);
 }
 
 /* Print Styles & High-Fidelity Magazine Pagination */

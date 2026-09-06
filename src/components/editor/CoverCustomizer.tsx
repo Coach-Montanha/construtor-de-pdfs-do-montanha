@@ -278,6 +278,11 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
       name: "Monochrome Heavy Iron & Red",
       desc: "Alto contraste cru em preto e branco marfim com detalhes em vermelho rubi.",
     },
+    {
+      id: "midnight-fintech",
+      name: "Midnight Fintech & Violet Glow (Design Language)",
+      desc: "Dark void em azul-marinho (#050A14), brilhos radiais violeta e azul, cards translúcidos 4% e gradiente magenta.",
+    },
   ];
 
   const textScalePresets: { id: TextScalePreset; label: string; scale: number }[] = [

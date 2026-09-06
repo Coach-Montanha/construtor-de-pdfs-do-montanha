@@ -3,7 +3,8 @@ export type AppUiThemeMode =
   | "light-clean"      // Claro Suave Editorial
   | "dark-ergonomic"   // Escuro Ergonômico (Slate & Âmbar)
   | "sepia-paper"      // Papel Sépiado Eye-Care
-  | "midnight-oled";   // Preto Absoluto OLED
+  | "midnight-oled"    // Preto Absoluto OLED
+  | "midnight-fintech"; // Midnight Void (#050A14), Violet Glow (#6958E2), 4% Glass Surfaces
 
 export interface AppUiThemeConfig {
   id: AppUiThemeMode;
@@ -30,6 +31,18 @@ export const APP_UI_THEMES: AppUiThemeConfig[] = [
     previewBorder: "#000000",
     previewAccent: "#FACC15",
     className: "app-theme-contrast-white",
+  },
+  {
+    id: "midnight-fintech",
+    name: "Midnight Fintech & Violet Glow (Design Language)",
+    subtitle: "Canvas ink-navy (#050A14), brilho radial violeta e azul, cards translúcidos 4% e gradiente magenta (#6958E2 / #7317D5).",
+    icon: "zap",
+    previewBg: "#050A14",
+    previewCard: "#0D1424",
+    previewText: "#EAEAEA",
+    previewBorder: "#171E2C",
+    previewAccent: "#6958E2",
+    className: "app-theme-midnight-fintech",
   },
   {
     id: "light-clean",

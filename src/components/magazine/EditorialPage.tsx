@@ -66,7 +66,19 @@ export const EditorialPage: React.FC<EditorialPageProps> = ({
       }}
     >
       {/* Background Subtle Industrial Texture */}
-      <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+      {theme.id === "midnight-fintech" ? (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              radial-gradient(ellipse 65% 45% at 85% 15%, rgba(83, 73, 126, 0.28), transparent 60%),
+              radial-gradient(ellipse 50% 40% at 15% 85%, rgba(56, 152, 236, 0.12), transparent 55%)
+            `,
+          }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+      )}
 
       {/* Top Header Block: CONTENTS + ISSUE METADATA */}
       <div

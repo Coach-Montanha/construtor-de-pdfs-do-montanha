@@ -25,7 +25,8 @@ export type MagazineThemeId =
   | "ronin-crimson"        // Japanese Ronin / Sumi Ink & Blood Red
   | "concrete-monolith"    // Heavy Concrete & Industrial Slate
   | "acid-lime-athletic"   // High-Voltage Acid Lime / Cyber Athletic
-  | "swiss-helvetica";     // Swiss Minimalist / Alpine Red (Fundo Branco)
+  | "swiss-helvetica"      // Swiss Minimalist / Alpine Red (Fundo Branco)
+  | "midnight-fintech";    // Midnight Fintech & Violet Glow (Ink-Navy, Layered Violet Glow, Magenta Gradient)
 
 export interface MagazineTheme {
   id: MagazineThemeId;
@@ -60,7 +61,8 @@ export type CoverStyleVariant =
   | "peak-performance"  // High-Key Studio Lighting, Angular Blue/Dark Bands, Red PEAK hook, Circular Badge, Pro Edition
   | "tactical-stencil"   // Stencil Tactical Font, Warning Orange, Crosshair HUD, Military/Iron Focus
   | "monochrome-iron"    // High Contrast Gritty Black & White with Red Accents and Heavy Metal Texture
-  | "clean-editorial";   // Sleek High-End Magazine
+  | "clean-editorial"    // Sleek High-End Magazine
+  | "midnight-fintech";  // Midnight Fintech & Violet Glow (Ink-Navy, Radial Glows, Gradient Pills, Creato Display)
 
 export type TextScalePreset = "compact" | "normal" | "large" | "extra-large";
 
@@ -266,7 +268,8 @@ export type HeadlineFontOption =
   | "cinzel"       // Cinzel (Classic Roman Prestige)
   | "space"        // Space Grotesk (Tech / Futuristic)
   | "oswald"       // Oswald (Condensed Athletic)
-  | "inter";       // Inter (Clean Sans)
+  | "inter"        // Inter (Clean Sans)
+  | "creato";      // Creato Display (Midnight Fintech, Bold Display & -0.02em tracking)
 
 export type BodyFontOption =
   | "inter"        // Inter (Modern Crisp Sans)

@@ -16,6 +16,8 @@ export function getHeadlineFontClass(headlineFont?: HeadlineFontOption): string 
       return "font-headline-oswald tracking-tight";
     case "inter":
       return "font-headline-inter tracking-tight";
+    case "creato":
+      return "font-headline-creato tracking-tight";
     default:
       return "font-headline-bebas tracking-wide";
   }
@@ -42,6 +44,7 @@ export function getBodyFontClass(bodyFont?: BodyFontOption): string {
  */
 export function getMagazineThemeVariables(theme: MagazineTheme) {
   const isLight = Boolean(theme.isLight);
+  const isMidnightFintech = theme.id === "midnight-fintech";
   
   return {
     "--theme-primary": theme.primaryColor,
@@ -49,8 +52,14 @@ export function getMagazineThemeVariables(theme: MagazineTheme) {
     "--theme-bg": isLight ? theme.bgLight : theme.bgDark,
     "--theme-card": theme.cardBg,
     "--theme-text": theme.textColor,
-    "--theme-text-muted": isLight ? "#475569" : "#94A3B8",
+    "--theme-text-muted": isLight ? "#475569" : isMidnightFintech ? "#9EA6B6" : "#94A3B8",
     "--theme-border": theme.borderColor,
+    "--theme-gradient-cta": isMidnightFintech
+      ? "linear-gradient(90deg, #6958e2 20%, #7317d5)"
+      : undefined,
+    "--theme-page-glow": isMidnightFintech
+      ? "radial-gradient(ellipse 60% 50% at 70% 20%, rgba(83, 73, 126, 0.45), transparent 60%), radial-gradient(ellipse 50% 40% at 30% 10%, rgba(56, 152, 236, 0.15), transparent 55%)"
+      : undefined,
     backgroundColor: isLight ? theme.bgLight : theme.bgDark,
     color: theme.textColor,
   } as React.CSSProperties;

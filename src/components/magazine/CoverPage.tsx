@@ -19,6 +19,8 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   const overlayOpacity = coverConfig.backgroundOverlayOpacity / 100;
   const isPeakPerformance = coverConfig.coverStyleVariant === "peak-performance";
   const isTactical = coverConfig.coverStyleVariant === "tactical-stencil";
+  const isMidnightFintech =
+    coverConfig.coverStyleVariant === "midnight-fintech" || theme.id === "midnight-fintech";
 
   const headlineFontClass = getHeadlineFontClass(project.fontConfig?.headlineFont);
   const bodyFontClass = getBodyFontClass(project.fontConfig?.bodyFont);
@@ -215,6 +217,261 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         <div className="absolute bottom-[1.2%] left-[34%] text-[5.5pt] font-bold text-slate-300 z-20 uppercase leading-tight">
           WWW.MONTANHAMAGAZINE.COM.BR • {coverConfig.editionNumber || "ISSUE 01"} | R$ 35,00<br />
           {coverConfig.issueDate || "EDITION 2026"} / SPECIAL LAUNCH
+        </div>
+      </div>
+    );
+  }
+
+  /* -------------------------------------------------------------
+   * VARIANT: MIDNIGHT FINTECH & VIOLET GLOW (DESIGN LANGUAGE)
+   * ------------------------------------------------------------- */
+  if (isMidnightFintech) {
+    return (
+      <div
+        className={`magazine-page relative w-full h-full bg-[#050a14] text-[#eaeaea] overflow-hidden flex flex-col justify-between select-none ${
+          isPrintMode ? "print-page" : "shadow-2xl"
+        }`}
+        style={{
+          aspectRatio: "210 / 297",
+          fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+        }}
+      >
+        {/* Layered Atmospheric Radial Glows (Violet + Cool Blue + Bottom Magenta) */}
+        <div
+          className="absolute inset-0 z-1 pointer-events-none"
+          style={{
+            backgroundImage: `
+              radial-gradient(ellipse 65% 55% at 75% 20%, rgba(83, 73, 126, 0.48), transparent 65%),
+              radial-gradient(ellipse 55% 45% at 25% 15%, rgba(56, 152, 236, 0.18), transparent 55%),
+              radial-gradient(ellipse 75% 35% at 50% 100%, rgba(115, 23, 213, 0.28), transparent 65%)
+            `,
+          }}
+        />
+
+        {/* Background Athlete Image with Dark Void Integration */}
+        {coverConfig.backgroundImage && (
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <img
+              src={
+                coverConfig.backgroundImage?.includes("unsplash.com")
+                  ? coverConfig.backgroundImage.replace(/w=\d+/, "w=2560").replace(/q=\d+/, "q=95")
+                  : coverConfig.backgroundImage
+              }
+              alt="Capa Atleta Midnight Fintech"
+              className="w-full h-full object-cover object-center filter contrast-110 brightness-90"
+              loading="eager"
+            />
+            {/* Dark Ink-Navy overlay gradient for high text legibility */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(to top, #050a14 12%, rgba(5, 10, 20, 0.65) 50%, rgba(5, 10, 20, 0.85) 100%)",
+                opacity: Math.max(0.65, overlayOpacity),
+              }}
+            />
+          </div>
+        )}
+
+        {/* Top Header Bar / Masthead Section */}
+        <div className="relative z-10 p-4 sm:p-5 md:p-6 flex flex-col items-center">
+          {/* Top Metadata Strip */}
+          <div className="w-full flex items-center justify-between border-b border-[#171e2c] pb-2 text-[9px] sm:text-[10px] font-medium text-[#9ea6b6]">
+            <div className="flex items-center gap-2">
+              {/* Pill Badge with Purple-to-Magenta Gradient + Inset Highlight */}
+              <div
+                className="px-3 py-1 font-bold text-[8.5px] uppercase text-white flex items-center gap-1.5 shadow-md"
+                style={{
+                  background: "linear-gradient(90deg, #6958e2 20%, #7317d5)",
+                  borderRadius: "999px",
+                  boxShadow: "inset 0 -3px 6px rgba(255, 255, 255, 0.35)",
+                }}
+              >
+                <Zap className="w-3 h-3 text-white fill-white" />
+                <span>{coverConfig.hexBadgeText || coverConfig.issueBadge || "Edição Oficial"}</span>
+              </div>
+              <span className="hidden sm:inline text-xs text-[#eaeaea] font-semibold">
+                {coverConfig.issueBadge}
+              </span>
+            </div>
+            <span className="text-[#9ea6b6]">{coverConfig.issueDate}</span>
+            <span
+              className="px-2.5 py-0.5 rounded-full text-[8.5px] font-medium border border-[#171e2c]"
+              style={{
+                backgroundColor: "rgba(234, 234, 234, 0.04)",
+                color: "#eaeaea",
+                boxShadow: "inset 0 -2px 4px rgba(255, 255, 255, 0.15)",
+              }}
+            >
+              {coverConfig.priceBadge || "Edição Digital"}
+            </span>
+          </div>
+
+          {/* Masthead Logo */}
+          <div className="w-full text-center mt-3 mb-1">
+            <h1
+              className="font-bold tracking-tight leading-[0.92] text-center font-headline-creato"
+              style={{
+                fontSize: `clamp(2.4rem, ${10 * scale}cqw, 4.6rem)`,
+                color: "#eaeaea",
+                letterSpacing: "-0.025em",
+                textShadow: "0 4px 24px rgba(0, 0, 0, 0.9), 0 0 40px rgba(105, 88, 226, 0.3)",
+              }}
+            >
+              {coverConfig.mastheadText || "MONTANHA MAGAZINE"}
+            </h1>
+
+            {/* Slogan Bar */}
+            <div className="mt-1.5 w-full flex items-center justify-center">
+              <div
+                className="w-full max-w-xl py-1 px-3 rounded-full flex items-center justify-center gap-2 text-center text-[10px] font-medium text-[#9ea6b6] border border-[#171e2c]"
+                style={{
+                  backgroundColor: "rgba(234, 234, 234, 0.04)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <span className="text-[#6958e2] font-mono text-[9px]">//</span>
+                <span>{coverConfig.sloganText || "Infraestrutura de performance atlética e conhecimento sem limites"}</span>
+                <span className="text-[#6958e2] font-mono text-[9px]">//</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Middle Section: Glass-Dark Story Cards (Left) & Stat Counter (Right) */}
+        <div className="relative z-10 px-4 sm:p-5 md:p-6 flex-1 flex items-center justify-between gap-4">
+          {/* Left-Aligned Story Cards with 4% White Wash Surface */}
+          <div className="flex flex-col gap-2.5 max-w-[58%] w-full">
+            {coverConfig.highlights.slice(0, 3).map((hl) => (
+              <div
+                key={hl.id}
+                className="p-3 border border-[#171e2c] transition-all"
+                style={{
+                  backgroundColor: "rgba(234, 234, 234, 0.04)",
+                  borderRadius: "18px",
+                  backdropFilter: "blur(12px)",
+                  boxShadow: "inset 0 -2px 5px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.4)",
+                }}
+              >
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span
+                    className="font-bold text-[8.5px] uppercase tracking-wider"
+                    style={{ color: "#6958e2" }}
+                  >
+                    {hl.tag}
+                  </span>
+                </div>
+                <h3
+                  className="font-bold text-[#eaeaea] leading-snug tracking-tight font-headline-creato"
+                  style={{
+                    fontSize: `${11.5 * scale}pt`,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {hl.title}
+                </h3>
+                {hl.teaser && (
+                  <p
+                    className="text-[#9ea6b6] text-[8.5pt] mt-1 leading-relaxed line-clamp-2"
+                  >
+                    {hl.teaser}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Right Side: Cinematic Stat Counter with Gradient Text */}
+          <div className="hidden sm:flex flex-col items-end text-right pr-2">
+            <div
+              className="text-4xl md:text-5xl font-extrabold tracking-tight font-headline-creato"
+              style={{
+                background: "linear-gradient(90deg, rgb(105, 88, 226) 20%, rgb(255, 255, 255))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                letterSpacing: "-0.03em",
+              }}
+            >
+              {coverConfig.numFeature?.number || "#01"}
+            </div>
+            <div className="text-[9px] font-medium text-[#9ea6b6] uppercase tracking-wider mt-0.5 max-w-[130px]">
+              {coverConfig.numFeature?.sub || "Edição de Lançamento"}
+            </div>
+
+            {/* Pill Indicator */}
+            <div
+              className="mt-3 px-3 py-1 rounded-full text-[8px] font-bold text-[#eaeaea] border border-[#171e2c]"
+              style={{
+                backgroundColor: "rgba(234, 234, 234, 0.04)",
+                boxShadow: "inset 0 -2px 4px rgba(255, 255, 255, 0.2)",
+              }}
+            >
+              Tecnologia & Força
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Section: Hero Main Headline & Footer Metadata */}
+        <div className="relative z-10 px-4 sm:p-5 md:p-6 pb-4">
+          <div
+            className="p-4 border border-[#171e2c] mb-3"
+            style={{
+              backgroundColor: "rgba(234, 234, 234, 0.04)",
+              borderRadius: "18px",
+              backdropFilter: "blur(14px)",
+              boxShadow: "inset 0 -3px 6px rgba(255, 255, 255, 0.12), 0 12px 32px rgba(0, 0, 0, 0.6)",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span
+                className="px-2.5 py-0.5 rounded-full text-[8.5px] font-bold text-white shadow-xs"
+                style={{
+                  background: "linear-gradient(90deg, #6958e2 20%, #7317d5)",
+                  boxShadow: "inset 0 -2px 4px rgba(255, 255, 255, 0.3)",
+                }}
+              >
+                {coverConfig.categoryTag || "Matéria de Capa"}
+              </span>
+              <span className="text-[9px] text-[#9ea6b6] font-medium">
+                Destaque Editorial Exclusivo
+              </span>
+            </div>
+
+            <h2
+              className="font-bold text-[#eaeaea] leading-[0.94] tracking-tight font-headline-creato"
+              style={{
+                fontSize: `clamp(1.6rem, ${6.5 * scale}cqw, 3.2rem)`,
+                letterSpacing: "-0.025em",
+              }}
+            >
+              {coverConfig.mainHeadline || "O Código da Alta Performance"}
+            </h2>
+
+            <p
+              className="text-[#9ea6b6] text-xs sm:text-sm mt-1.5 leading-relaxed max-w-2xl"
+            >
+              {coverConfig.subHeadline || "Fundamentos de força, biomecânica e desenvolvimento humano para atletas de elite."}
+            </p>
+          </div>
+
+          {/* Bottom Bar: Barcode and Minimalist Info */}
+          <div className="flex items-center justify-between pt-2 border-t border-[#171e2c] text-[8.5px] text-[#9ea6b6]">
+            <div className="flex items-center gap-2.5">
+              {/* Crisp Barcode */}
+              <div className="bg-white px-2 py-0.5 rounded border border-white/20 flex flex-col items-center">
+                <div className="h-[10px] w-[64px] bg-[repeating-linear-gradient(90deg,#000,#000_1.5px,#fff_1.5px,#fff_3px,#000_3px,#000_4px,#fff_4px,#fff_6px,#000_6px,#000_8px)]" />
+                <span className="font-mono text-[5pt] font-bold text-black leading-none mt-0.5">
+                  {coverConfig.barcodeText || "9 772226 502002"}
+                </span>
+              </div>
+              <span className="font-medium text-[#eaeaea]">
+                Montanha Magazine • {coverConfig.issueBadge}
+              </span>
+            </div>
+
+            <div className="font-medium">
+              www.montanhamagazine.com.br
+            </div>
+          </div>
         </div>
       </div>
     );

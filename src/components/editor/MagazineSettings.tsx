@@ -111,6 +111,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
     { id: "space", name: "Space Grotesk", style: "Técnico & Futurista", sample: "SYS.PROTOCOL // 01" },
     { id: "oswald", name: "Oswald", style: "Atlético Condensado", sample: "HEAVY TRAINING" },
     { id: "inter", name: "Inter Bold", style: "Minimalista & Contemporâneo", sample: "DESIGN EDITORIAL" },
+    { id: "creato", name: "Creato Display", style: "Midnight Fintech & Editorial (Tracking -0.02em)", sample: "INFRASTRUCTURE & GLOW" },
   ];
 
   const bodyFontOptions: { id: BodyFontOption; name: string; style: string; sample: string }[] = [
@@ -519,7 +520,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           <div>
             <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
               <Palette className="w-4 h-4 text-amber-500" />
-              <span>2. Tema Visual da Revista (16 Paletas de Cores Editoriais)</span>
+              <span>2. Tema Visual da Revista ({MAGAZINE_THEMES.length} Paletas de Cores Editoriais)</span>
             </h3>
             <p className="text-xs opacity-75 mt-0.5">
               Escolha a identidade visual completa para a capa, páginas internas, caixas de destaque e contracapa.
@@ -660,7 +661,7 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           Alterne o visual da sua área de trabalho para evitar a fadiga visual durante longas sessões de edição.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 pt-1">
           {APP_UI_THEMES.map((uiTheme) => {
             const isSelected = currentUiTheme === uiTheme.id;
             return (
