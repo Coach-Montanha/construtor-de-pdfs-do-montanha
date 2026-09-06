@@ -1,5 +1,5 @@
 import React from "react";
-import { Article, MagazineProject, MagazineTheme } from "../../types/magazine";
+import { Article, MagazineLayoutMode, MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { formatPageNumber, getEffectiveArticlePageSpan, MANUAL_PAGE_BREAK_REGEX, MANUAL_COLUMN_BREAK_REGEX } from "../../lib/magazine-utils";
 import {
@@ -21,6 +21,7 @@ interface ArticleSpreadProps {
   isPrintMode?: boolean;
   pagePart?: number; // For multi-page spreads
   totalPagesForArticle?: number;
+  layoutMode?: MagazineLayoutMode;
 }
 
 export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
@@ -31,7 +32,11 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   isPrintMode = false,
   pagePart = 1,
   totalPagesForArticle = article.pageSpan || 1,
+  layoutMode = "print",
 }) => {
+  const effectiveLayoutMode = layoutMode || project.layoutMode || "print";
+  const isMobile = effectiveLayoutMode === "mobile";
+
   const isWorkout = article.layoutTemplate === "workout-protocol";
   const isProductAd = article.layoutTemplate === "product-ad";
   const isFacilitySpotlight = article.layoutTemplate === "facility-spotlight";
@@ -172,16 +177,17 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
 
   // Dynamic Text Density / Font Sizing based on explicit density AND real text volume
   const density = article.textDensity || "normal";
-  const bodyTextSizeClass =
-    density === "compact" || isExtremeDenseText
-      ? "text-[8.5px] leading-[1.38] sm:text-[9px] sm:leading-[1.42] mb-1.5"
-      : isVeryDenseText
-      ? "text-[9.5px] leading-[1.5] sm:text-[10px] sm:leading-[1.5] mb-2"
-      : density === "spacious" || isShortPageText
-      ? "text-[12px] leading-[1.75] sm:text-[12.5px] sm:leading-[1.75] mb-3.5"
-      : isDenseText
-      ? "text-[10.5px] leading-[1.6] sm:text-[11px] sm:leading-[1.6] mb-2.5"
-      : "text-[11px] leading-[1.65] sm:text-[11.5px] sm:leading-[1.65] mb-2.5";
+  const bodyTextSizeClass = isMobile
+    ? "text-[12px] leading-[1.75] sm:text-[13px] sm:leading-[1.8] mb-2.5"
+    : density === "compact" || isExtremeDenseText
+    ? "text-[8.5px] leading-[1.38] sm:text-[9px] sm:leading-[1.42] mb-1.5"
+    : isVeryDenseText
+    ? "text-[9.5px] leading-[1.5] sm:text-[10px] sm:leading-[1.5] mb-2"
+    : density === "spacious" || isShortPageText
+    ? "text-[12px] leading-[1.75] sm:text-[12.5px] sm:leading-[1.75] mb-3.5"
+    : isDenseText
+    ? "text-[10.5px] leading-[1.6] sm:text-[11px] sm:leading-[1.6] mb-2.5"
+    : "text-[11px] leading-[1.65] sm:text-[11.5px] sm:leading-[1.65] mb-2.5";
 
   // Split pageChunks into Coluna 1 (prioritária / esquerda) e Coluna 2 (direita)
   const hasManualColumnBreak = pageChunks.some((c) => MANUAL_COLUMN_BREAK_REGEX.test(c));
@@ -313,6 +319,18 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     const headingMatch = chunk.match(/^#{1,4}\s*(.*)/);
     if (headingMatch && headingMatch[1]?.trim()) {
       const cleanTitle = headingMatch[1].replace(/[*_#]/g, "").trim();
+      if (isMobile) {
+        return (
+          <div key={idx} className="mt-3 mb-1.5 pb-0.5">
+            <h4
+              className={`text-[12px] sm:text-[13px] font-black uppercase tracking-wider ${headlineFontClass}`}
+              style={{ color: primaryColor }}
+            >
+              {cleanTitle}
+            </h4>
+          </div>
+        );
+      }
       return (
         <div key={idx} className="mt-3 mb-1.5 pb-1 border-b break-inside-avoid break-inside-avoid-column flex items-center gap-1.5" style={{ borderColor: `${primaryColor}40` }}>
           <span className="text-[9px] font-mono font-black" style={{ color: primaryColor }}>//</span>
@@ -330,6 +348,18 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
     if (chunk.startsWith("//")) {
       const cleanTitle = chunk.replace(/^\/+\s*/, "").replace(/[*_]/g, "").trim();
       const isRef = cleanTitle.toUpperCase().startsWith("REFERÊNCIAS") || cleanTitle.toUpperCase().startsWith("REFERENCIAS");
+      if (isMobile) {
+        return (
+          <div key={idx} className="mt-3 mb-1 pb-0.5">
+            <h4
+              className={`text-[11.5px] sm:text-[12.5px] font-black uppercase tracking-wider ${headlineFontClass}`}
+              style={{ color: isRef ? "#F59E0B" : primaryColor }}
+            >
+              {cleanTitle}
+            </h4>
+          </div>
+        );
+      }
       return (
         <div
           key={idx}
@@ -382,10 +412,10 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       return (
         <div key={idx} className="my-1.5 break-inside-avoid break-inside-avoid-column">
           <h4
-            className={`text-[10px] sm:text-[10.5px] font-black uppercase mb-0.5 ${headlineFontClass}`}
+            className={`text-[10.5px] sm:text-[11.5px] font-black uppercase mb-0.5 ${headlineFontClass}`}
             style={{ color: primaryColor }}
           >
-            // {title}
+            {isMobile ? title : `// ${title}`}
           </h4>
           <p
             className={`${bodyTextSizeClass} text-left leading-relaxed ${bodyFontClass}`}
@@ -507,10 +537,10 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   return (
     <div
       className={`magazine-page relative w-full h-full overflow-hidden flex flex-col justify-between p-5 sm:p-7 select-none ${
-        isPrintMode ? "print-page" : "shadow-2xl rounded-sm"
+        isPrintMode ? "print-page" : isMobile ? "shadow-2xl rounded-lg" : "shadow-2xl rounded-sm"
       }`}
       style={{
-        aspectRatio: "210 / 297",
+        aspectRatio: isMobile ? "9 / 16" : "210 / 297",
         backgroundColor: bgColor,
         color: textColor,
       }}
@@ -1023,22 +1053,32 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* Dual Column Narrative Grid (Coluna 1 prioritária + Quebra Manual por botão) */}
-            <div
-              className={`grid grid-cols-1 sm:grid-cols-2 gap-5 text-left min-h-0 ${bodyFontClass} ${
-                hasBottomFeature ? "shrink-0 max-h-[52%]" : "flex-1"
-              }`}
-            >
-              {/* Coluna 1 (Esquerda - Prioritária) */}
-              <div className="flex flex-col min-h-0 space-y-2">
-                {col1Chunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
+            {/* Dual Column Narrative Grid (ou Coluna Única no Mobile) */}
+            {isMobile ? (
+              <div
+                className={`flex flex-col min-h-0 space-y-2.5 text-left ${bodyFontClass} ${
+                  hasBottomFeature ? "shrink-0 max-h-[56%]" : "flex-1"
+                }`}
+              >
+                {pageChunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
               </div>
+            ) : (
+              <div
+                className={`grid grid-cols-1 sm:grid-cols-2 gap-5 text-left min-h-0 ${bodyFontClass} ${
+                  hasBottomFeature ? "shrink-0 max-h-[52%]" : "flex-1"
+                }`}
+              >
+                {/* Coluna 1 (Esquerda - Prioritária) */}
+                <div className="flex flex-col min-h-0 space-y-2">
+                  {col1Chunks.map((chunk, idx) => renderSingleChunk(chunk, idx, idx === 0))}
+                </div>
 
-              {/* Coluna 2 (Direita - Fluxo Contínuo / Quebra Manual) */}
-              <div className="flex flex-col min-h-0 space-y-2">
-                {col2Chunks.map((chunk, idx) => renderSingleChunk(chunk, idx + col1Chunks.length, false))}
+                {/* Coluna 2 (Direita - Fluxo Contínuo / Quebra Manual) */}
+                <div className="flex flex-col min-h-0 space-y-2">
+                  {col2Chunks.map((chunk, idx) => renderSingleChunk(chunk, idx + col1Chunks.length, false))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Imagem Editorial de Fechamento da Página Final (Opcional - pode ser removida pelo usuário para liberar espaço) */}
             {hasBottomFeature && finalClosingPhotoUrl && (
@@ -1130,25 +1170,35 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
       </div>
 
       {/* Bottom Page Footer Bar */}
-      <div
-        className="relative z-10 border-t pt-1.5 flex items-center justify-between text-[9px] font-mono font-bold uppercase shrink-0"
-        style={{ borderColor: `${primaryColor}40`, color: textMutedColor }}
-      >
-        <div className="flex items-center gap-2">
-          <span>{project.title} • {project.coverConfig?.editionNumber || project.editionNumber ? `ED. #${project.coverConfig?.editionNumber || project.editionNumber}` : "ED. #01"}</span>
-          {isMultiPage && !isLastPage && (
-            <span className="text-amber-500 font-black animate-pulse">
-              (CONTINUA NA PÁGINA {formatPageNumber(pageNumber + 1)} ▸)
-            </span>
-          )}
-        </div>
-        <span
-          className="px-2 py-0.5 rounded border font-bold"
-          style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
+      {isMobile ? (
+        <div
+          className="relative z-10 border-t pt-2 flex items-center justify-between text-[10px] font-mono font-bold uppercase shrink-0"
+          style={{ borderColor: `${primaryColor}30`, color: textMutedColor }}
         >
-          PÁGINA {formatPageNumber(pageNumber)}
-        </span>
-      </div>
+          <span>{brandTitle}</span>
+          <span>pág {formatPageNumber(pageNumber)}</span>
+        </div>
+      ) : (
+        <div
+          className="relative z-10 border-t pt-1.5 flex items-center justify-between text-[9px] font-mono font-bold uppercase shrink-0"
+          style={{ borderColor: `${primaryColor}40`, color: textMutedColor }}
+        >
+          <div className="flex items-center gap-2">
+            <span>{project.title} • {project.coverConfig?.editionNumber || project.editionNumber ? `ED. #${project.coverConfig?.editionNumber || project.editionNumber}` : "ED. #01"}</span>
+            {isMultiPage && !isLastPage && (
+              <span className="text-amber-500 font-black animate-pulse">
+                (CONTINUA NA PÁGINA {formatPageNumber(pageNumber + 1)} ▸)
+              </span>
+            )}
+          </div>
+          <span
+            className="px-2 py-0.5 rounded border font-bold"
+            style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
+          >
+            PÁGINA {formatPageNumber(pageNumber)}
+          </span>
+        </div>
+      )}
     </div>
   );
 };

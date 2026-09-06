@@ -455,4 +455,20 @@ body.app-theme-midnight-fintech .theme-app-viewer-canvas {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
+
+  /* Mobile Digital Reader Print Styles (Smartphone 9:16 Ratio) */
+  body.print-layout-mobile .magazine-print-page,
+  .print-layout-mobile .magazine-print-page {
+    width: 108mm !important;
+    height: 192mm !important;
+    max-height: 192mm !important;
+  }
+
+  body.print-layout-mobile .magazine-print-page .magazine-page,
+  .print-layout-mobile .magazine-print-page .magazine-page {
+    width: 108mm !important;
+    height: 192mm !important;
+    max-height: 192mm !important;
+    aspect-ratio: 9 / 16 !important;
+  }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MagazineProject, MagazineTheme, PageViewMode } from "../../types/magazine";
+import { MagazineLayoutMode, MagazineProject, MagazineTheme, PageViewMode } from "../../types/magazine";
 import { CoverPage } from "./CoverPage";
 import { EditorLetterPage } from "./EditorLetterPage";
 import { ContributorsPage } from "./ContributorsPage";
@@ -16,6 +16,7 @@ import {
   BookOpen,
   FileText,
   Printer,
+  Smartphone,
   Sparkles,
 } from "lucide-react";
 import { Button } from "../ui/button";
@@ -25,6 +26,8 @@ interface MagazineViewerProps {
   theme: MagazineTheme;
   onOpenExportModal: () => void;
   onOpenArticleEditor?: (articleId: string) => void;
+  layoutMode?: MagazineLayoutMode;
+  onLayoutModeChange?: (mode: MagazineLayoutMode) => void;
 }
 
 export const MagazineViewer: React.FC<MagazineViewerProps> = ({
@@ -32,10 +35,28 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
   theme,
   onOpenExportModal,
   onOpenArticleEditor,
+  layoutMode: propLayoutMode,
+  onLayoutModeChange,
 }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
   const [viewMode, setViewMode] = useState<PageViewMode>("single");
   const [zoomLevel, setZoomLevel] = useState<number>(100);
+  const [layoutMode, setLayoutMode] = useState<MagazineLayoutMode>(
+    propLayoutMode || project.layoutMode || "print"
+  );
+
+  useEffect(() => {
+    if (propLayoutMode && propLayoutMode !== layoutMode) {
+      setLayoutMode(propLayoutMode);
+    }
+  }, [propLayoutMode]);
+
+  const handleLayoutModeToggle = (mode: MagazineLayoutMode) => {
+    setLayoutMode(mode);
+    if (onLayoutModeChange) {
+      onLayoutModeChange(mode);
+    }
+  };
 
   // Dynamic active page visibility
   const visibility = {
@@ -59,7 +80,14 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
     activePages.push({
       id: "cover",
       title: "Capa Principal",
-      render: (_, isPrint) => <CoverPage project={project} theme={theme} isPrintMode={isPrint ?? false} />,
+      render: (_, isPrint) => (
+        <CoverPage
+          project={project}
+          theme={theme}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
+      ),
     });
   }
 
@@ -68,7 +96,13 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       id: "editor-letter",
       title: "Carta do Editor",
       render: (pNum, isPrint) => (
-        <EditorLetterPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
+        <EditorLetterPage
+          project={project}
+          theme={theme}
+          pageNumber={pNum}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
       ),
     });
   }
@@ -78,7 +112,13 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       id: "contributors",
       title: "Colaboradores",
       render: (pNum, isPrint) => (
-        <ContributorsPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
+        <ContributorsPage
+          project={project}
+          theme={theme}
+          pageNumber={pNum}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
       ),
     });
   }
@@ -88,7 +128,13 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       id: "toc",
       title: "Sumário / Índice",
       render: (pNum, isPrint) => (
-        <EditorialPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
+        <EditorialPage
+          project={project}
+          theme={theme}
+          pageNumber={pNum}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
       ),
     });
   }
@@ -111,6 +157,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
               isPrintMode={isPrint ?? false}
               pagePart={part}
               totalPagesForArticle={span}
+              layoutMode={layoutMode}
             />
           ),
         });
@@ -122,7 +169,13 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
       id: "back-cover",
       title: "Contracapa",
       render: (pNum, isPrint) => (
-        <BackCoverPage project={project} theme={theme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
+        <BackCoverPage
+          project={project}
+          theme={theme}
+          pageNumber={pNum}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
       ),
     });
   }
@@ -182,44 +235,77 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
     <div className="theme-app-viewer flex flex-col h-full rounded-xl overflow-hidden border-2 shadow-2xl transition-colors font-sans">
       {/* Top Controls Toolbar - All buttons and icons organized in a single horizontal row */}
       <div className="theme-app-viewer-toolbar px-3 sm:px-4 py-2 border-b-2 flex items-center justify-between gap-3 overflow-x-auto custom-scrollbar flex-nowrap transition-colors">
-        {/* Left: View Mode Selector */}
-        <div className="flex items-center theme-app-card-subtle p-0.5 rounded-lg border shrink-0">
-          <button
-            onClick={() => setViewMode("single")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
-              viewMode === "single"
-                ? "bg-amber-400 text-black border border-black shadow-xs"
-                : "opacity-70 hover:opacity-100"
-            }`}
-            title="Visualizar Página Única"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Página Única</span>
-          </button>
-          <button
-            onClick={() => setViewMode("spread")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
-              viewMode === "spread"
-                ? "bg-amber-400 text-black border border-black shadow-xs"
-                : "opacity-70 hover:opacity-100"
-            }`}
-            title="Visualizar Revista Aberta (Dupla)"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Revista Aberta</span>
-          </button>
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
-              viewMode === "grid"
-                ? "bg-amber-400 text-black border border-black shadow-xs"
-                : "opacity-70 hover:opacity-100"
-            }`}
-            title="Visualizar Grade de Páginas"
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>Grade</span>
-          </button>
+        {/* Left: View Mode & Layout Mode Selectors */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* View Mode Selector */}
+          <div className="flex items-center theme-app-card-subtle p-0.5 rounded-lg border shrink-0">
+            <button
+              onClick={() => setViewMode("single")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
+                viewMode === "single"
+                  ? "bg-amber-400 text-black border border-black shadow-xs"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+              title="Visualizar Página Única"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Página Única</span>
+            </button>
+            <button
+              onClick={() => setViewMode("spread")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
+                viewMode === "spread"
+                  ? "bg-amber-400 text-black border border-black shadow-xs"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+              title="Visualizar Revista Aberta (Dupla)"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Revista Aberta</span>
+            </button>
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-amber-400 text-black border border-black shadow-xs"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+              title="Visualizar Grade de Páginas"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Grade</span>
+            </button>
+          </div>
+
+          {/* Layout Mode Selector (Print A4 vs Mobile Smartphone Reader) */}
+          <div className="flex items-center theme-app-card-subtle p-0.5 rounded-lg border shrink-0">
+            <button
+              data-testid="btn-layout-print"
+              onClick={() => handleLayoutModeToggle("print")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
+                layoutMode === "print"
+                  ? "bg-amber-400 text-black border border-black shadow-xs"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+              title="Layout Impresso A4 (Clássico)"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print A4</span>
+            </button>
+            <button
+              data-testid="btn-layout-mobile"
+              onClick={() => handleLayoutModeToggle("mobile")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-black rounded-md transition-all cursor-pointer ${
+                layoutMode === "mobile"
+                  ? "bg-amber-400 text-black border border-black shadow-xs"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+              title="Leitor Digital Mobile (Smartphone)"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Mobile</span>
+            </button>
+          </div>
         </div>
 
         {/* Center: Pagination & Nav */}
@@ -306,7 +392,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
                     : "border-slate-700 hover:border-white"
                 }`}
               >
-                <div className="relative aspect-[210/297] pointer-events-none transform scale-100 origin-top bg-white">
+                <div className={`relative ${layoutMode === "mobile" ? "aspect-[9/16]" : "aspect-[210/297]"} pointer-events-none transform scale-100 origin-top bg-white`}>
                   {renderPageByIndex(idx)}
                 </div>
                 <div className="bg-slate-900 text-white p-2 text-center text-xs font-bold border-t border-slate-700">
@@ -323,22 +409,22 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
           >
             {currentPageIndex === 0 ? (
               /* Cover is displayed alone */
-              <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 shadow-[0_25px_60px_rgba(0,0,0,0.8)] rounded-xs overflow-hidden border border-black/40">
+              <div className={`h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] ${layoutMode === "mobile" ? "aspect-[9/16] rounded-2xl border-4 border-slate-700 shadow-[0_25px_60px_rgba(0,0,0,0.95)]" : "aspect-[210/297] rounded-xs border border-black/40 shadow-[0_25px_60px_rgba(0,0,0,0.8)]"} shrink-0 overflow-hidden`}>
                 {renderPageByIndex(0)}
               </div>
             ) : currentPageIndex === totalPages - 1 ? (
               /* Back Cover is displayed alone */
-              <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 shadow-[0_25px_60px_rgba(0,0,0,0.8)] rounded-xs overflow-hidden border border-black/40">
+              <div className={`h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] ${layoutMode === "mobile" ? "aspect-[9/16] rounded-2xl border-4 border-slate-700 shadow-[0_25px_60px_rgba(0,0,0,0.95)]" : "aspect-[210/297] rounded-xs border border-black/40 shadow-[0_25px_60px_rgba(0,0,0,0.8)]"} shrink-0 overflow-hidden`}>
                 {renderPageByIndex(totalPages - 1)}
               </div>
             ) : (
               /* 2 Pages Spread */
-              <div className="flex items-center justify-center shadow-[0_25px_60px_rgba(0,0,0,0.8)] rounded-xs overflow-hidden border border-black/40">
-                <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 border-r border-black/50">
+              <div className={`flex items-center justify-center ${layoutMode === "mobile" ? "rounded-2xl border-4 border-slate-700 shadow-[0_25px_60px_rgba(0,0,0,0.95)]" : "rounded-xs border border-black/40 shadow-[0_25px_60px_rgba(0,0,0,0.8)]"} overflow-hidden`}>
+                <div className={`h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] ${layoutMode === "mobile" ? "aspect-[9/16]" : "aspect-[210/297]"} shrink-0 border-r border-black/50`}>
                   {renderPageByIndex(currentPageIndex)}
                 </div>
                 {currentPageIndex + 1 < totalPages && (
-                  <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 border-l border-black/50">
+                  <div className={`h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] ${layoutMode === "mobile" ? "aspect-[9/16]" : "aspect-[210/297]"} shrink-0 border-l border-black/50`}>
                     {renderPageByIndex(currentPageIndex + 1)}
                   </div>
                 )}
@@ -346,12 +432,12 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
             )}
           </div>
         ) : (
-          /* Single Page Mode (Exact WYSIWYG A4 Canvas Matching Print Preview) */
+          /* Single Page Mode */
           <div
             className="flex items-center justify-center transition-transform duration-200"
             style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "center center" }}
           >
-            <div className="h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] aspect-[210/297] shrink-0 shadow-[0_25px_60px_rgba(0,0,0,0.8)] rounded-xs overflow-hidden border border-black/40">
+            <div className={`h-[calc(100vh-230px)] max-h-[820px] min-h-[500px] ${layoutMode === "mobile" ? "aspect-[9/16] rounded-2xl border-4 border-slate-700 shadow-[0_25px_60px_rgba(0,0,0,0.95)]" : "aspect-[210/297] rounded-xs border border-black/40 shadow-[0_25px_60px_rgba(0,0,0,0.8)]"} shrink-0 overflow-hidden`}>
               {renderPageByIndex(currentPageIndex)}
             </div>
           </div>
@@ -365,7 +451,7 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
           <span className="font-bold">Total de Páginas Ativas na Edição: {totalPages} páginas</span>
         </div>
         <span className="font-mono text-[10px] font-bold">
-          Proporção Exata A4 (210mm x 297mm)
+          {layoutMode === "mobile" ? "Leitor Digital Smartphone (Proporção 9:16)" : "Proporção Exata A4 (210mm x 297mm)"}
         </span>
       </div>
     </div>

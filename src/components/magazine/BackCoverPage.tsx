@@ -1,6 +1,7 @@
 import React from "react";
-import { MagazineProject, MagazineTheme } from "../../types/magazine";
+import { MagazineLayoutMode, MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
+import { formatPageNumber } from "../../lib/magazine-utils";
 import { Globe, Instagram, Youtube, Mail, QrCode, Sparkles } from "lucide-react";
 
 interface BackCoverPageProps {
@@ -8,6 +9,7 @@ interface BackCoverPageProps {
   theme: MagazineTheme;
   pageNumber: number;
   isPrintMode?: boolean;
+  layoutMode?: MagazineLayoutMode;
 }
 
 export const BackCoverPage: React.FC<BackCoverPageProps> = ({
@@ -15,8 +17,11 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
   theme,
   pageNumber,
   isPrintMode = false,
+  layoutMode = "print",
 }) => {
   const { backCoverConfig } = project;
+  const effectiveLayoutMode = layoutMode || project.layoutMode || "print";
+  const isMobile = effectiveLayoutMode === "mobile";
 
   const headlineFontClass = getHeadlineFontClass(project.fontConfig?.headlineFont);
   const bodyFontClass = getBodyFontClass(project.fontConfig?.bodyFont);
@@ -31,10 +36,10 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
   return (
     <div
       className={`magazine-page relative w-full h-full overflow-hidden flex flex-col justify-between p-6 sm:p-7 select-none break-inside-avoid ${
-        isPrintMode ? "print-page" : "shadow-2xl rounded-sm"
+        isPrintMode ? "print-page" : isMobile ? "shadow-2xl rounded-lg" : "shadow-2xl rounded-sm"
       }`}
       style={{
-        aspectRatio: "210 / 297",
+        aspectRatio: isMobile ? "9 / 16" : "210 / 297",
         backgroundColor: bgColor,
         color: textColor,
         breakInside: "avoid",
@@ -80,7 +85,7 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
       </div>
 
       {/* Center Hero Message */}
-      <div className="relative z-10 max-w-lg mx-auto text-center my-auto py-2">
+      <div className={`relative z-10 ${isMobile ? "w-full" : "max-w-lg"} mx-auto text-center my-auto py-2`}>
         <div
           className="inline-block text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full mb-2.5 border"
           style={{ backgroundColor: `${primaryColor}20`, color: primaryColor, borderColor: `${primaryColor}50` }}
@@ -88,24 +93,24 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
           MANUAL DO ALUNO & LEITOR
         </div>
         <h2
-          className={`text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-tight mb-2.5 drop-shadow-md ${headlineFontClass}`}
+          className={`${isMobile ? "text-2xl sm:text-3xl" : "text-2xl sm:text-3xl md:text-4xl"} font-black uppercase tracking-tight leading-tight mb-2.5 drop-shadow-md ${headlineFontClass}`}
           style={{ color: backCoverConfig.backgroundImage ? "#FFFFFF" : textColor }}
         >
           {backCoverConfig.headline}
         </h2>
         <p
-          className={`text-xs sm:text-sm font-semibold mb-3 leading-relaxed ${bodyFontClass}`}
+          className={`${isMobile ? "text-xs sm:text-sm" : "text-xs sm:text-sm"} font-semibold mb-3 leading-relaxed ${bodyFontClass}`}
           style={{ color: primaryColor }}
         >
           {backCoverConfig.subheadline}
         </p>
-        <p className={`text-xs leading-relaxed max-w-md mx-auto italic mb-4 ${bodyFontClass}`} style={{ color: backCoverConfig.backgroundImage ? "#CBD5E1" : textMutedColor }}>
+        <p className={`text-xs leading-relaxed ${isMobile ? "w-full" : "max-w-md"} mx-auto italic mb-4 ${bodyFontClass}`} style={{ color: backCoverConfig.backgroundImage ? "#CBD5E1" : textMutedColor }}>
           "{backCoverConfig.message}"
         </p>
 
-        {/* CTA Button */}
+        {/* CTA Button (Largura Total no Modo Mobile) */}
         <div
-          className="inline-flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider px-5 py-2.5 rounded-md shadow-lg border cursor-pointer"
+          className={`${isMobile ? "w-full" : "inline-flex"} flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider px-5 py-3 rounded-lg shadow-xl border cursor-pointer transition-transform hover:scale-[1.02]`}
           style={{ backgroundColor: primaryColor, color: isLight ? (isColorLight(primaryColor) ? "#000000" : "#FFFFFF") : "#000000", borderColor: "#000000" }}
         >
           <span>{backCoverConfig.ctaText}</span>
@@ -114,41 +119,51 @@ export const BackCoverPage: React.FC<BackCoverPageProps> = ({
       </div>
 
       {/* Bottom Footer & Social Bar */}
-      <div
-        className="relative z-10 border-t pt-2.5 flex flex-row items-center justify-between gap-3 text-xs shrink-0"
-        style={{ borderColor: `${primaryColor}40` }}
-      >
-        <div className="flex items-center gap-4 text-xs font-mono">
-          {backCoverConfig.socialHandles?.instagram && (
-            <span className="flex items-center gap-1 font-bold text-[11px]" style={{ color: primaryColor }}>
-              <Instagram className="w-3.5 h-3.5" />
-              {backCoverConfig.socialHandles.instagram}
-            </span>
-          )}
-          {backCoverConfig.socialHandles?.youtube && (
-            <span className="flex items-center gap-1 font-bold text-[11px]" style={{ color: primaryColor }}>
-              <Youtube className="w-3.5 h-3.5" />
-              {backCoverConfig.socialHandles.youtube}
-            </span>
-          )}
-          {backCoverConfig.socialHandles?.email && (
-            <span className="flex items-center gap-1 font-bold text-[11px] hidden md:inline-flex" style={{ color: primaryColor }}>
-              <Mail className="w-3.5 h-3.5" />
-              {backCoverConfig.socialHandles.email}
-            </span>
-          )}
+      {isMobile ? (
+        <div
+          className="relative z-10 border-t pt-2 flex items-center justify-between text-[10px] font-mono font-bold uppercase shrink-0"
+          style={{ borderColor: `${primaryColor}30`, color: textMutedColor }}
+        >
+          <span>{project.title}</span>
+          <span>pág {formatPageNumber(pageNumber)}</span>
         </div>
+      ) : (
+        <div
+          className="relative z-10 border-t pt-2.5 flex flex-row items-center justify-between gap-3 text-xs shrink-0"
+          style={{ borderColor: `${primaryColor}40` }}
+        >
+          <div className="flex items-center gap-4 text-xs font-mono">
+            {backCoverConfig.socialHandles?.instagram && (
+              <span className="flex items-center gap-1 font-bold text-[11px]" style={{ color: primaryColor }}>
+                <Instagram className="w-3.5 h-3.5" />
+                {backCoverConfig.socialHandles.instagram}
+              </span>
+            )}
+            {backCoverConfig.socialHandles?.youtube && (
+              <span className="flex items-center gap-1 font-bold text-[11px]" style={{ color: primaryColor }}>
+                <Youtube className="w-3.5 h-3.5" />
+                {backCoverConfig.socialHandles.youtube}
+              </span>
+            )}
+            {backCoverConfig.socialHandles?.email && (
+              <span className="flex items-center gap-1 font-bold text-[11px] hidden md:inline-flex" style={{ color: primaryColor }}>
+                <Mail className="w-3.5 h-3.5" />
+                {backCoverConfig.socialHandles.email}
+              </span>
+            )}
+          </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-right text-[9px] font-mono leading-tight" style={{ color: textMutedColor }}>
-            <p className="font-bold uppercase" style={{ color: primaryColor }}>{project.title} PUBLISHING</p>
-            <p>© {new Date().getFullYear()} ALL RIGHTS RESERVED</p>
-          </div>
-          <div className="bg-white p-1 rounded-sm border border-black shadow-sm">
-            <QrCode className="w-5 h-5 text-black" />
+          <div className="flex items-center gap-3">
+            <div className="text-right text-[9px] font-mono leading-tight" style={{ color: textMutedColor }}>
+              <p className="font-bold uppercase" style={{ color: primaryColor }}>{project.title} PUBLISHING</p>
+              <p>© {new Date().getFullYear()} ALL RIGHTS RESERVED</p>
+            </div>
+            <div className="bg-white p-1 rounded-sm border border-black shadow-sm">
+              <QrCode className="w-5 h-5 text-black" />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

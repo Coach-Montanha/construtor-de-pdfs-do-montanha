@@ -318,6 +318,7 @@ export interface MagazineProject {
   date: string;
   category: string;
   themeId: MagazineThemeId;
+  layoutMode?: MagazineLayoutMode;
   coverConfig: CoverConfig;
   editorialInfo: EditorialInfo;
   articles: Article[];
@@ -330,4 +331,5 @@ export interface MagazineProject {
 }
 
 export type PageViewMode = "spread" | "single" | "grid";
+export type MagazineLayoutMode = "print" | "mobile";
 

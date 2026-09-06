@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { MagazineProject, MagazineTheme } from "../../types/magazine";
+import React, { useState, useEffect } from "react";
+import { MagazineLayoutMode, MagazineProject, MagazineTheme } from "../../types/magazine";
 import { calculateMagazineTotalPages } from "../../lib/magazine-utils";
 import {
   Dialog,
@@ -16,6 +16,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
+  Smartphone,
 } from "lucide-react";
 
 interface PdfExportModalProps {
@@ -25,6 +26,8 @@ interface PdfExportModalProps {
   theme: MagazineTheme;
   totalPages?: number;
   onOpenMockupStudio?: () => void;
+  layoutMode?: MagazineLayoutMode;
+  onSelectLayoutMode?: (mode: MagazineLayoutMode) => void;
 }
 
 export const PdfExportModal: React.FC<PdfExportModalProps> = ({
@@ -34,19 +37,41 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
   theme,
   totalPages: customTotalPages,
   onOpenMockupStudio,
+  layoutMode = "print",
+  onSelectLayoutMode,
 }) => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [selectedExportMode, setSelectedExportMode] = useState<MagazineLayoutMode>(
+    layoutMode || "print"
+  );
+
+  useEffect(() => {
+    if (layoutMode) {
+      setSelectedExportMode(layoutMode);
+    }
+  }, [layoutMode]);
 
   const totalPages = customTotalPages || calculateMagazineTotalPages(project);
 
-  const handlePrintPdf = () => {
+  const handlePrintPdf = (modeToPrint: MagazineLayoutMode = selectedExportMode) => {
     setIsExporting(true);
-    // Fechamos o modal antes de disparar a impressão para garantir que nenhum overlay permaneça no DOM
+    if (onSelectLayoutMode) {
+      onSelectLayoutMode(modeToPrint);
+    }
+    if (modeToPrint === "mobile") {
+      document.body.classList.add("print-layout-mobile");
+      document.body.classList.remove("print-layout-print");
+    } else {
+      document.body.classList.add("print-layout-print");
+      document.body.classList.remove("print-layout-mobile");
+    }
     onClose();
 
     setTimeout(() => {
       window.print();
       setIsExporting(false);
+      document.body.classList.remove("print-layout-mobile");
+      document.body.classList.remove("print-layout-print");
     }, 250);
   };
 
@@ -124,6 +149,60 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-5 my-4">
+          {/* Format Selector: Print A4 vs Mobile Smartphone Reader */}
+          <div className="space-y-2">
+            <span className="text-xs font-black uppercase tracking-tight flex items-center gap-1.5">
+              <span>Selecione o Formato do PDF:</span>
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                data-testid="opt-export-print"
+                onClick={() => setSelectedExportMode("print")}
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedExportMode === "print"
+                    ? "border-amber-400 bg-amber-400/10 shadow-sm ring-2 ring-amber-400/40"
+                    : "border-slate-700/60 hover:border-slate-400 theme-app-card-subtle opacity-75 hover:opacity-100"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 font-black text-xs uppercase">
+                    <Printer className="w-4 h-4 text-amber-500" />
+                    <span>Edição Impressa A4</span>
+                  </div>
+                  {selectedExportMode === "print" && (
+                    <CheckCircle2 className="w-4 h-4 text-amber-500" />
+                  )}
+                </div>
+                <p className="text-[11px] opacity-80 leading-snug">
+                  Layout clássico A4 (210x297mm), texto em duas colunas, rodapé editorial denso com código de barras.
+                </p>
+              </div>
+
+              <div
+                data-testid="opt-export-mobile"
+                onClick={() => setSelectedExportMode("mobile")}
+                className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedExportMode === "mobile"
+                    ? "border-amber-400 bg-amber-400/10 shadow-sm ring-2 ring-amber-400/40"
+                    : "border-slate-700/60 hover:border-slate-400 theme-app-card-subtle opacity-75 hover:opacity-100"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2 font-black text-xs uppercase">
+                    <Smartphone className="w-4 h-4 text-amber-500" />
+                    <span>Leitor Digital Mobile</span>
+                  </div>
+                  {selectedExportMode === "mobile" && (
+                    <CheckCircle2 className="w-4 h-4 text-amber-500" />
+                  )}
+                </div>
+                <p className="text-[11px] opacity-80 leading-snug">
+                  Coluna única, tipografia ampliada, imagens em blocos separados e rodapé minimalista para celular.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Summary Box */}
           <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-2">
             <div className="flex items-center justify-between text-xs font-bold">
@@ -133,12 +212,14 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="opacity-75 uppercase">Total de Páginas:</span>
               <span className="font-mono font-black text-amber-600">
-                {totalPages} Páginas A4
+                {totalPages} Páginas ({selectedExportMode === "mobile" ? "Proporção Mobile 9:16" : "Formato A4"})
               </span>
             </div>
             <div className="flex items-center justify-between text-xs font-bold">
-              <span className="opacity-75 uppercase">Formato Editorial:</span>
-              <span className="font-bold">A4 Portrait (210mm x 297mm)</span>
+              <span className="opacity-75 uppercase">Modo Selecionado:</span>
+              <span className="font-bold uppercase text-amber-600">
+                {selectedExportMode === "mobile" ? "Leitor Digital Mobile (9:16)" : "A4 Portrait (210mm x 297mm)"}
+              </span>
             </div>
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="opacity-75 uppercase">Tema Ativo:</span>
@@ -233,12 +314,23 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
           {/* Actions Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
             <Button
-              onClick={handlePrintPdf}
+              data-testid="btn-confirm-export-pdf"
+              onClick={() => handlePrintPdf(selectedExportMode)}
               disabled={isExporting}
               className="h-11 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md border-2 border-black flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Printer className="w-4 h-4" />
-              <span>{isExporting ? "Preparando..." : "Gerar & Salvar PDF A4"}</span>
+              {selectedExportMode === "mobile" ? (
+                <Smartphone className="w-4 h-4" />
+              ) : (
+                <Printer className="w-4 h-4" />
+              )}
+              <span>
+                {isExporting
+                  ? "Preparando..."
+                  : selectedExportMode === "mobile"
+                  ? "Gerar PDF Mobile (9:16)"
+                  : "Gerar & Salvar PDF A4"}
+              </span>
             </Button>
 
             <Button

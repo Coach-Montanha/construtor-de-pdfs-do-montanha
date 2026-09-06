@@ -1,5 +1,5 @@
 import React from "react";
-import { MagazineProject, MagazineTheme } from "../../types/magazine";
+import { MagazineLayoutMode, MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { Sparkles, Zap, Crosshair } from "lucide-react";
 
@@ -8,12 +8,14 @@ interface CoverPageProps {
   theme: MagazineTheme;
   pageNumber?: number;
   isPrintMode?: boolean;
+  layoutMode?: MagazineLayoutMode;
 }
 
 export const CoverPage: React.FC<CoverPageProps> = ({
   project,
   theme,
   isPrintMode = false,
+  layoutMode = "print",
 }) => {
   const { coverConfig } = project;
   const overlayOpacity = coverConfig.backgroundOverlayOpacity / 100;
@@ -38,6 +40,155 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   const coverBadgeTextColor =
     theme.coverBadgeTextColor ||
     (isColorLight(coverBadgeBg) ? "#000000" : "#FFFFFF");
+
+  const effectiveLayoutMode = layoutMode || project.layoutMode || "print";
+  const isMobile = effectiveLayoutMode === "mobile";
+
+  /* -------------------------------------------------------------
+   * VARIANT: MOBILE DIGITAL READER (Clean Vertical Flow, Separated Full-Width Image, Minimal Footer)
+   * ------------------------------------------------------------- */
+  if (isMobile) {
+    const isThemeLight = Boolean(theme.isLight);
+    const mobileBg = isThemeLight ? (theme.bgLight || "#FFFFFF") : (theme.bgDark || "#0B0F19");
+    const mobileText = isThemeLight ? (theme.textColor || "#000000") : "#FFFFFF";
+    const mobileMuted = isThemeLight ? "#475569" : "#94A3B8";
+
+    return (
+      <div
+        className={`magazine-page relative w-full h-full flex flex-col justify-between overflow-hidden select-none p-5 sm:p-6 ${
+          isPrintMode ? "print-page" : "shadow-2xl"
+        }`}
+        style={{
+          aspectRatio: "9 / 16",
+          backgroundColor: mobileBg,
+          color: mobileText,
+          fontFamily: theme.fontSerif ? "Georgia, serif" : "inherit",
+        }}
+      >
+        {/* Top Header / Masthead */}
+        <div
+          className="w-full shrink-0 flex flex-col items-center gap-1.5 pb-2 border-b"
+          style={{ borderColor: `${coverPrimary}30` }}
+        >
+          <div
+            className="w-full flex items-center justify-between text-[9px] font-mono font-black uppercase"
+            style={{ color: mobileMuted }}
+          >
+            <span
+              className="px-2 py-0.5 rounded font-bold"
+              style={{ backgroundColor: coverBadgeBg, color: coverBadgeTextColor }}
+            >
+              {coverConfig.issueBadge || "MOBILE EDITION"}
+            </span>
+            <span>{coverConfig.issueDate || project.date}</span>
+            <span>{coverConfig.priceBadge || "DIGITAL"}</span>
+          </div>
+
+          <h1
+            className={`font-black tracking-tight uppercase leading-[0.9] text-center w-full mt-1.5 ${headlineFontClass}`}
+            style={{
+              fontSize: `clamp(2rem, ${9 * scale}cqw, 3.2rem)`,
+              color: isThemeLight ? (theme.primaryColor !== "#FACC15" ? theme.primaryColor : "#0F172A") : coverPrimary,
+            }}
+          >
+            {coverConfig.mastheadText || project.title}
+          </h1>
+
+          {coverConfig.sloganText && (
+            <p
+              className="font-mono text-[9px] font-bold tracking-widest uppercase text-center opacity-85"
+              style={{ color: mobileMuted }}
+            >
+              {coverConfig.sloganText}
+            </p>
+          )}
+        </div>
+
+        {/* Dedicated Full-Width Image Block (Separated from text - ZERO overlaid text) */}
+        {coverConfig.backgroundImage && (
+          <div
+            className="w-full aspect-[16/10] my-2 rounded-lg overflow-hidden border shrink-0 shadow-md"
+            style={{ borderColor: `${coverPrimary}40` }}
+          >
+            <img
+              src={
+                coverConfig.backgroundImage?.includes("unsplash.com")
+                  ? coverConfig.backgroundImage.replace(/w=\d+/, "w=1600").replace(/q=\d+/, "q=90")
+                  : coverConfig.backgroundImage
+              }
+              alt="Capa da Edição Mobile"
+              className="w-full h-full object-cover object-center filter contrast-110"
+            />
+          </div>
+        )}
+
+        {/* Story Headline & Highlights (Arranged in clean readable block below photo) */}
+        <div className="flex-1 flex flex-col justify-start space-y-2.5 overflow-hidden">
+          {/* Main Headline */}
+          <div className="space-y-1">
+            <span
+              className="text-[9px] font-mono font-black tracking-widest uppercase px-2 py-0.5 rounded inline-block"
+              style={{ backgroundColor: coverBadgeBg, color: coverBadgeTextColor }}
+            >
+              {coverConfig.categoryTag || "DOSSIÊ EXCLUSIVO"}
+            </span>
+            <h2
+              className={`font-black uppercase tracking-tight leading-[0.96] ${headlineFontClass}`}
+              style={{
+                fontSize: `clamp(1.4rem, ${6.5 * scale}cqw, 2.3rem)`,
+                color: mobileText,
+              }}
+            >
+              {coverConfig.mainHeadline}
+            </h2>
+            {coverConfig.subHeadline && (
+              <p
+                className={`text-[12px] sm:text-[13px] font-semibold leading-snug line-clamp-2 ${bodyFontClass}`}
+                style={{ color: mobileMuted }}
+              >
+                {coverConfig.subHeadline}
+              </p>
+            )}
+          </div>
+
+          {/* Highlights Stack (Clean, bold/caps, without "//" boxes) */}
+          {coverConfig.highlights && coverConfig.highlights.length > 0 && (
+            <div className="space-y-1.5 pt-1">
+              {coverConfig.highlights.slice(0, 3).map((hl) => (
+                <div
+                  key={hl.id}
+                  className="p-2 rounded border-l-3 bg-black/5 dark:bg-white/5 flex flex-col"
+                  style={{ borderLeftColor: coverPrimary }}
+                >
+                  <span
+                    className="text-[8.5px] font-mono font-black uppercase"
+                    style={{ color: isThemeLight ? theme.primaryColor : coverPrimary }}
+                  >
+                    {hl.tag}
+                  </span>
+                  <span
+                    className="text-[11.5px] sm:text-xs font-black uppercase leading-tight mt-0.5"
+                    style={{ color: mobileText }}
+                  >
+                    {hl.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Minimal Footer: Only "Montanha Magazine · pág 1" - NO barcode, NO hazard stripe */}
+        <div
+          className="w-full shrink-0 border-t pt-2 flex items-center justify-between text-[10px] font-mono font-bold"
+          style={{ borderColor: `${coverPrimary}30`, color: mobileMuted }}
+        >
+          <span>{coverConfig.mastheadText || project.title}</span>
+          <span>pág 1</span>
+        </div>
+      </div>
+    );
+  }
 
   /* -------------------------------------------------------------
    * VARIANT: PEAK PERFORMANCE / PRO EDITION (High-Key Studio & Angular Blue)

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useState, useEffect } from "react";
-import { MagazineProject, Article } from "../types/magazine";
+import { MagazineProject, Article, MagazineLayoutMode } from "../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../lib/sample-data";
 import { APP_UI_THEMES, AppUiThemeMode } from "../lib/ui-theme";
 import { loadLatestProject, syncProjectToCloud } from "../lib/cloud-sync";
@@ -86,6 +86,7 @@ function Index() {
   const [isArticleModalOpen, setIsArticleModalOpen] = useState<boolean>(false);
   const [isAiStudioOpen, setIsAiStudioOpen] = useState<boolean>(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [layoutMode, setLayoutMode] = useState<MagazineLayoutMode>("print");
   const [isMockupStudioOpen, setIsMockupStudioOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
@@ -396,7 +397,14 @@ function Index() {
     activePages.push({
       id: "cover",
       title: "Capa Principal",
-      render: (_, isPrint) => <CoverPage project={project} theme={currentPublicationTheme} isPrintMode={isPrint ?? false} />,
+      render: (_, isPrint) => (
+        <CoverPage
+          project={project}
+          theme={currentPublicationTheme}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
+      ),
     });
   }
 
@@ -405,7 +413,13 @@ function Index() {
       id: "editor-letter",
       title: "Carta do Editor",
       render: (pNum, isPrint) => (
-        <EditorLetterPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
+        <EditorLetterPage
+          project={project}
+          theme={currentPublicationTheme}
+          pageNumber={pNum}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
       ),
     });
   }
@@ -415,7 +429,13 @@ function Index() {
       id: "contributors",
       title: "Colaboradores",
       render: (pNum, isPrint) => (
-        <ContributorsPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
+        <ContributorsPage
+          project={project}
+          theme={currentPublicationTheme}
+          pageNumber={pNum}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
       ),
     });
   }
@@ -425,7 +445,13 @@ function Index() {
       id: "toc",
       title: "Sumário / Índice",
       render: (pNum, isPrint) => (
-        <EditorialPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
+        <EditorialPage
+          project={project}
+          theme={currentPublicationTheme}
+          pageNumber={pNum}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
       ),
     });
   }
@@ -448,6 +474,7 @@ function Index() {
               isPrintMode={isPrint ?? false}
               pagePart={part}
               totalPagesForArticle={span}
+              layoutMode={layoutMode}
             />
           ),
         });
@@ -459,7 +486,13 @@ function Index() {
       id: "back-cover",
       title: "Contracapa",
       render: (pNum, isPrint) => (
-        <BackCoverPage project={project} theme={currentPublicationTheme} pageNumber={pNum} isPrintMode={isPrint ?? false} />
+        <BackCoverPage
+          project={project}
+          theme={currentPublicationTheme}
+          pageNumber={pNum}
+          isPrintMode={isPrint ?? false}
+          layoutMode={layoutMode}
+        />
       ),
     });
   }
@@ -467,7 +500,10 @@ function Index() {
   const totalPages = Math.max(1, activePages.length);
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 theme-app-shell ${activeUiTheme.className}`}>
+    <div
+      data-hydrated={isInitialLoaded ? "true" : "false"}
+      className={`min-h-screen flex flex-col font-sans transition-colors duration-200 theme-app-shell ${activeUiTheme.className}`}
+    >
       {/* Top Application Header / Studio Navbar */}
       <header className="no-print sticky top-0 z-50 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 transition-colors theme-app-header border-b-2 shadow-sm">
         {/* Brand & Issue Title */}
@@ -651,6 +687,8 @@ function Index() {
             <MagazineViewer
               project={project}
               theme={currentPublicationTheme}
+              layoutMode={layoutMode}
+              onLayoutModeChange={setLayoutMode}
               onOpenExportModal={() => setIsExportModalOpen(true)}
               onOpenArticleEditor={(id) => {
                 const art = project.articles.find((a) => a.id === id);
@@ -1005,6 +1043,8 @@ function Index() {
         project={project}
         theme={currentPublicationTheme}
         totalPages={totalPages}
+        layoutMode={layoutMode}
+        onSelectLayoutMode={setLayoutMode}
         onOpenMockupStudio={() => {
           setIsExportModalOpen(false);
           setIsMockupStudioOpen(true);
@@ -1086,7 +1126,7 @@ function Index() {
       </Dialog>
 
       {/* Print-Only Container (Render ONLY active pages without blank sheets) */}
-      <div className="print-only-container">
+      <div className={`print-only-container ${layoutMode === "mobile" ? "print-layout-mobile" : "print-layout-print"}`}>
         {activePages.map((page, idx) => (
           <div key={page.id} className="magazine-print-page">
             {page.render(idx + 1, true)}

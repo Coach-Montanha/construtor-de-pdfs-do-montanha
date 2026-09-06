@@ -48,6 +48,10 @@ type AuthFixtures = {
   proPage: Page;
 };
 
+export async function waitForHydration(page: Page) {
+  await page.waitForSelector('[data-hydrated="true"]', { timeout: 15000 });
+}
+
 /**
  * Custom Playwright test fixture with pre-authenticated sessions
  */
@@ -55,12 +59,14 @@ export const test = base.extend<AuthFixtures>({
   authenticatedPage: async ({ page }, use) => {
     await seedSession(page, TEST_AUTHENTICATED_USER);
     await page.goto("/");
+    await waitForHydration(page);
     await use(page);
   },
 
   proPage: async ({ page }, use) => {
     await seedSession(page, TEST_PRO_USER);
     await page.goto("/");
+    await waitForHydration(page);
     await use(page);
   },
 });

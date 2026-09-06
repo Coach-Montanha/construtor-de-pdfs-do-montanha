@@ -1,5 +1,5 @@
 import React from "react";
-import { MagazineProject, MagazineTheme } from "../../types/magazine";
+import { MagazineLayoutMode, MagazineProject, MagazineTheme } from "../../types/magazine";
 import { getHeadlineFontClass, getBodyFontClass, isColorLight } from "../../lib/theme-utils";
 import { formatPageNumber } from "../../lib/magazine-utils";
 import { Feather, Award, Scale, FileText } from "lucide-react";
@@ -9,6 +9,7 @@ interface EditorLetterPageProps {
   theme: MagazineTheme;
   pageNumber?: number;
   isPrintMode?: boolean;
+  layoutMode?: MagazineLayoutMode;
 }
 
 export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
@@ -16,8 +17,11 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
   theme,
   pageNumber = 2,
   isPrintMode = false,
+  layoutMode = "print",
 }) => {
   const { editorialInfo, coverConfig } = project;
+  const effectiveLayoutMode = layoutMode || project.layoutMode || "print";
+  const isMobile = effectiveLayoutMode === "mobile";
 
   const headlineFontClass = getHeadlineFontClass(project.fontConfig?.headlineFont);
   const bodyFontClass = getBodyFontClass(project.fontConfig?.bodyFont);
@@ -34,10 +38,10 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
   return (
     <div
       className={`magazine-page relative w-full h-full overflow-hidden flex flex-col justify-between p-5 sm:p-7 select-none ${
-        isPrintMode ? "print-page" : "shadow-2xl rounded-sm"
+        isPrintMode ? "print-page" : isMobile ? "shadow-2xl rounded-lg" : "shadow-2xl rounded-sm"
       }`}
       style={{
-        aspectRatio: "210 / 297",
+        aspectRatio: isMobile ? "9 / 16" : "210 / 297",
         backgroundColor: bgColor,
         color: textColor,
       }}
@@ -302,18 +306,28 @@ export const EditorLetterPage: React.FC<EditorLetterPageProps> = ({
       </div>
 
       {/* ---------------- 4. BOTTOM FOOTER & PAGE NUMBERING ---------------- */}
-      <div
-        className="relative z-10 border-t pt-1.5 flex items-center justify-between text-[9px] font-mono font-bold uppercase shrink-0"
-        style={{ borderColor: `${primaryColor}40`, color: textMutedColor }}
-      >
-        <span>{project.title} • {coverConfig.editionNumber ? `ED. #${coverConfig.editionNumber}` : "ED. #01"}</span>
-        <span
-          className="px-2 py-0.5 rounded border"
-          style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
+      {isMobile ? (
+        <div
+          className="relative z-10 border-t pt-2 flex items-center justify-between text-[10px] font-mono font-bold uppercase shrink-0"
+          style={{ borderColor: `${primaryColor}30`, color: textMutedColor }}
         >
-          PÁGINA {formatPageNumber(pageNumber)}
-        </span>
-      </div>
+          <span>{project.title}</span>
+          <span>pág {formatPageNumber(pageNumber)}</span>
+        </div>
+      ) : (
+        <div
+          className="relative z-10 border-t pt-1.5 flex items-center justify-between text-[9px] font-mono font-bold uppercase shrink-0"
+          style={{ borderColor: `${primaryColor}40`, color: textMutedColor }}
+        >
+          <span>{project.title} • {coverConfig.editionNumber ? `ED. #${coverConfig.editionNumber}` : "ED. #01"}</span>
+          <span
+            className="px-2 py-0.5 rounded border"
+            style={{ backgroundColor: cardBg, color: primaryColor, borderColor: `${primaryColor}60` }}
+          >
+            PÁGINA {formatPageNumber(pageNumber)}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
