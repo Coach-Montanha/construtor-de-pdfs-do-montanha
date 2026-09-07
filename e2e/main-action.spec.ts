@@ -87,4 +87,29 @@ test.describe("Jornada Crítica: Ação Principal (Criação, Edição de Matér
     await expect(authenticatedPage.getByTestId("export-modal")).toBeVisible();
     await expect(authenticatedPage.getByText("Central de Exportação de PDF & Impressão Editorial")).toBeVisible();
   });
+
+  test("Fluxo Editorial: Sincronização de status entre Revista e Acervo (Publicado vs Rascunho)", async ({ authenticatedPage }) => {
+    // 1. Abrir aba do Acervo & Repositório
+    await authenticatedPage.getByTestId("tab-repository").click();
+    await expect(authenticatedPage.getByText("Repositório de Arquivos & Gerador de Artigos por IA")).toBeVisible();
+
+    // 2. Verificar presença dos filtros dinâmicos
+    await expect(authenticatedPage.getByRole("button", { name: /^Rascunhos Disponíveis/i })).toBeVisible();
+    await expect(authenticatedPage.getByRole("button", { name: /^Na Revista/i })).toBeVisible();
+
+    // 3. Testar inserção direta na revista e posterior remoção
+    const addBtn = authenticatedPage.getByRole("button", { name: /Colocar na Revista/i }).first();
+    if (await addBtn.isVisible()) {
+      await addBtn.click();
+      // O botão vira "Remover da Revista" e o badge "PUBLICADO NA REVISTA" aparece
+      const removeBtn = authenticatedPage.getByRole("button", { name: /Remover da Revista/i }).first();
+      await expect(removeBtn).toBeVisible();
+      await expect(authenticatedPage.getByText("PUBLICADO NA REVISTA").first()).toBeVisible();
+
+      // 4. Ao clicar em remover, volta a ser rascunho
+      await removeBtn.click();
+      await expect(authenticatedPage.getByRole("button", { name: /Colocar na Revista/i }).first()).toBeVisible();
+      await expect(authenticatedPage.getByText("RASCUNHO DISPONÍVEL").first()).toBeVisible();
+    }
+  });
 });

@@ -20,7 +20,7 @@ import {
   EditorialAnalysisResult,
 } from "../../lib/ai-service";
 import { AiApprovalModal } from "./AiApprovalModal";
-import { countWords } from "../../lib/magazine-utils";
+import { countWords, calculateRequiredArticlePages } from "../../lib/magazine-utils";
 import {
   FolderOpen,
   Upload,
@@ -35,6 +35,9 @@ import {
   Eye,
   Clock,
   Loader2,
+  Undo2,
+  BookOpen,
+  FileEdit,
 } from "lucide-react";
 
 interface ContentRepositoryViewProps {
@@ -75,12 +78,35 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
 
   const documents = project.contentRepository || [];
 
+  // Helper de sincronização em tempo real: verifica se o documento do acervo está atualmente na revista
+  const getDocMagazineLink = (doc: RepositoryDocument) => {
+    const article = project.articles.find(
+      (a) =>
+        (a.sourceDocId && a.sourceDocId === doc.id) ||
+        a.title.toLowerCase().trim() === doc.title.toLowerCase().trim()
+    );
+    return {
+      isInMagazine: !!article,
+      article,
+    };
+  };
+
+  const publishedCount = documents.filter((d) => getDocMagazineLink(d).isInMagazine).length;
+  const draftsCount = documents.filter((d) => !getDocMagazineLink(d).isInMagazine).length;
+
   // Filtered Documents
   const filteredDocs = documents.filter((doc) => {
     const matchesSearch =
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.rawContent.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === "all" || doc.status === filterStatus;
+      doc.rawContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (doc.category && doc.category.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const { isInMagazine } = getDocMagazineLink(doc);
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "published" && isInMagazine) ||
+      (filterStatus === "draft" && !isInMagazine);
+
     return matchesSearch && matchesStatus;
   });
 
@@ -220,11 +246,87 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     }
   };
 
+  // Remover matéria da revista e retornar documento para status Rascunho
+  const handleRemoveFromMagazine = (doc: RepositoryDocument) => {
+    const { article } = getDocMagazineLink(doc);
+    const updatedArticles = article
+      ? project.articles.filter((a) => a.id !== article.id)
+      : project.articles;
+
+    const updatedDocs = documents.map((d) =>
+      d.id === doc.id
+        ? { ...d, status: "draft" as const, updatedAt: new Date().toISOString() }
+        : d
+    );
+
+    onUpdateProject({
+      ...project,
+      articles: updatedArticles,
+      contentRepository: updatedDocs,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  // Inserir documento diretamente na revista atual como matéria
+  const handleDirectAddToMagazine = (doc: RepositoryDocument) => {
+    const { isInMagazine } = getDocMagazineLink(doc);
+    if (isInMagazine) {
+      alert("Este artigo já está inserido na revista.");
+      return;
+    }
+
+    const newArt: Article = {
+      id: "art-" + Date.now(),
+      sourceDocId: doc.id,
+      title: doc.title,
+      subtitle: `Artigo do acervo editorial // ${doc.category || "Alta Performance"}.`,
+      category: doc.category || "MONTANHA METHOD",
+      author: "Coach Montanha",
+      authorBio: "Master Coach & Fundador",
+      authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
+      heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+      heroImageCaption: "Foto editorial // Montanha Media",
+      content: doc.rawContent,
+      pullQuotes: [],
+      keyTakeaways: [],
+      layoutTemplate: doc.wordCount > 650 ? "editorial-lead" : "two-column-quote",
+      pageSpan: calculateRequiredArticlePages({
+        content: doc.rawContent,
+        heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+      } as any),
+      quotePlacement: "end",
+      textDensity: "normal",
+      tags: [doc.category || "Geral", "Alta Performance"],
+      estimatedReadTime: Math.max(1, Math.round(doc.wordCount / 130)),
+      featuredOnCover: false,
+      enabled: true,
+    };
+
+    const updatedArticles = [...project.articles, newArt];
+    const updatedDocs = documents.map((d) =>
+      d.id === doc.id
+        ? { ...d, status: "published" as const, updatedAt: new Date().toISOString() }
+        : d
+    );
+
+    onUpdateProject({
+      ...project,
+      articles: updatedArticles,
+      contentRepository: updatedDocs,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
   // On AI Approval
   const handleApproveArticle = (newArticle: Article, sourceDocId?: string) => {
-    const updatedArticles = [...project.articles, newArticle];
-    const updatedDocs = sourceDocId
-      ? documents.map((d) => (d.id === sourceDocId ? { ...d, status: "published" as const } : d))
+    const finalDocId = sourceDocId || selectedSourceDoc?.id;
+    const artWithSource: Article = {
+      ...newArticle,
+      sourceDocId: finalDocId,
+    };
+    const updatedArticles = [...project.articles, artWithSource];
+    const updatedDocs = finalDocId
+      ? documents.map((d) => (d.id === finalDocId ? { ...d, status: "published" as const, updatedAt: new Date().toISOString() } : d))
       : documents;
 
     onUpdateProject({
@@ -372,13 +474,13 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
           />
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
           <span className="text-[10px] font-bold opacity-75 uppercase mr-1">Status:</span>
           <button
             type="button"
             onClick={() => setFilterStatus("all")}
-            className={`px-2.5 py-1 rounded text-xs font-bold border cursor-pointer ${
-              filterStatus === "all" ? "bg-amber-400 text-black font-black border-black" : "theme-app-card-subtle opacity-70"
+            className={`px-3 py-1 rounded text-xs font-bold border transition-all cursor-pointer ${
+              filterStatus === "all" ? "bg-amber-400 text-black font-black border-black shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
             }`}
           >
             Todos ({documents.length})
@@ -386,20 +488,22 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
           <button
             type="button"
             onClick={() => setFilterStatus("draft")}
-            className={`px-2.5 py-1 rounded text-xs font-bold border cursor-pointer ${
-              filterStatus === "draft" ? "bg-amber-400 text-black font-black border-black" : "theme-app-card-subtle opacity-70"
+            className={`px-3 py-1 rounded text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+              filterStatus === "draft" ? "bg-amber-400 text-black font-black border-black shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
             }`}
           >
-            Rascunhos ({documents.filter((d) => d.status !== "published").length})
+            <FileEdit className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+            <span>Rascunhos Disponíveis ({draftsCount})</span>
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus("published")}
-            className={`px-2.5 py-1 rounded text-xs font-bold border cursor-pointer ${
-              filterStatus === "published" ? "bg-amber-400 text-black font-black border-black" : "theme-app-card-subtle opacity-70"
+            className={`px-3 py-1 rounded text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+              filterStatus === "published" ? "bg-emerald-600 text-white font-black border-emerald-800 shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
             }`}
           >
-            Publicados ({documents.filter((d) => d.status === "published").length})
+            <Check className="w-3 h-3 stroke-[3]" />
+            <span>Na Revista ({publishedCount})</span>
           </button>
         </div>
       </div>
@@ -434,13 +538,21 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredDocs.map((doc) => {
             const isDocAnalyzing = isAnalyzing && analyzingDocId === doc.id;
-            const isPublished = doc.status === "published";
+            const { isInMagazine, article: linkedArt } = getDocMagazineLink(doc);
+
+            // Page number if in magazine
+            let pageBadgeText = "";
+            if (linkedArt) {
+              const idx = project.articles.findIndex((a) => a.id === linkedArt.id);
+              const approxPage = (idx >= 0 ? idx : 0) + 4;
+              pageBadgeText = `PÁG. ${approxPage.toString().padStart(2, "0")}`;
+            }
 
             return (
               <div
                 key={doc.id}
                 className={`theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col justify-between space-y-3 shadow-sm ${
-                  isPublished ? "border-emerald-500/40 bg-emerald-500/5" : "border-slate-300 hover:border-black"
+                  isInMagazine ? "border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/20" : "border-slate-300 dark:border-slate-700 hover:border-black dark:hover:border-white"
                 }`}
               >
                 <div>
@@ -450,22 +562,35 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                         {doc.category || "GERAL"}
                       </span>
                       {doc.sourceFileName && (
-                        <span className="text-[9px] font-mono opacity-60 flex items-center gap-1">
-                          <FileText className="w-3 h-3" />
-                          {doc.sourceFileName}
+                        <span className="text-[9px] font-mono opacity-60 flex items-center gap-1 truncate max-w-[130px]">
+                          <FileText className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{doc.sourceFileName}</span>
                         </span>
                       )}
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      {isPublished ? (
-                        <span className="bg-emerald-500 text-white font-mono text-[8.5px] font-black px-2 py-0.5 rounded uppercase flex items-center gap-1">
-                          <Check className="w-3 h-3" />
-                          PUBLICADO
-                        </span>
+                      {isInMagazine ? (
+                        <div className="flex items-center gap-1">
+                          <span className="bg-emerald-600 text-white font-mono text-[8.5px] font-black px-2 py-0.5 rounded uppercase flex items-center gap-1 shadow-xs">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                            <span>PUBLICADO NA REVISTA</span>
+                          </span>
+                          {pageBadgeText && (
+                            <span className="font-mono text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                              {pageBadgeText}
+                            </span>
+                          )}
+                          {linkedArt?.enabled === false && (
+                            <span className="bg-amber-500/20 text-amber-700 dark:text-amber-400 font-mono text-[8px] font-bold px-1.5 py-0.2 rounded uppercase border border-amber-500/40">
+                              PAUSADO
+                            </span>
+                          )}
+                        </div>
                       ) : (
-                        <span className="bg-slate-200 text-slate-800 font-mono text-[8.5px] font-bold px-2 py-0.5 rounded uppercase">
-                          RASCUNHO
+                        <span className="bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[8.5px] font-bold px-2 py-0.5 rounded uppercase flex items-center gap-1 border border-slate-300 dark:border-slate-700">
+                          <FileEdit className="w-3 h-3 text-amber-500" />
+                          <span>RASCUNHO DISPONÍVEL</span>
                         </span>
                       )}
                     </div>
@@ -497,11 +622,66 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {isInMagazine ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFromMagazine(doc)}
+                          className="h-7 px-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-800 rounded font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-xs"
+                          title="Remover esta matéria da revista e retornar para status de Rascunho no Acervo"
+                        >
+                          <Undo2 className="w-3 h-3" />
+                          <span>Remover da Revista</span>
+                        </button>
+
+                        {linkedArt && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenArticleEditor(linkedArt)}
+                            className="h-7 px-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all shadow-xs"
+                            title="Abrir o editor da matéria diagramada na revista"
+                          >
+                            <BookOpen className="w-3 h-3 text-amber-500" />
+                            <span>Ver Matéria</span>
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handleDirectAddToMagazine(doc)}
+                          className="h-7 px-2.5 bg-amber-400 hover:bg-amber-500 text-black font-black text-[10px] border border-black shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
+                          title="Inserir diretamente como matéria na revista atual"
+                        >
+                          <Plus className="w-3 h-3 text-black" />
+                          <span>Colocar na Revista</span>
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          onClick={() => handleTriggerAiAnalysis(doc)}
+                          disabled={isDocAnalyzing}
+                          className="h-7 px-2.5 bg-black hover:bg-slate-900 text-white font-bold text-[10px] border border-black shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
+                          title={isDocAnalyzing ? "Analisando com IA..." : "Diagramar com IA"}
+                        >
+                          {isDocAnalyzing ? (
+                            <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+                          ) : (
+                            <Wand2 className="w-3 h-3 text-amber-400" />
+                          )}
+                          <span>{isDocAnalyzing ? "Analisando..." : "Diagramar IA"}</span>
+                        </Button>
+                      </>
+                    )}
+
+                    <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-0.5 hidden sm:block" />
+
                     <button
                       type="button"
                       onClick={() => setPreviewDoc(doc)}
-                      className="p-1.5 opacity-70 hover:opacity-100 hover:bg-black/10 rounded cursor-pointer"
+                      className="p-1.5 opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 rounded cursor-pointer"
                       title="Pré-visualizar / Ler Texto"
                     >
                       <Eye className="w-3.5 h-3.5 text-amber-600" />
@@ -510,8 +690,8 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleEditDraft(doc)}
-                      className="p-1.5 opacity-70 hover:opacity-100 hover:bg-black/10 rounded cursor-pointer"
-                      title="Editar Rascunho"
+                      className="p-1.5 opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 rounded cursor-pointer"
+                      title="Editar Rascunho no Acervo"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
@@ -525,21 +705,6 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
-
-                    <Button
-                      size="sm"
-                      onClick={() => handleTriggerAiAnalysis(doc)}
-                      disabled={isDocAnalyzing}
-                      className="h-7 w-8 p-0 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border border-black shadow-xs cursor-pointer flex items-center justify-center shrink-0"
-                      title={isDocAnalyzing ? "Analisando com IA..." : "Diagramar com IA"}
-                      aria-label="Diagramar com IA"
-                    >
-                      {isDocAnalyzing ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
-                      ) : (
-                        <Wand2 className="w-3.5 h-3.5 text-black" />
-                      )}
-                    </Button>
                   </div>
                 </div>
               </div>

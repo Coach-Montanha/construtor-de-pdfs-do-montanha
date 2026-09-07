@@ -229,9 +229,26 @@ function Index() {
     if (!articleToDelete) return;
     const targetId = articleToDelete.id;
     const updatedArticles = project.articles.filter((a) => a.id !== targetId);
+
+    // Reverte automaticamente o documento correspondente no repositório de volta para "draft"
+    const updatedRepository = project.contentRepository?.map((doc) => {
+      const isMatch =
+        (articleToDelete.sourceDocId && doc.id === articleToDelete.sourceDocId) ||
+        doc.title.toLowerCase().trim() === articleToDelete.title.toLowerCase().trim();
+      if (isMatch) {
+        return {
+          ...doc,
+          status: "draft" as const,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      return doc;
+    });
+
     const updatedProj: MagazineProject = {
       ...project,
       articles: updatedArticles,
+      contentRepository: updatedRepository,
       updatedAt: new Date().toISOString(),
     };
     setProject(updatedProj);
@@ -316,6 +333,7 @@ function Index() {
   const handleImportDirectFromRepo = (doc: RepositoryDocument) => {
     const newArt: Article = {
       id: "art-" + Date.now(),
+      sourceDocId: doc.id,
       title: doc.title,
       subtitle: `Artigo importado do acervo editorial // ${doc.category || "Alta Performance"}.`,
       category: doc.category || "MONTANHA METHOD",
@@ -342,7 +360,7 @@ function Index() {
 
     const updatedArticles = [...project.articles, newArt];
     const updatedDocs = project.contentRepository
-      ? project.contentRepository.map((d) => (d.id === doc.id ? { ...d, status: "published" as const } : d))
+      ? project.contentRepository.map((d) => (d.id === doc.id ? { ...d, status: "published" as const, updatedAt: new Date().toISOString() } : d))
       : [];
 
     const updatedProj: MagazineProject = {
@@ -358,9 +376,14 @@ function Index() {
   };
 
   const handleApproveRepoArticle = (approvedArt: Article, sourceDocId?: string) => {
-    const updatedArticles = [...project.articles, approvedArt];
-    const updatedDocs = sourceDocId && project.contentRepository
-      ? project.contentRepository.map((d) => (d.id === sourceDocId ? { ...d, status: "published" as const } : d))
+    const finalDocId = sourceDocId || approvedArt.sourceDocId || selectedRepoDoc?.id;
+    const artWithSource: Article = {
+      ...approvedArt,
+      sourceDocId: finalDocId,
+    };
+    const updatedArticles = [...project.articles, artWithSource];
+    const updatedDocs = finalDocId && project.contentRepository
+      ? project.contentRepository.map((d) => (d.id === finalDocId ? { ...d, status: "published" as const, updatedAt: new Date().toISOString() } : d))
       : project.contentRepository;
 
     const updatedProj: MagazineProject = {

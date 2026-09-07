@@ -209,6 +209,7 @@ export type MagazineArticle = Article;
 
 export interface Article {
   id: string;
+  sourceDocId?: string; // ID do documento correspondente no repositório / acervo
   title: string;
   subtitle: string;
   category: string;

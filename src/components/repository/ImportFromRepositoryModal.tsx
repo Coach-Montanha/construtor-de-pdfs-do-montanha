@@ -108,12 +108,18 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
             </div>
           ) : (
             filteredDocs.map((doc) => {
-              const isPublished = doc.status === "published";
+              const linkedArticle = project.articles.find(
+                (a) =>
+                  (a.sourceDocId && a.sourceDocId === doc.id) ||
+                  (doc.id && a.id === doc.id) ||
+                  a.title.trim().toLowerCase() === doc.title.trim().toLowerCase()
+              );
+              const isInMagazine = !!linkedArticle;
               return (
                 <div
                   key={doc.id}
                   className={`theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col justify-between space-y-2.5 shadow-xs hover:border-amber-500 ${
-                    isPublished ? "border-emerald-500/40 bg-emerald-500/5" : ""
+                    isInMagazine ? "border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/20" : ""
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -139,10 +145,14 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
                         <Clock className="w-3 h-3" />
                         ~{Math.max(1, Math.round(doc.wordCount / 130))} min
                       </span>
-                      {isPublished && (
-                        <span className="bg-emerald-500 text-white text-[8px] font-black px-1.5 py-0.2 rounded uppercase ml-1 flex items-center gap-0.5">
-                          <Check className="w-2.5 h-2.5" />
-                          PUBLICADO
+                      {isInMagazine ? (
+                        <span className="bg-emerald-600 text-white text-[8.5px] font-black px-2 py-0.5 rounded uppercase ml-1 flex items-center gap-1 shadow-xs">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          NA REVISTA
+                        </span>
+                      ) : (
+                        <span className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[8.5px] font-bold px-2 py-0.5 rounded uppercase ml-1 border border-slate-300 dark:border-slate-700">
+                          RASCUNHO
                         </span>
                       )}
                     </div>
@@ -168,7 +178,7 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
                       className="h-8 text-xs font-bold border-2 border-current cursor-pointer flex items-center gap-1"
                     >
                       <FileDown className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Importar Direto (Manual)</span>
+                      <span>{isInMagazine ? "Importar Novamente" : "Importar Direto (Manual)"}</span>
                     </Button>
 
                     <Button
@@ -180,7 +190,7 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
                       className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black shadow-xs cursor-pointer flex items-center gap-1"
                     >
                       <Wand2 className="w-3.5 h-3.5 text-black" />
-                      <span>⚡ Analisar & Diagramar com IA</span>
+                      <span>⚡ {isInMagazine ? "Rediagramar com IA" : "Analisar & Diagramar com IA"}</span>
                     </Button>
                   </div>
                 </div>
