@@ -32,26 +32,38 @@ test.describe("Arquitetura de Layout Duplo: Print A4 vs Mobile Digital Reader", 
     await expect(authenticatedPage.getByText(/Proporção Exata A4/)).toBeVisible();
   });
 
-  test("Deve permitir selecionar entre Edição Impressa A4 e Mobile no Modal de Exportação", async ({ authenticatedPage }) => {
+  test("Deve permitir selecionar entre Edição Impressa A4 e Mobile no Modal de Exportação com Pré-Visualização e Download Direto", async ({ authenticatedPage }) => {
     // 1. Abrir a central de exportação
     await authenticatedPage.getByTestId("btn-export-pdf").click();
     await expect(authenticatedPage.getByTestId("export-modal")).toBeVisible();
 
-    // 2. Verificar a existência das opções de formato
+    // 2. Verificar a existência das opções de formato e botão de download direto
     const optPrint = authenticatedPage.getByTestId("opt-export-print");
     const optMobile = authenticatedPage.getByTestId("opt-export-mobile");
-    const btnConfirm = authenticatedPage.getByTestId("btn-confirm-export-pdf");
+    const btnDirectDownload = authenticatedPage.getByTestId("btn-direct-download-pdf");
 
     await expect(optPrint).toBeVisible();
     await expect(optMobile).toBeVisible();
-    await expect(btnConfirm).toBeVisible();
+    await expect(btnDirectDownload).toBeVisible();
 
-    // 3. Selecionar formato Mobile
+    // 3. Verificar pré-visualização ao vivo presente
+    await expect(authenticatedPage.getByText(/Pré-Visualização Ao Vivo/i)).toBeVisible();
+
+    // 4. Selecionar formato Mobile
     await optMobile.click();
-    await expect(btnConfirm).toContainText("Gerar PDF Mobile");
+    await expect(btnDirectDownload).toContainText("Mobile 9:16");
+    await expect(authenticatedPage.getByText(/9:16 Vertical/i)).toBeVisible();
 
-    // 4. Selecionar formato Print A4
+    // 5. Selecionar formato Print A4
     await optPrint.click();
-    await expect(btnConfirm).toContainText("Gerar & Salvar PDF A4");
+    await expect(btnDirectDownload).toContainText("A4");
+    await expect(authenticatedPage.getByText(/210x297mm A4/i)).toBeVisible();
+
+    // 6. Testar navegação da pré-visualização (Próxima página)
+    const nextBtn = authenticatedPage.getByRole("button", { name: /Próxima/i });
+    if (await nextBtn.isVisible()) {
+      await nextBtn.click();
+      await expect(authenticatedPage.getByText(/2 \//i)).toBeVisible();
+    }
   });
 });

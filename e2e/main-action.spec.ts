@@ -85,7 +85,7 @@ test.describe("Jornada Crítica: Ação Principal (Criação, Edição de Matér
 
     // Modal de exportação deve abrir
     await expect(authenticatedPage.getByTestId("export-modal")).toBeVisible();
-    await expect(authenticatedPage.getByText("Central de Exportação de PDF & Impressão Editorial")).toBeVisible();
+    await expect(authenticatedPage.getByText(/Central de Exportação de PDF/i)).toBeVisible();
   });
 
   test("Fluxo Editorial: Sincronização de status entre Revista e Acervo (Publicado vs Rascunho)", async ({ authenticatedPage }) => {

@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MagazineLayoutMode, MagazineProject, MagazineTheme, PageViewMode } from "../../types/magazine";
-import { CoverPage } from "./CoverPage";
-import { EditorLetterPage } from "./EditorLetterPage";
-import { ContributorsPage } from "./ContributorsPage";
-import { EditorialPage } from "./EditorialPage";
-import { ArticleSpread } from "./ArticleSpread";
-import { BackCoverPage } from "./BackCoverPage";
-import { getEffectiveArticlePageSpan } from "../../lib/magazine-utils";
+import { getActiveMagazinePages } from "../../lib/magazine-pages";
 import {
   ChevronLeft,
   ChevronRight,
@@ -58,127 +52,11 @@ export const MagazineViewer: React.FC<MagazineViewerProps> = ({
     }
   };
 
-  // Dynamic active page visibility
-  const visibility = {
-    showCover: true,
-    showEditorLetter: true,
-    showContributors: false, // Default false
-    showTableOfContents: true,
-    showBackCover: true,
-    ...project.pageVisibility,
-  };
-
-  interface PageItem {
-    id: string;
-    title: string;
-    render: (pageNumber: number, isPrint?: boolean) => React.ReactNode;
-  }
-
-  const activePages: PageItem[] = [];
-
-  if (visibility.showCover) {
-    activePages.push({
-      id: "cover",
-      title: "Capa Principal",
-      render: (_, isPrint) => (
-        <CoverPage
-          project={project}
-          theme={theme}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
-
-  if (visibility.showEditorLetter) {
-    activePages.push({
-      id: "editor-letter",
-      title: "Carta do Editor",
-      render: (pNum, isPrint) => (
-        <EditorLetterPage
-          project={project}
-          theme={theme}
-          pageNumber={pNum}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
-
-  if (visibility.showContributors) {
-    activePages.push({
-      id: "contributors",
-      title: "Colaboradores",
-      render: (pNum, isPrint) => (
-        <ContributorsPage
-          project={project}
-          theme={theme}
-          pageNumber={pNum}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
-
-  if (visibility.showTableOfContents) {
-    activePages.push({
-      id: "toc",
-      title: "Sumário / Índice",
-      render: (pNum, isPrint) => (
-        <EditorialPage
-          project={project}
-          theme={theme}
-          pageNumber={pNum}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
-
-  project.articles
-    .filter((art) => art.enabled !== false)
-    .forEach((art) => {
-      const span = getEffectiveArticlePageSpan(art);
-      for (let part = 1; part <= span; part++) {
-        activePages.push({
-          id: span > 1 ? `${art.id}-part${part}` : art.id,
-          title: span > 1 ? `${art.title} (Parte ${part}/${span})` : art.title,
-          render: (pNum, isPrint) => (
-            <ArticleSpread
-              key={`${art.id}-part${part}`}
-              article={art}
-              project={project}
-              theme={theme}
-              pageNumber={pNum}
-              isPrintMode={isPrint ?? false}
-              pagePart={part}
-              totalPagesForArticle={span}
-              layoutMode={layoutMode}
-            />
-          ),
-        });
-      }
-    });
-
-  if (visibility.showBackCover) {
-    activePages.push({
-      id: "back-cover",
-      title: "Contracapa",
-      render: (pNum, isPrint) => (
-        <BackCoverPage
-          project={project}
-          theme={theme}
-          pageNumber={pNum}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
+  const activePages = getActiveMagazinePages({
+    project,
+    theme,
+    layoutMode,
+  });
 
   const totalPages = Math.max(1, activePages.length);
 

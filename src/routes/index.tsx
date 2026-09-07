@@ -13,12 +13,7 @@ import { AiStudioDialog } from "../components/editor/AiStudioDialog";
 import { PdfExportModal } from "../components/export/PdfExportModal";
 import { MockupStudioModal } from "../components/mockup/MockupStudioModal";
 import { CloudSyncDialog } from "../components/sync/CloudSyncDialog";
-import { CoverPage } from "../components/magazine/CoverPage";
-import { EditorLetterPage } from "../components/magazine/EditorLetterPage";
-import { ContributorsPage } from "../components/magazine/ContributorsPage";
-import { EditorialPage } from "../components/magazine/EditorialPage";
-import { ArticleSpread } from "../components/magazine/ArticleSpread";
-import { BackCoverPage } from "../components/magazine/BackCoverPage";
+import { getActiveMagazinePages } from "../lib/magazine-pages";
 import { PwaInstallPrompt } from "../components/pwa/PwaInstallPrompt";
 import { ContentRepositoryView } from "../components/repository/ContentRepositoryView";
 import { ImportFromRepositoryModal } from "../components/repository/ImportFromRepositoryModal";
@@ -398,127 +393,11 @@ function Index() {
     setActiveTab("articles");
   };
 
-  // Dynamic active page visibility calculation
-  const visibility = {
-    showCover: true,
-    showEditorLetter: true,
-    showContributors: false, // Default false
-    showTableOfContents: true,
-    showBackCover: true,
-    ...project.pageVisibility,
-  };
-
-  interface PageItem {
-    id: string;
-    title: string;
-    render: (pageNumber: number, isPrint?: boolean) => React.ReactNode;
-  }
-
-  const activePages: PageItem[] = [];
-
-  if (visibility.showCover) {
-    activePages.push({
-      id: "cover",
-      title: "Capa Principal",
-      render: (_, isPrint) => (
-        <CoverPage
-          project={project}
-          theme={currentPublicationTheme}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
-
-  if (visibility.showEditorLetter) {
-    activePages.push({
-      id: "editor-letter",
-      title: "Carta do Editor",
-      render: (pNum, isPrint) => (
-        <EditorLetterPage
-          project={project}
-          theme={currentPublicationTheme}
-          pageNumber={pNum}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
-
-  if (visibility.showContributors) {
-    activePages.push({
-      id: "contributors",
-      title: "Colaboradores",
-      render: (pNum, isPrint) => (
-        <ContributorsPage
-          project={project}
-          theme={currentPublicationTheme}
-          pageNumber={pNum}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
-
-  if (visibility.showTableOfContents) {
-    activePages.push({
-      id: "toc",
-      title: "Sumário / Índice",
-      render: (pNum, isPrint) => (
-        <EditorialPage
-          project={project}
-          theme={currentPublicationTheme}
-          pageNumber={pNum}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
-
-  project.articles
-    .filter((art) => art.enabled !== false)
-    .forEach((art) => {
-      const span = getEffectiveArticlePageSpan(art);
-      for (let part = 1; part <= span; part++) {
-        activePages.push({
-          id: span > 1 ? `${art.id}-part${part}` : art.id,
-          title: span > 1 ? `${art.title} (Parte ${part}/${span})` : art.title,
-          render: (pNum, isPrint) => (
-            <ArticleSpread
-              key={`${art.id}-part${part}`}
-              article={art}
-              project={project}
-              theme={currentPublicationTheme}
-              pageNumber={pNum}
-              isPrintMode={isPrint ?? false}
-              pagePart={part}
-              totalPagesForArticle={span}
-              layoutMode={layoutMode}
-            />
-          ),
-        });
-      }
-    });
-
-  if (visibility.showBackCover) {
-    activePages.push({
-      id: "back-cover",
-      title: "Contracapa",
-      render: (pNum, isPrint) => (
-        <BackCoverPage
-          project={project}
-          theme={currentPublicationTheme}
-          pageNumber={pNum}
-          isPrintMode={isPrint ?? false}
-          layoutMode={layoutMode}
-        />
-      ),
-    });
-  }
+  const activePages = getActiveMagazinePages({
+    project,
+    theme: currentPublicationTheme,
+    layoutMode,
+  });
 
   const totalPages = Math.max(1, activePages.length);
 
