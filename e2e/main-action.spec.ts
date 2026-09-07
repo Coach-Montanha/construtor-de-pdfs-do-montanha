@@ -112,4 +112,30 @@ test.describe("Jornada Crítica: Ação Principal (Criação, Edição de Matér
       await expect(authenticatedPage.getByText("RASCUNHO DISPONÍVEL").first()).toBeVisible();
     }
   });
+
+  test("Fluxo em Nuvem: Sincronização multi-dispositivo (Upload e Download)", async ({ authenticatedPage }) => {
+    // 1. Abrir diálogo de sincronização em nuvem
+    await authenticatedPage.getByTestId("btn-open-cloud-sync").click();
+    await expect(authenticatedPage.getByText(/Central de Sincronização em Nuvem/i)).toBeVisible();
+
+    // 2. Verificar presença do QR Code e campo de código
+    await expect(authenticatedPage.getByText(/Abrir Exatamente Esta Edição no Celular/i)).toBeVisible();
+    await expect(authenticatedPage.getByText(/Código da Edição na Nuvem/i)).toBeVisible();
+
+    // 3. Testar envio para a nuvem (Upload)
+    const btnPush = authenticatedPage.getByTestId("btn-cloud-push");
+    await expect(btnPush).toBeVisible();
+    await btnPush.click();
+
+    // Deve exibir mensagem de confirmação de envio
+    await expect(authenticatedPage.getByText(/enviado para a nuvem sob o código/i)).toBeVisible();
+
+    // 4. Testar puxar da nuvem (Download)
+    const btnPull = authenticatedPage.getByTestId("btn-cloud-pull");
+    await expect(btnPull).toBeVisible();
+    await btnPull.click();
+
+    // Deve exibir confirmação de download aplicado
+    await expect(authenticatedPage.getByText(/baixada da nuvem e aplicada/i)).toBeVisible();
+  });
 });

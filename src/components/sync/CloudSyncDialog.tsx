@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { MagazineProject } from "../../types/magazine";
 import {
   Dialog,
@@ -10,25 +10,22 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import {
   Cloud,
-  RefreshCw,
   Download,
   Upload,
-  QrCode,
   Copy,
   CheckCircle2,
   Smartphone,
-  Laptop,
   ArrowRightLeft,
   Loader2,
-  Sparkles,
-  ShieldCheck,
   Send,
   CloudDownload,
   ExternalLink,
+  Key,
+  AlertCircle,
 } from "lucide-react";
 import {
   syncProjectToCloud,
-  loadLatestProject,
+  fetchProjectFromCloud,
   exportProjectToFile,
   importProjectFromFile,
   generateShareUrl,
@@ -47,43 +44,76 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
   project,
   onUpdateProject,
 }) => {
+  const [syncCode, setSyncCode] = useState<string>("MONTANHA");
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isPulling, setIsPulling] = useState<boolean>(false);
-  const [lastSyncedText, setLastSyncedText] = useState<string>("Sincronizado");
+  const [lastSyncedText, setLastSyncedText] = useState<string>("Pronto para sincronizar");
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null);
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
+  const [qrError, setQrError] = useState<boolean>(false);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const shareUrl = typeof window !== "undefined" ? generateShareUrl(project) : "";
-  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedCode = localStorage.getItem("montanha_sync_code");
+      if (savedCode) {
+        setSyncCode(savedCode.toUpperCase());
+      }
+    }
+  }, [isOpen]);
+
+  const cleanCode = (syncCode || "MONTANHA").trim().toUpperCase();
+  const shareUrl = typeof window !== "undefined" ? generateShareUrl(cleanCode) : "";
+  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(
     shareUrl
   )}&bgcolor=FFFFFF&color=000000&margin=2`;
 
   const handleManualPushToCloud = async () => {
     setIsSyncing(true);
     setSyncSuccessMessage(null);
-    const result = await syncProjectToCloud(project);
-    setIsSyncing(false);
-    if (result.success) {
-      setLastSyncedText(`Sincronizado às ${new Date().toLocaleTimeString("pt-BR")}`);
-      setSyncSuccessMessage("✓ Projeto enviado para a nuvem com sucesso! Acesse no outro navegador ou celular para carregar.");
-      setTimeout(() => setSyncSuccessMessage(null), 5000);
+    setSyncErrorMessage(null);
+
+    try {
+      const result = await syncProjectToCloud(project, cleanCode);
+      if (result.success) {
+        const timeStr = new Date().toLocaleTimeString("pt-BR");
+        setLastSyncedText(`Sincronizado às ${timeStr}`);
+        setSyncSuccessMessage(
+          `✓ Projeto enviado para a nuvem sob o código [${result.code}]! Agora você pode baixá-lo no outro dispositivo ou escanear o QR Code.`
+        );
+      } else {
+        setSyncErrorMessage(result.error || "Não foi possível enviar para a nuvem.");
+      }
+    } catch (e: any) {
+      setSyncErrorMessage("Erro no envio: " + (e?.message || e));
+    } finally {
+      setIsSyncing(false);
     }
   };
 
   const handlePullFromCloud = async () => {
     setIsPulling(true);
     setSyncSuccessMessage(null);
+    setSyncErrorMessage(null);
+
     try {
-      const latest = await loadLatestProject();
-      if (latest) {
-        onUpdateProject(latest);
-        setLastSyncedText(`Atualizado da nuvem às ${new Date().toLocaleTimeString("pt-BR")}`);
-        setSyncSuccessMessage("✓ Versão mais recente baixada e aplicada neste dispositivo!");
-        setTimeout(() => setSyncSuccessMessage(null), 5000);
+      const result = await fetchProjectFromCloud(cleanCode);
+      if (result && result.project) {
+        onUpdateProject(result.project);
+        const timeStr = new Date().toLocaleTimeString("pt-BR");
+        setLastSyncedText(`Atualizado da nuvem às ${timeStr}`);
+        setSyncSuccessMessage(
+          `✓ Edição [${result.code}] baixada da nuvem e aplicada com sucesso neste dispositivo!`
+        );
+      } else {
+        setSyncErrorMessage(
+          `Nenhuma edição encontrada na nuvem com o código [${cleanCode}]. Certifique-se de clicar em 'Enviar' no dispositivo principal primeiro.`
+        );
       }
     } catch (e: any) {
-      alert("Erro ao buscar da nuvem: " + e.message);
+      setSyncErrorMessage("Erro ao buscar da nuvem: " + (e?.message || e));
     } finally {
       setIsPulling(false);
     }
@@ -108,8 +138,8 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
     try {
       const imported = await importProjectFromFile(file);
       onUpdateProject(imported);
-      await syncProjectToCloud(imported);
-      alert("Backup importado e sincronizado com sucesso em todos os aparelhos!");
+      await syncProjectToCloud(imported, cleanCode);
+      alert("Backup importado e sincronizado com sucesso neste e em outros dispositivos!");
       onClose();
     } catch (err: any) {
       alert("Erro ao importar arquivo: " + err.message);
@@ -131,14 +161,21 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
             </DialogTitle>
           </div>
           <p className="text-xs opacity-75 mt-0.5">
-            Sincronize suas matérias, fotos e diagramação entre o notebook (Edge / Chrome) e o celular em tempo real.
+            Sincronize matérias, fotos e diagramação entre o notebook (Edge / Chrome) e o celular em tempo real.
           </p>
         </DialogHeader>
 
         {syncSuccessMessage && (
-          <div className="p-3 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-700 text-xs font-bold flex items-center gap-2">
+          <div className="p-3 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{syncSuccessMessage}</span>
+            <span className="leading-snug">{syncSuccessMessage}</span>
+          </div>
+        )}
+
+        {syncErrorMessage && (
+          <div className="p-3 rounded-lg bg-red-500/10 border-2 border-red-500/50 text-red-700 dark:text-red-300 text-xs font-bold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span className="leading-snug">{syncErrorMessage}</span>
           </div>
         )}
 
@@ -158,12 +195,21 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="p-2 rounded-lg bg-white border-2 border-black shrink-0 shadow-sm">
-                <img
-                  src={qrCodeApiUrl}
-                  alt="QR Code de Sincronização"
-                  className="w-32 h-32 object-contain"
-                />
+              <div className="p-2 rounded-lg bg-white border-2 border-black shrink-0 shadow-sm flex items-center justify-center min-w-[136px] min-h-[136px]">
+                {!qrError ? (
+                  <img
+                    src={qrCodeApiUrl}
+                    alt="QR Code de Sincronização"
+                    onError={() => setQrError(true)}
+                    className="w-32 h-32 object-contain"
+                  />
+                ) : (
+                  <div className="w-32 h-32 flex flex-col items-center justify-center p-2 text-center text-[10px] font-mono font-bold text-black border border-dashed border-black">
+                    <span>CÓDIGO:</span>
+                    <span className="text-xs font-black text-amber-600 my-1">{cleanCode}</span>
+                    <span className="text-[9px] opacity-75">Acesse o site e use 'Puxar da Nuvem'</span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 text-xs flex-1 text-center sm:text-left">
@@ -171,7 +217,7 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
                   Abra a câmera do seu celular e aponte para este QR Code. A edição completa do seu computador carregará imediatamente no seu telefone!
                 </p>
                 <p className="text-[11px] opacity-75 leading-snug">
-                  Transfere todos os artigos, capas personalizadas, fotos e configurações sem depender de login ou cookies de navegador.
+                  Transfere todos os artigos, capas personalizadas, fotos e configurações com 1 clique.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-2 pt-1">
@@ -180,7 +226,7 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
                     readOnly
                     className="theme-app-input font-mono text-[10px] h-8 border-2 truncate"
                   />
-                  <div className="flex gap-1.5 shrink-0">
+                  <div className="flex gap-1.5 shrink-0 justify-center sm:justify-start">
                     <Button
                       size="sm"
                       onClick={handleCopyLink}
@@ -206,35 +252,54 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
 
           {/* 2. Push & Pull Actions (Sync between Edge and Chrome on Notebook) */}
           <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b pb-2">
               <div className="flex items-center gap-2">
                 <ArrowRightLeft className="w-4 h-4 text-amber-500" />
                 <h4 className="font-black text-xs uppercase tracking-tight">
-                  2. Sincronização entre Navegadores (Edge ⇄ Chrome ⇄ Celular)
+                  2. Sincronização entre Dispositivos (Edge ⇄ Chrome ⇄ Celular)
                 </h4>
               </div>
-              <span className="text-[10px] font-mono font-bold text-emerald-600">
+              <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
                 {lastSyncedText}
               </span>
             </div>
 
+            {/* Sync Code Identifier */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg bg-black/10 dark:bg-white/5 border border-current">
+              <div className="flex items-center gap-1.5 text-xs font-bold">
+                <Key className="w-3.5 h-3.5 text-amber-500" />
+                <span>Código da Edição na Nuvem:</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={syncCode}
+                  onChange={(e) => setSyncCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))}
+                  placeholder="Ex: MONTANHA"
+                  className="theme-app-input font-mono font-black text-xs h-7 w-32 text-center uppercase tracking-wider border-2"
+                />
+                <span className="text-[10px] opacity-70 font-mono">Use o mesmo código nos dois aparelhos</span>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
               <Button
+                data-testid="btn-cloud-push"
                 onClick={handleManualPushToCloud}
                 disabled={isSyncing}
-                className="h-9 bg-amber-500 hover:bg-amber-600 text-black font-black text-xs border-2 border-black shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                className="h-10 bg-amber-500 hover:bg-amber-600 text-black font-black text-xs border-2 border-black shadow-xs cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 transition-all"
               >
-                {isSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 <span>Enviar Esta Versão para a Nuvem (Upload)</span>
               </Button>
 
               <Button
+                data-testid="btn-cloud-pull"
                 onClick={handlePullFromCloud}
                 disabled={isPulling}
                 variant="outline"
-                className="h-9 font-black text-xs border-2 border-current shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                className="h-10 font-black text-xs border-2 border-current shadow-xs cursor-pointer flex items-center justify-center gap-1.5 hover:bg-amber-400/20 active:scale-95 transition-all"
               >
-                {isPulling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudDownload className="w-3.5 h-3.5 text-amber-500" />}
+                {isPulling ? <Loader2 className="w-4 h-4 animate-spin text-amber-500" /> : <CloudDownload className="w-4 h-4 text-amber-500" />}
                 <span>Puxar Versão da Nuvem (Download)</span>
               </Button>
             </div>

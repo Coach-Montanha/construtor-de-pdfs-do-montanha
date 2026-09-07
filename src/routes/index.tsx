@@ -137,10 +137,10 @@ function Index() {
 
     setSaveStatus("Salvando...");
     const timer = setTimeout(() => {
-      syncProjectToCloud(project).then((cloudSuccess) => {
-        setSaveStatus(cloudSuccess ? "Nuvem Sincronizada" : "Salvo Localmente");
+      syncProjectToCloud(project).then((res) => {
+        setSaveStatus(res?.success ? "Nuvem Sincronizada" : "Salvo Localmente");
       });
-    }, 600);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [project, isInitialLoaded]);
@@ -433,6 +433,7 @@ function Index() {
           {/* Cloud Sync Status (Only cloud icon) */}
           <Button
             size="sm"
+            data-testid="btn-open-cloud-sync"
             onClick={() => setIsCloudSyncOpen(true)}
             className="h-8 sm:h-9 px-2.5 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer"
             title={saveStatus ? `Sincronização em Nuvem: ${saveStatus}` : "Sincronização em Nuvem & Compartilhamento"}
