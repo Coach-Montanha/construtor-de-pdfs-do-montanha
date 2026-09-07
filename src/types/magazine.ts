@@ -33,7 +33,8 @@ export type MagazineThemeId =
   | "tactical-dossier-light" // Tactical Dossier & Charcoal Grid (Fundo Gelo Militar)
   | "athletic-crimson-light" // Athletic Performance & Deep Crimson (Fundo Branco Esportivo)
   | "botanic-emerald-light" // Botanic Longevity & Deep Emerald (Fundo Suave Biohacking)
-  | "harbor-slate-light";  // Minimalist Slate & Steel Blue (Fundo Alabastro Polar)
+  | "harbor-slate-light"   // Minimalist Slate & Steel Blue (Fundo Alabastro Polar)
+  | "swiss-editorial";     // Swiss Editorial & Amber Gold (Design Suíço contemporâneo, papel branco puro e alto contraste WCAG AAA)
 
 export interface MagazineTheme {
   id: MagazineThemeId;
@@ -283,14 +284,19 @@ export type HeadlineFontOption =
   | "space"        // Space Grotesk (Tech / Futuristic)
   | "oswald"       // Oswald (Condensed Athletic)
   | "inter"        // Inter (Clean Sans)
-  | "creato";      // Creato Display (Midnight Fintech, Bold Display & -0.02em tracking)
+  | "creato"       // Creato Display (Midnight Fintech, Bold Display & -0.02em tracking)
+  | "barlow"       // Barlow Condensed (Sports / Fitness #1 Condensed Impact)
+  | "syne";        // Syne (Modern High-End Editorial & Asymmetric Impact)
 
 export type BodyFontOption =
   | "inter"        // Inter (Modern Crisp Sans)
   | "lora"         // Lora (Magazine Editorial Serif)
   | "merriweather" // Merriweather (Dense Book Serif)
   | "roboto"       // Roboto (Neutral Sans)
-  | "space";       // Space Grotesk (Mono Technical)
+  | "space"        // Space Grotesk (Mono Technical)
+  | "newsreader"   // Newsreader (Editorial Long-Form Magazine Serif)
+  | "barlow"       // Barlow (Athletic Clean Sans)
+  | "jakarta";     // Plus Jakarta Sans (Modern Geometric Reading Sans)
 
 export interface RepositoryDocument {
   id: string;

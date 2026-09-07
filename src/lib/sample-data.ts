@@ -446,6 +446,27 @@ export const MAGAZINE_THEMES: MagazineTheme[] = [
     coverBadgeBg: "#38BDF8",
     coverBadgeTextColor: "#000000",
   },
+  {
+    id: "swiss-editorial",
+    name: "Swiss Editorial & Amber Gold (Design Suíço)",
+    description: "Estética suíça contemporânea inspirada no ui-ux-pro-max: Fundo branco papel puro (#FFFFFF), texto preto carvão (#0F172A) para contraste 15:1 (WCAG AAA) e detalhes vibrantes em âmbar e ouro queimado (#D97706 / #F59E0B).",
+    category: "light",
+    primaryColor: "#D97706",
+    accentColor: "#F59E0B",
+    textColor: "#0F172A",
+    bgLight: "#FFFFFF",
+    bgDark: "#FFFFFF",
+    cardBg: "#F8FAFC",
+    borderColor: "#D97706",
+    fontHeadline: "font-headline-oswald",
+    fontBody: "font-body-inter",
+    fontSerif: false,
+    isLight: true,
+    coverPrimaryColor: "#F59E0B",
+    coverTextColor: "#FFFFFF",
+    coverBadgeBg: "#F59E0B",
+    coverBadgeTextColor: "#000000",
+  },
 ];
 
 

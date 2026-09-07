@@ -138,4 +138,43 @@ test.describe("Jornada Crítica: Ação Principal (Criação, Edição de Matér
     // Deve exibir confirmação de download aplicado
     await expect(authenticatedPage.getByText(/baixada da nuvem e aplicada/i)).toBeVisible();
   });
+
+  test("Fluxo Editorial Intelligence: Tema Swiss Editorial, Presets Tipográficos e Blocos Ricos", async ({ authenticatedPage }) => {
+    // 1. Abrir Configurações do Projeto
+    await authenticatedPage.getByTestId("tab-settings").click();
+    await expect(authenticatedPage.getByText(/Estrutura de Páginas, Tipografia & Temas/i)).toBeVisible();
+
+    // 2. Verificar e testar os Presets Rápidos de Tipografia (1 Clique)
+    await expect(authenticatedPage.getByText(/Combinações Consagradas de 1 Clique/i)).toBeVisible();
+    const btnPresetFitness = authenticatedPage.getByRole("button", { name: /Força & Atletismo Puro/i });
+    await expect(btnPresetFitness).toBeVisible();
+    await btnPresetFitness.click();
+    await expect(btnPresetFitness).toHaveClass(/bg-amber-400/);
+
+    // 3. Selecionar o Novo Tema Swiss Editorial & Amber Gold
+    await authenticatedPage.getByRole("button", { name: /Claros & Editoriais/i }).click();
+    const swissThemeCard = authenticatedPage.getByText(/Swiss Editorial & Amber Gold/i);
+    await expect(swissThemeCard).toBeVisible();
+    await swissThemeCard.click();
+    await expect(authenticatedPage.getByText("ATIVO").first()).toBeVisible();
+
+    // 4. Testar inserção de Blocos Editoriais no Artigo (Bento Stat)
+    await authenticatedPage.getByTestId("tab-articles").click();
+    const firstEditBtn = authenticatedPage.getByTestId("btn-edit-article").first();
+    await expect(firstEditBtn).toBeVisible();
+    await firstEditBtn.click();
+    await expect(authenticatedPage.getByTestId("article-modal")).toBeVisible();
+
+    // Clicar no botão "+ Bento Stat" na barra de ferramentas
+    const btnBentoStat = authenticatedPage.getByRole("button", { name: /\+ Bento Stat/i });
+    await expect(btnBentoStat).toBeVisible();
+    await btnBentoStat.click();
+
+    // Verificar se o texto [STAT: 85% | Hipertrofia Miofibrilar...] foi inserido no conteúdo
+    const textarea = authenticatedPage.getByTestId("textarea-article-content");
+    await expect(textarea).toHaveValue(/\[STAT:\s*85%/);
+
+    // Fechar modal
+    await authenticatedPage.getByTestId("btn-cancel-article").click();
+  });
 });

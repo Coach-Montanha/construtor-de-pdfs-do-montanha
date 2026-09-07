@@ -11,6 +11,7 @@ import {
   Flame,
   Tag,
   Building,
+  Dumbbell,
 } from "lucide-react";
 
 interface ArticleSpreadProps {
@@ -401,6 +402,188 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
             </li>
           ))}
         </ul>
+      );
+    }
+
+    // 1. Bento Stat Box: [STAT: 85% | Hipertrofia Miofibrilar | Protocolo de alta tensão mecânica]
+    const statMatch = chunk.trim().match(/^\[STAT:\s*([^\|\]]+)\s*\|\s*([^\|\]]+)(?:\s*\|\s*([^\]]+))?\]$/i);
+    if (statMatch) {
+      const statValue = statMatch[1]?.trim() || "";
+      const statLabel = statMatch[2]?.trim() || "";
+      const statDesc = statMatch[3]?.trim() || "";
+      return (
+        <div
+          key={idx}
+          className="my-2.5 p-3 rounded-xl border-2 shadow-xs break-inside-avoid break-inside-avoid-column flex items-center justify-between gap-3"
+          style={{
+            backgroundColor: cardBg,
+            borderColor: `${primaryColor}50`,
+          }}
+        >
+          <div className="space-y-0.5 min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span
+                className="text-[7px] sm:text-[7.5px] font-mono font-black uppercase px-1.5 py-0.2 rounded"
+                style={{
+                  backgroundColor: `${primaryColor}20`,
+                  color: primaryColor,
+                }}
+              >
+                // MÉTRICA
+              </span>
+              <span
+                className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider truncate ${headlineFontClass}`}
+                style={{ color: isLight ? "#0F172A" : "#FFFFFF" }}
+              >
+                {statLabel}
+              </span>
+            </div>
+            {statDesc && (
+              <p
+                className={`text-[9px] sm:text-[9.5px] leading-tight opacity-80 ${bodyFontClass}`}
+                style={{ color: articleBodyColor }}
+              >
+                {statDesc}
+              </p>
+            )}
+          </div>
+          <div
+            className={`text-2xl sm:text-3xl font-black shrink-0 tracking-tight leading-none px-2.5 py-1 rounded-lg border ${headlineFontClass}`}
+            style={{
+              backgroundColor: `${primaryColor}15`,
+              color: primaryColor,
+              borderColor: `${primaryColor}40`,
+            }}
+          >
+            {statValue}
+          </div>
+        </div>
+      );
+    }
+
+    // 2. Dica do Montanha / Callout Box: [DICA: Título | Conteúdo...]
+    const dicaMatch = chunk.trim().match(/^\[(?:DICA|CALLOUT|AVISO):\s*([^\|\]]+)\s*\|\s*([^\]]+)\]$/i);
+    if (dicaMatch) {
+      const dicaTitle = dicaMatch[1]?.trim() || "DICA DO MONTANHA";
+      const dicaContent = dicaMatch[2]?.trim() || "";
+      return (
+        <div
+          key={idx}
+          className="my-2.5 p-3 rounded-xl border-l-4 border-2 shadow-xs break-inside-avoid break-inside-avoid-column"
+          style={{
+            backgroundColor: isLight ? `${primaryColor}08` : `${primaryColor}15`,
+            borderLeftColor: primaryColor,
+            borderColor: `${primaryColor}30`,
+          }}
+        >
+          <div
+            className={`flex items-center gap-1.5 mb-1 text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider ${headlineFontClass}`}
+            style={{ color: primaryColor }}
+          >
+            <Dumbbell className="w-3.5 h-3.5 shrink-0" />
+            <span>{dicaTitle}</span>
+          </div>
+          <p
+            className={`text-[9px] sm:text-[10px] leading-relaxed ${bodyFontClass}`}
+            style={{ color: articleBodyColor }}
+          >
+            {renderInlineFormatted(dicaContent)}
+          </p>
+        </div>
+      );
+    }
+
+    // 3. Pull Quote inline: > [QUOTE: "..." -- Autor] or > "..." or > Texto
+    if (chunk.startsWith("> ") || chunk.startsWith(">\n")) {
+      const cleanQuote = chunk
+        .replace(/^>\s*/gm, "")
+        .replace(/^\[QUOTE:\s*/i, "")
+        .replace(/\]$/, "")
+        .trim();
+      
+      const authorMatch = cleanQuote.match(/^(.*?)(?:\s*(?:--|—)\s*([^\n\r]+))$/s);
+      const quoteBody = (authorMatch ? authorMatch[1] : cleanQuote).replace(/^["“]|["”]$/g, "").trim();
+      const quoteAuthor = authorMatch ? authorMatch[2]?.trim() : article.author;
+
+      return (
+        <div
+          key={idx}
+          className="my-3 p-3.5 rounded-xl border-2 shadow-sm relative overflow-hidden break-inside-avoid break-inside-avoid-column"
+          style={{
+            backgroundColor: cardBg,
+            borderColor: `${primaryColor}60`,
+          }}
+        >
+          <div className="flex items-start gap-2.5">
+            <Quote className="w-5 h-5 shrink-0 mt-0.5" style={{ color: primaryColor }} />
+            <div className="space-y-1 min-w-0 flex-1">
+              <p
+                className={`text-xs sm:text-[12.5px] font-black italic leading-snug ${headlineFontClass}`}
+                style={{ color: isLight ? "#0F172A" : "#F8FAFC" }}
+              >
+                "{quoteBody}"
+              </p>
+              {quoteAuthor && (
+                <span
+                  className="text-[8px] sm:text-[8.5px] font-mono font-bold uppercase block text-right tracking-wider"
+                  style={{ color: primaryColor }}
+                >
+                  — {quoteAuthor}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 4. Markdown Table: lines starting and ending with |
+    const tableLines = chunk.trim().split("\n");
+    if (tableLines.length >= 2 && tableLines[0]?.trim().startsWith("|") && tableLines[0]?.trim().endsWith("|")) {
+      const headerLine = tableLines[0];
+      const separatorIndex = tableLines.findIndex((l, i) => i > 0 && /^[|:\s-]+$/.test(l.trim()));
+      const headers = headerLine.split("|").map(h => h.trim()).filter(Boolean);
+      const rowLines = tableLines.slice(separatorIndex > 0 ? separatorIndex + 1 : 1).filter(l => l.trim().startsWith("|"));
+
+      return (
+        <div
+          key={idx}
+          className="my-2.5 rounded-xl border-2 overflow-hidden shadow-xs break-inside-avoid break-inside-avoid-column text-[9px] sm:text-[9.5px]"
+          style={{ borderColor: `${primaryColor}40`, backgroundColor: cardBg }}
+        >
+          <table className={`w-full text-left border-collapse ${bodyFontClass}`}>
+            <thead>
+              <tr style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
+                {headers.map((h, hIdx) => (
+                  <th key={hIdx} className={`p-1.5 sm:p-2 font-black uppercase text-[8px] sm:text-[8.5px] tracking-wider border-b border-current/20 ${headlineFontClass}`}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rowLines.map((row, rIdx) => {
+                const cells = row.split("|").map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
+                return (
+                  <tr
+                    key={rIdx}
+                    className="border-b last:border-0 border-slate-200/20"
+                    style={{
+                      backgroundColor: rIdx % 2 === 0 ? "transparent" : (isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)"),
+                      color: articleBodyColor,
+                    }}
+                  >
+                    {cells.map((cell, cIdx) => (
+                      <td key={cIdx} className="p-1.5 sm:p-2 font-medium leading-tight">
+                        {renderInlineFormatted(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       );
     }
 

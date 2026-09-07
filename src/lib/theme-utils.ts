@@ -18,6 +18,10 @@ export function getHeadlineFontClass(headlineFont?: HeadlineFontOption): string 
       return "font-headline-inter tracking-tight";
     case "creato":
       return "font-headline-creato tracking-tight";
+    case "barlow":
+      return "font-headline-barlow tracking-tight uppercase";
+    case "syne":
+      return "font-headline-syne tracking-tight";
     default:
       return "font-headline-bebas tracking-wide";
   }
@@ -33,6 +37,12 @@ export function getBodyFontClass(bodyFont?: BodyFontOption): string {
       return "font-body-roboto";
     case "space":
       return "font-body-space";
+    case "newsreader":
+      return "font-body-newsreader";
+    case "barlow":
+      return "font-body-barlow";
+    case "jakarta":
+      return "font-body-jakarta";
     case "inter":
     default:
       return "font-body-inter";

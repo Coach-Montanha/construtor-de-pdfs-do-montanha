@@ -104,7 +104,9 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
   };
 
   const headlineFontOptions: { id: HeadlineFontOption; name: string; style: string; sample: string }[] = [
+    { id: "barlow", name: "Barlow Condensed", style: "Fitness & Força #1 (Condensada / Impacto)", sample: "MAXIMUM OVERLOAD // 100%" },
     { id: "bebas", name: "Bebas Neue", style: "Industrial & Força Bruta (Caixa Alta Pesada)", sample: "A FORÇA DO FERRO" },
+    { id: "syne", name: "Syne ExtraBold", style: "Editorial Contemporâneo & Assimétrico", sample: "THE UNCONVENTIONAL MIND" },
     { id: "montserrat", name: "Montserrat Black", style: "Moderno Geométrico de Alto Impacto", sample: "ALTA PERFORMANCE" },
     { id: "playfair", name: "Playfair Display", style: "Editorial Serifado Clássico & Elegante", sample: "The Elite Method" },
     { id: "cinzel", name: "Cinzel", style: "Romano Monumental & Prestige", sample: "DISCIPLINA & HONRA" },
@@ -115,15 +117,80 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
   ];
 
   const bodyFontOptions: { id: BodyFontOption; name: string; style: string; sample: string }[] = [
+    { id: "newsreader", name: "Newsreader", style: "Revista Editorial Digital (Leitura Confortável)", sample: "O controle preciso do volume gera hipertrofia sustentável ao longo dos anos." },
     { id: "inter", name: "Inter (Padrão)", style: "Ultra Legível & Moderno", sample: "O treinamento consistente forja resultados duradouros." },
+    { id: "barlow", name: "Barlow", style: "Atlética Limpa (Par perfeito com Barlow Condensed)", sample: "Execução controlada, cadência rigorosa e disciplina em cada repetição." },
+    { id: "jakarta", name: "Plus Jakarta Sans", style: "Geométrica Moderna de Alto Contraste", sample: "Design editorial contemporâneo com leitura cristalina em qualquer tela." },
     { id: "lora", name: "Lora", style: "Serifada Clássica de Revistas e Livros", sample: "A consistência diária nos detalhes invisíveis constrói o sucesso." },
     { id: "merriweather", name: "Merriweather", style: "Editorial Robusto com Excelente Leitura", sample: "Ciência aplicada e disciplina na alta performance." },
     { id: "roboto", name: "Roboto", style: "Neutro, Direto e Técnico", sample: "Instruções claras e biomecânica precisa em cada movimento." },
     { id: "space", name: "Space Grotesk", style: "Mono Técnico & Moderno", sample: "Protocolos estruturados para resultados mensuráveis." },
   ];
 
+  const typographyPairingPresets: {
+    title: string;
+    description: string;
+    headline: HeadlineFontOption;
+    body: BodyFontOption;
+    badge: string;
+  }[] = [
+    {
+      title: "Força & Atletismo Puro",
+      description: "Barlow Condensed + Barlow: visual oficial de revistas esportivas e força pesada",
+      headline: "barlow",
+      body: "barlow",
+      badge: "FITNESS #1",
+    },
+    {
+      title: "Revista de Banca Clássica",
+      description: "Bebas Neue + Newsreader: impacto de capa clássico com leitura editorial fluida",
+      headline: "bebas",
+      body: "newsreader",
+      badge: "EDITORIAL",
+    },
+    {
+      title: "Swiss Modernism 2.0",
+      description: "Oswald + Inter: design racional suíço com alto contraste e legibilidade cristalina",
+      headline: "oswald",
+      body: "inter",
+      badge: "SWISS",
+    },
+    {
+      title: "Prestige & Luxo Editorial",
+      description: "Playfair Display + Merriweather: elegância tradicional com serifas de alta classe",
+      headline: "playfair",
+      body: "merriweather",
+      badge: "PRESTIGE",
+    },
+    {
+      title: "Biohacking & Tech Lab",
+      description: "Space Grotesk + Plus Jakarta Sans: dados laboratoriais, ciência e biomecânica",
+      headline: "space",
+      body: "jakarta",
+      badge: "TECH",
+    },
+    {
+      title: "Neo-Editorial Asymmetric",
+      description: "Syne ExtraBold + Lora: tipografia ousada de design agency e matérias especiais",
+      headline: "syne",
+      body: "lora",
+      badge: "MODERN",
+    },
+  ];
+
   const activeHeadlineClass = getHeadlineFontClass(fontConfig.headlineFont);
   const activeBodyClass = getBodyFontClass(fontConfig.bodyFont);
+
+  const applyTypographyPreset = (headline: HeadlineFontOption, body: BodyFontOption) => {
+    onChange({
+      ...project,
+      fontConfig: {
+        ...fontConfig,
+        headlineFont: headline,
+        bodyFont: body,
+      },
+    });
+  };
 
   return (
     <div className="space-y-6 font-sans">
@@ -161,12 +228,12 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
               </p>
             </div>
           </div>
-          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase shrink-0 self-start sm:self-auto">
-            {APP_UI_THEMES.length} MODOS DISPONÍVEIS
+          <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase self-start sm:self-auto">
+            MODO DE TRABALHO
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
           {APP_UI_THEMES.map((theme) => {
             const isSelected = currentUiTheme === theme.id;
             return (
@@ -174,10 +241,10 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
                 key={theme.id}
                 type="button"
                 onClick={() => onSelectUiTheme(theme.id)}
-                className={`p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer relative flex flex-col justify-between gap-3 ${
+                className={`p-3 rounded-xl border-2 text-left cursor-pointer transition-all flex flex-col justify-between ${
                   isSelected
-                    ? "theme-app-card border-amber-400 ring-2 ring-amber-400 shadow-sm"
-                    : "theme-app-card-subtle opacity-75 hover:opacity-100 hover:border-current"
+                    ? "bg-amber-400 text-black border-black shadow-md ring-2 ring-amber-400"
+                    : "theme-app-card-subtle border-slate-300 hover:border-black"
                 }`}
               >
                 <div>
@@ -428,6 +495,48 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
           <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
             FONTE & DESIGN
           </span>
+        </div>
+
+        {/* Pareamentos Recomendados de 1 Clique (ui-ux-pro-max Intelligence) */}
+        <div className="space-y-2 p-3.5 rounded-xl border-2 border-amber-500/40 bg-amber-400/5">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-black uppercase text-amber-500 flex items-center gap-1.5">
+              <span>⚡ Combinações Consagradas de 1 Clique (Editorial & Sports Intelligence)</span>
+            </Label>
+            <span className="text-[9px] font-mono opacity-60 uppercase">APLICA MANCHETE + CORPO</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
+            {typographyPairingPresets.map((preset, pIdx) => {
+              const isActive = fontConfig.headlineFont === preset.headline && fontConfig.bodyFont === preset.body;
+              return (
+                <button
+                  key={pIdx}
+                  type="button"
+                  onClick={() => applyTypographyPreset(preset.headline, preset.body)}
+                  className={`p-2.5 rounded-lg border-2 text-left cursor-pointer transition-all flex flex-col justify-between ${
+                    isActive
+                      ? "bg-amber-400 text-black border-black shadow-sm ring-2 ring-amber-400"
+                      : "theme-app-card-subtle border-slate-300 hover:border-black"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="font-black text-xs uppercase leading-tight truncate">{preset.title}</span>
+                    <span className={`text-[8px] font-mono font-black px-1.5 py-0.2 rounded border ${
+                      isActive ? "bg-black text-amber-400 border-black" : "bg-amber-400/20 text-amber-600 border-amber-500/30"
+                    }`}>
+                      {preset.badge}
+                    </span>
+                  </div>
+                  <p className="text-[10px] opacity-75 line-clamp-2 leading-tight mb-2">{preset.description}</p>
+                  <div className="flex items-center justify-between pt-1 border-t border-current/20 text-[9px] font-mono font-bold">
+                    <span className="truncate">H: {preset.headline.toUpperCase()}</span>
+                    <span>+</span>
+                    <span className="truncate">B: {preset.body.toUpperCase()}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Headline Fonts Selector */}

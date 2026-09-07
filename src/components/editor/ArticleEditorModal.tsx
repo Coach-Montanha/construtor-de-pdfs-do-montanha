@@ -52,6 +52,8 @@ import {
   Columns,
   SpellCheck,
   Undo2,
+  Table,
+  TrendingUp,
 } from "lucide-react";
 import {
   polishEditorialText,
@@ -1321,6 +1323,47 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
               <span>Lista</span>
             </button>
 
+            {/* Novos Blocos Editoriais Interativos (ui-ux-pro-max Intelligence) */}
+            <button
+              type="button"
+              onClick={() => applyFormatting("\n\n> \"A carga molda o corpo, a disciplina molda o homem.\"\n> — Coach Montanha\n\n", "", "")}
+              className="px-2 py-1 rounded border border-amber-500/50 bg-amber-400/10 hover:bg-amber-400/25 font-bold flex items-center gap-1 cursor-pointer text-amber-700 dark:text-amber-400"
+              title="Inserir Citação Editorial de Destaque (> [QUOTE: ...])"
+            >
+              <Quote className="w-3.5 h-3.5 text-amber-500" />
+              <span>+ Citação</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("\n\n[STAT: 85% | Hipertrofia Miofibrilar | Estímulo com alta tensão mecânica]\n\n", "", "")}
+              className="px-2 py-1 rounded border border-amber-500/50 bg-amber-400/10 hover:bg-amber-400/25 font-bold flex items-center gap-1 cursor-pointer text-amber-700 dark:text-amber-400"
+              title="Inserir Bento Stat Box com número gigante e métrica de treino"
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+              <span>+ Bento Stat</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("\n\n[DICA: Dica do Montanha | Mantenha as escápulas aduzidas e os cotovelos a 45 graus para proteger a articulação glenoumeral.]\n\n", "", "")}
+              className="px-2 py-1 rounded border border-amber-500/50 bg-amber-400/10 hover:bg-amber-400/25 font-bold flex items-center gap-1 cursor-pointer text-amber-700 dark:text-amber-400"
+              title="Inserir Box Callout Dica do Montanha com ícone temático"
+            >
+              <Dumbbell className="w-3.5 h-3.5 text-amber-500" />
+              <span>+ Dica Coach</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormatting("\n\n| EXERCÍCIO | SÉRIES × REPS | INTERVALO |\n| :--- | :--- | :--- |\n| Agachamento Livre | 4 × 6-8 reps | 120s |\n| Supino Reto com Barra | 4 × 8-10 reps | 90s |\n| Levantamento Terra | 3 × 5 reps | 180s |\n\n", "", "")}
+              className="px-2 py-1 rounded border border-amber-500/50 bg-amber-400/10 hover:bg-amber-400/25 font-bold flex items-center gap-1 cursor-pointer text-amber-700 dark:text-amber-400"
+              title="Inserir Tabela de Treino e Séries formatada"
+            >
+              <Table className="w-3.5 h-3.5 text-amber-500" />
+              <span>+ Tabela</span>
+            </button>
+
             {/* Botão de Quebrar Colunas (Coluna 1 -> Coluna 2) */}
             <button
               type="button"
@@ -1462,6 +1505,45 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                           </li>
                         ))}
                       </ul>
+                    );
+                  }
+                  // Bento Stat
+                  const sMatch = p.trim().match(/^\[STAT:\s*([^\|\]]+)\s*\|\s*([^\|\]]+)(?:\s*\|\s*([^\]]+))?\]$/i);
+                  if (sMatch) {
+                    return (
+                      <div key={idx} className="my-1.5 p-2 rounded-lg border border-amber-500/40 bg-amber-400/10 flex items-center justify-between gap-2">
+                        <div>
+                          <span className="text-[8px] font-mono font-black uppercase text-amber-500 block">// MÉTRICA: {sMatch[2]}</span>
+                          {sMatch[3] && <span className="text-[10px] opacity-75">{sMatch[3]}</span>}
+                        </div>
+                        <span className="text-base font-black text-amber-500 px-2 py-0.5 rounded border border-amber-500/30 bg-black/20">{sMatch[1]}</span>
+                      </div>
+                    );
+                  }
+                  // Dica
+                  const dMatch = p.trim().match(/^\[(?:DICA|CALLOUT|AVISO):\s*([^\|\]]+)\s*\|\s*([^\]]+)\]$/i);
+                  if (dMatch) {
+                    return (
+                      <div key={idx} className="my-1.5 p-2 rounded-lg border-l-4 border-amber-500 bg-amber-400/10 text-[11px]">
+                        <span className="font-black uppercase text-amber-500 block mb-0.5">💡 {dMatch[1]}</span>
+                        <p>{dMatch[2]}</p>
+                      </div>
+                    );
+                  }
+                  // Quote
+                  if (p.startsWith("> ") || p.startsWith(">\n")) {
+                    return (
+                      <div key={idx} className="my-1.5 p-2.5 rounded-lg border-l-4 border-amber-500 bg-slate-900/30 italic text-[11px]">
+                        <p className="font-bold text-amber-400">"{p.replace(/^>\s*/gm, "")}"</p>
+                      </div>
+                    );
+                  }
+                  // Table
+                  if (p.trim().startsWith("|") && p.includes("\n|")) {
+                    return (
+                      <div key={idx} className="my-1.5 p-1 rounded border border-amber-500/30 font-mono text-[9px] overflow-x-auto bg-black/20">
+                        <pre className="whitespace-pre">{p}</pre>
+                      </div>
                     );
                   }
                   return (
