@@ -1,4 +1,4 @@
-import { MagazineProject } from "../types/magazine";
+import { MagazineProject, RepositoryDocument, Article } from "../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT } from "./sample-data";
 import { calculateMagazineTotalPages, countWords } from "./magazine-utils";
 
@@ -258,3 +258,178 @@ export function exportAllEditionsArchive(): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+export interface DocumentPublicationRecord {
+  editionNumber: string;
+  editionTitle: string;
+  date?: string;
+  publishedAt?: string;
+  isManual?: boolean;
+}
+
+export interface DocumentUsageTracker {
+  isInCurrentMagazine: boolean;
+  currentArticle?: Article;
+  currentPageNumber?: number;
+  previousEditions: DocumentPublicationRecord[];
+  isUnusedDraft: boolean;
+  status: "current" | "previous" | "both" | "unused";
+  statusLabel: string;
+}
+
+/**
+ * Avalia o status editorial completo de um documento do acervo:
+ * - Se está na revista atual
+ * - Se já foi publicado em edições anteriores arquivadas
+ * - Ou se é um rascunho 100% inédito
+ */
+export function getDocumentUsageTracker(
+  doc: RepositoryDocument,
+  currentProject: MagazineProject,
+  archivedEditions?: ArchivedEdition[]
+): DocumentUsageTracker {
+  // 1. Verificar na edição atual ativa
+  const currentArticles = currentProject.articles || [];
+  const currentArticleIndex = currentArticles.findIndex(
+    (a) =>
+      (a.sourceDocId && a.sourceDocId === doc.id) ||
+      (doc.id && a.id === doc.id) ||
+      a.title.trim().toLowerCase() === doc.title.trim().toLowerCase()
+  );
+  const currentArticle = currentArticleIndex >= 0 ? currentArticles[currentArticleIndex] : undefined;
+  const isInCurrentMagazine = !!currentArticle;
+  const currentPageNumber = currentArticleIndex >= 0 ? currentArticleIndex + 4 : undefined;
+
+  // 2. Verificar edições anteriores
+  const previousEditionsMap = new Map<string, DocumentPublicationRecord>();
+
+  // a) Edições registradas diretamente no documento
+  if (doc.publishedEditions && Array.isArray(doc.publishedEditions)) {
+    for (const record of doc.publishedEditions) {
+      if (record.editionNumber) {
+        const key = record.editionNumber.trim().toLowerCase();
+        previousEditionsMap.set(key, {
+          editionNumber: record.editionNumber,
+          editionTitle: record.editionTitle || `Edição #${record.editionNumber}`,
+          date: record.date,
+          publishedAt: record.publishedAt,
+          isManual: record.isManual,
+        });
+      }
+    }
+  }
+
+  // b) Edições arquivadas no sistema
+  const archiveList = archivedEditions || getArchivedEditions();
+  const currentEdNumber = (currentProject.editionNumber || "").trim().toLowerCase();
+
+  for (const archive of archiveList) {
+    const archiveEdNumber = (archive.editionNumber || "").trim().toLowerCase();
+    const isSameEditionNumber = archiveEdNumber === currentEdNumber;
+
+    // Verificar se o documento estava presente nos artigos do snapshot arquivado
+    const foundInArchive = archive.projectSnapshot?.articles?.some(
+      (a) =>
+        (a.sourceDocId && a.sourceDocId === doc.id) ||
+        (doc.id && a.id === doc.id) ||
+        a.title.trim().toLowerCase() === doc.title.trim().toLowerCase()
+    );
+
+    if (foundInArchive) {
+      if (!isSameEditionNumber || !isInCurrentMagazine) {
+        const key = archiveEdNumber;
+        if (!previousEditionsMap.has(key)) {
+          previousEditionsMap.set(key, {
+            editionNumber: archive.editionNumber,
+            editionTitle: archive.title || `Edição #${archive.editionNumber}`,
+            date: archive.date,
+            publishedAt: archive.approvedAt,
+            isManual: false,
+          });
+        }
+      }
+    }
+  }
+
+  const previousEditions = Array.from(previousEditionsMap.values());
+  const hasPrevious = previousEditions.length > 0;
+
+  let status: "current" | "previous" | "both" | "unused" = "unused";
+  let statusLabel = "Rascunho Inédito";
+
+  if (isInCurrentMagazine && hasPrevious) {
+    status = "both";
+    statusLabel = `Na Revista Atual (e anterior: Ed. ${previousEditions[0]?.editionNumber})`;
+  } else if (isInCurrentMagazine) {
+    status = "current";
+    statusLabel = "Na Revista Atual";
+  } else if (hasPrevious) {
+    status = "previous";
+    statusLabel = `Publicado na Ed. #${previousEditions[0]?.editionNumber}`;
+  } else {
+    status = "unused";
+    statusLabel = "Rascunho Inédito (Disponível)";
+  }
+
+  return {
+    isInCurrentMagazine,
+    currentArticle,
+    currentPageNumber,
+    previousEditions,
+    isUnusedDraft: status === "unused",
+    status,
+    statusLabel,
+  };
+}
+
+/**
+ * Adiciona ou remove marcação manual de edição publicada em um documento do acervo
+ */
+export function toggleDocPublishedEdition(
+  docId: string,
+  project: MagazineProject,
+  editionData: { editionNumber: string; editionTitle?: string; date?: string }
+): MagazineProject {
+  const targetDoc = project.contentRepository?.find((d) => d.id === docId);
+  if (!targetDoc) return project;
+
+  const currentEditions = targetDoc.publishedEditions || [];
+  const exists = currentEditions.some(
+    (e) => e.editionNumber.trim().toLowerCase() === editionData.editionNumber.trim().toLowerCase()
+  );
+
+  let updatedList: typeof currentEditions;
+  if (exists) {
+    updatedList = currentEditions.filter(
+      (e) => e.editionNumber.trim().toLowerCase() !== editionData.editionNumber.trim().toLowerCase()
+    );
+  } else {
+    updatedList = [
+      ...currentEditions,
+      {
+        editionNumber: editionData.editionNumber.trim(),
+        editionTitle: editionData.editionTitle || `Edição #${editionData.editionNumber.trim()}`,
+        date: editionData.date,
+        publishedAt: new Date().toISOString(),
+        isManual: true,
+      },
+    ];
+  }
+
+  const updatedRepository = (project.contentRepository || []).map((d) =>
+    d.id === docId
+      ? {
+          ...d,
+          publishedEditions: updatedList,
+          updatedAt: new Date().toISOString(),
+        }
+      : d
+  );
+
+  return {
+    ...project,
+    contentRepository: updatedRepository,
+    updatedAt: new Date().toISOString(),
+  };
+}
+

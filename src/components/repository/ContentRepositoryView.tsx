@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   MagazineProject,
   RepositoryDocument,
@@ -38,7 +38,19 @@ import {
   Undo2,
   BookOpen,
   FileEdit,
+  Archive,
+  Sparkles,
+  History,
+  Tag,
+  Copy,
 } from "lucide-react";
+import {
+  getArchivedEditions,
+  getDocumentUsageTracker,
+  toggleDocPublishedEdition,
+  ArchivedEdition,
+  DocumentUsageTracker,
+} from "../../lib/editions-archive";
 
 interface ContentRepositoryViewProps {
   project: MagazineProject;
@@ -56,7 +68,21 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
   onNavigateToArticles,
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "published">("all");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "unused" | "current" | "previous" | "draft" | "published"
+  >("all");
+
+  // Edições Arquivadas & Controle de Pauta
+  const [archivedEditions, setArchivedEditions] = useState<ArchivedEdition[]>([]);
+  const [docForHistory, setDocForHistory] = useState<RepositoryDocument | null>(null);
+  const [manualEditionInput, setManualEditionInput] = useState<string>("");
+
+  useEffect(() => {
+    setArchivedEditions(getArchivedEditions());
+    const onArchiveChange = () => setArchivedEditions(getArchivedEditions());
+    window.addEventListener("montanha-archive-changed", onArchiveChange);
+    return () => window.removeEventListener("montanha-archive-changed", onArchiveChange);
+  }, []);
 
   // New/Editing Draft State
   const [isDraftEditorOpen, setIsDraftEditorOpen] = useState<boolean>(false);
@@ -64,6 +90,8 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
   const [draftTitle, setDraftTitle] = useState<string>("");
   const [draftContent, setDraftContent] = useState<string>("");
   const [draftCategory, setDraftCategory] = useState<string>("MONTANHA METHOD");
+  const [draftPublishedEditions, setDraftPublishedEditions] = useState<string[]>([]);
+  const [newEdTagInput, setNewEdTagInput] = useState<string>("");
 
   // AI Analysis & Approval State
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -78,6 +106,40 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
 
   const documents = project.contentRepository || [];
 
+  // Mapeamento dinâmico e rastreamento editorial tridimensional de cada documento
+  const docsWithTracker = useMemo(() => {
+    return documents.map((doc) => {
+      const tracker = getDocumentUsageTracker(doc, project, archivedEditions);
+      return { doc, tracker };
+    });
+  }, [documents, project, archivedEditions]);
+
+  const unusedCount = docsWithTracker.filter((item) => item.tracker.isUnusedDraft).length;
+  const currentCount = docsWithTracker.filter((item) => item.tracker.isInCurrentMagazine).length;
+  const previousCount = docsWithTracker.filter((item) => item.tracker.previousEditions.length > 0).length;
+
+  // Documentos filtrados por busca e status editorial
+  const filteredDocsWithTracker = docsWithTracker.filter(({ doc, tracker }) => {
+    const matchesSearch =
+      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.rawContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (doc.category && doc.category.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    if (!matchesSearch) return false;
+
+    if (filterStatus === "all") return true;
+    if (filterStatus === "unused" || filterStatus === "draft") {
+      return filterStatus === "unused" ? tracker.isUnusedDraft : !tracker.isInCurrentMagazine;
+    }
+    if (filterStatus === "current" || filterStatus === "published") {
+      return tracker.isInCurrentMagazine;
+    }
+    if (filterStatus === "previous") {
+      return tracker.previousEditions.length > 0;
+    }
+    return true;
+  });
+
   // Helper de sincronização em tempo real: verifica se o documento do acervo está atualmente na revista
   const getDocMagazineLink = (doc: RepositoryDocument) => {
     const article = project.articles.find(
@@ -90,25 +152,6 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
       article,
     };
   };
-
-  const publishedCount = documents.filter((d) => getDocMagazineLink(d).isInMagazine).length;
-  const draftsCount = documents.filter((d) => !getDocMagazineLink(d).isInMagazine).length;
-
-  // Filtered Documents
-  const filteredDocs = documents.filter((doc) => {
-    const matchesSearch =
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.rawContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (doc.category && doc.category.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    const { isInMagazine } = getDocMagazineLink(doc);
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "published" && isInMagazine) ||
-      (filterStatus === "draft" && !isInMagazine);
-
-    return matchesSearch && matchesStatus;
-  });
 
   // Handle File Upload (.txt, .md, .doc, .docx, .json)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,6 +197,8 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     setDraftTitle("");
     setDraftContent("");
     setDraftCategory("MONTANHA METHOD");
+    setDraftPublishedEditions([]);
+    setNewEdTagInput("");
     setIsDraftEditorOpen(true);
   };
 
@@ -162,6 +207,8 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     setDraftTitle(doc.title);
     setDraftContent(doc.rawContent);
     setDraftCategory(doc.category || "MONTANHA METHOD");
+    setDraftPublishedEditions((doc.publishedEditions || []).map((e) => e.editionNumber));
+    setNewEdTagInput("");
     setIsDraftEditorOpen(true);
   };
 
@@ -175,6 +222,13 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     const wordCount = countWords(draftContent);
     const now = new Date().toISOString();
 
+    const publishedEditionsRecords = draftPublishedEditions.map((edNum) => ({
+      editionNumber: edNum,
+      editionTitle: `Edição #${edNum}`,
+      isManual: true,
+      publishedAt: now,
+    }));
+
     let updatedList: RepositoryDocument[];
     if (editingDraftId) {
       updatedList = documents.map((d) =>
@@ -185,6 +239,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
               category: draftCategory,
               rawContent: draftContent,
               wordCount,
+              publishedEditions: publishedEditionsRecords,
               updatedAt: now,
             }
           : d
@@ -197,6 +252,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
         rawContent: draftContent,
         wordCount,
         status: "draft",
+        publishedEditions: publishedEditionsRecords,
         createdAt: now,
         updatedAt: now,
       };
@@ -437,6 +493,71 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
             />
           </div>
 
+          {/* Histórico em Edições Anteriores (Opcional) */}
+          <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold flex items-center gap-1.5">
+                <Archive className="w-3.5 h-3.5 text-indigo-500" />
+                <span>EDIÇÕES ANTERIORES EM QUE ESTE TEXTO JÁ FOI VEICULADO (OPCIONAL)</span>
+              </Label>
+              <span className="text-[10px] opacity-60 font-mono">
+                Para controle de textos já publicados no acervo
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {draftPublishedEditions.map((edNum, idx) => (
+                <span
+                  key={idx}
+                  className="bg-indigo-600 text-white font-mono text-xs font-black px-2.5 py-1 rounded flex items-center gap-1.5 shadow-xs"
+                >
+                  <span>Edição #{edNum}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDraftPublishedEditions(draftPublishedEditions.filter((_, i) => i !== idx))
+                    }
+                    className="hover:text-red-300 font-bold ml-1 cursor-pointer"
+                    title="Remover edição"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+
+              <div className="flex items-center gap-1.5">
+                <Input
+                  value={newEdTagInput}
+                  onChange={(e) => setNewEdTagInput(e.target.value)}
+                  placeholder="Ex: 01, 02..."
+                  className="theme-app-input h-7 w-28 text-xs font-mono font-bold"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (newEdTagInput.trim() && !draftPublishedEditions.includes(newEdTagInput.trim())) {
+                        setDraftPublishedEditions([...draftPublishedEditions, newEdTagInput.trim()]);
+                        setNewEdTagInput("");
+                      }
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    if (newEdTagInput.trim() && !draftPublishedEditions.includes(newEdTagInput.trim())) {
+                      setDraftPublishedEditions([...draftPublishedEditions, newEdTagInput.trim()]);
+                      setNewEdTagInput("");
+                    }
+                  }}
+                  className="h-7 px-2.5 text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                >
+                  + Adicionar
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between pt-2 border-t">
             <span className="text-[11px] font-mono font-bold opacity-75">
               Volume: {countWords(draftContent)} palavras
@@ -462,6 +583,93 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
         </div>
       )}
 
+      {/* Editorial Control & Inventory Dashboard (Avisos de Pauta) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Card 1: Rascunhos Inéditos */}
+        <button
+          type="button"
+          data-testid="stat-card-unused"
+          onClick={() => setFilterStatus(filterStatus === "unused" ? "all" : "unused")}
+          className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer shadow-xs ${
+            filterStatus === "unused"
+              ? "border-amber-500 bg-amber-500/10 ring-2 ring-amber-500/30"
+              : "theme-app-card hover:border-amber-400"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-mono font-black uppercase text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              RASCUNHOS INÉDITOS
+            </span>
+            <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black shadow-xs">
+              {unusedCount}
+            </span>
+          </div>
+          <div className="text-xl font-black tracking-tight">
+            {unusedCount} {unusedCount === 1 ? "texto disponível" : "textos disponíveis"}
+          </div>
+          <p className="text-[11px] opacity-75 mt-1 leading-snug">
+            Nunca utilizados em nenhuma edição. 100% livres para novas pautas.
+          </p>
+        </button>
+
+        {/* Card 2: Na Edição Atual */}
+        <button
+          type="button"
+          data-testid="stat-card-current"
+          onClick={() => setFilterStatus(filterStatus === "current" ? "all" : "current")}
+          className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer shadow-xs ${
+            filterStatus === "current"
+              ? "border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30"
+              : "theme-app-card hover:border-emerald-500"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-mono font-black uppercase text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
+              NA REVISTA ATUAL
+            </span>
+            <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-emerald-600 text-white border border-emerald-800 shadow-xs">
+              {currentCount}
+            </span>
+          </div>
+          <div className="text-xl font-black tracking-tight">
+            {currentCount} {currentCount === 1 ? "matéria diagramada" : "matérias diagramadas"}
+          </div>
+          <p className="text-[11px] opacity-75 mt-1 leading-snug">
+            Atualmente na Edição #{project.editionNumber || "01"}. Prontas para publicação.
+          </p>
+        </button>
+
+        {/* Card 3: Em Edições Anteriores */}
+        <button
+          type="button"
+          data-testid="stat-card-previous"
+          onClick={() => setFilterStatus(filterStatus === "previous" ? "all" : "previous")}
+          className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer shadow-xs ${
+            filterStatus === "previous"
+              ? "border-indigo-500 bg-indigo-500/10 ring-2 ring-indigo-500/30"
+              : "theme-app-card hover:border-indigo-500"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-mono font-black uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+              <Archive className="w-3.5 h-3.5" />
+              EDIÇÕES ANTERIORES
+            </span>
+            <span className="font-mono text-xs font-black px-2 py-0.5 rounded bg-indigo-600 text-white border border-indigo-800 shadow-xs">
+              {previousCount}
+            </span>
+          </div>
+          <div className="text-xl font-black tracking-tight">
+            {previousCount} {previousCount === 1 ? "artigo veiculado" : "artigos veiculados"}
+          </div>
+          <p className="text-[11px] opacity-75 mt-1 leading-snug">
+            Publicados em edições passadas do acervo. Reutilizáveis a qualquer momento.
+          </p>
+        </button>
+      </div>
+
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative flex-1 w-full">
@@ -478,6 +686,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
           <span className="text-[10px] font-bold opacity-75 uppercase mr-1">Status:</span>
           <button
             type="button"
+            data-testid="filter-tab-all"
             onClick={() => setFilterStatus("all")}
             className={`px-3 py-1 rounded text-xs font-bold border transition-all cursor-pointer ${
               filterStatus === "all" ? "bg-amber-400 text-black font-black border-black shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
@@ -487,29 +696,42 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setFilterStatus("draft")}
+            data-testid="filter-tab-draft"
+            onClick={() => setFilterStatus("unused")}
             className={`px-3 py-1 rounded text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 ${
-              filterStatus === "draft" ? "bg-amber-400 text-black font-black border-black shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
+              filterStatus === "unused" || filterStatus === "draft" ? "bg-amber-400 text-black font-black border-black shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
             }`}
           >
-            <FileEdit className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-            <span>Rascunhos Disponíveis ({draftsCount})</span>
+            <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+            <span>Rascunhos Disponíveis ({unusedCount})</span>
           </button>
           <button
             type="button"
-            onClick={() => setFilterStatus("published")}
+            data-testid="filter-tab-current"
+            onClick={() => setFilterStatus("current")}
             className={`px-3 py-1 rounded text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 ${
-              filterStatus === "published" ? "bg-emerald-600 text-white font-black border-emerald-800 shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
+              filterStatus === "current" || filterStatus === "published" ? "bg-emerald-600 text-white font-black border-emerald-800 shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
             }`}
           >
             <Check className="w-3 h-3 stroke-[3]" />
-            <span>Na Revista ({publishedCount})</span>
+            <span>Na Revista ({currentCount})</span>
+          </button>
+          <button
+            type="button"
+            data-testid="filter-tab-previous"
+            onClick={() => setFilterStatus("previous")}
+            className={`px-3 py-1 rounded text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+              filterStatus === "previous" ? "bg-indigo-600 text-white font-black border-indigo-800 shadow-xs" : "theme-app-card-subtle opacity-70 hover:opacity-100"
+            }`}
+          >
+            <Archive className="w-3 h-3 text-white" />
+            <span>Em Edições Anteriores ({previousCount})</span>
           </button>
         </div>
       </div>
 
       {/* Documents Grid / List */}
-      {filteredDocs.length === 0 ? (
+      {filteredDocsWithTracker.length === 0 ? (
         <div className="theme-app-card p-10 rounded-xl border-2 text-center space-y-3">
           <FolderOpen className="w-12 h-12 text-amber-500 mx-auto opacity-50" />
           <h3 className="text-base font-black uppercase">Nenhum documento encontrado no acervo</h3>
@@ -536,27 +758,30 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredDocs.map((doc) => {
+          {filteredDocsWithTracker.map(({ doc, tracker }) => {
             const isDocAnalyzing = isAnalyzing && analyzingDocId === doc.id;
-            const { isInMagazine, article: linkedArt } = getDocMagazineLink(doc);
 
-            // Page number if in magazine
+            // Page number if in current magazine
             let pageBadgeText = "";
-            if (linkedArt) {
-              const idx = project.articles.findIndex((a) => a.id === linkedArt.id);
-              const approxPage = (idx >= 0 ? idx : 0) + 4;
-              pageBadgeText = `PÁG. ${approxPage.toString().padStart(2, "0")}`;
+            if (tracker.currentArticle) {
+              pageBadgeText = tracker.currentPageNumber
+                ? `PÁG. ${tracker.currentPageNumber.toString().padStart(2, "0")}`
+                : "PÁG. --";
             }
+
+            const cardBorderClass = tracker.isInCurrentMagazine
+              ? "border-emerald-500/70 bg-emerald-500/5 ring-1 ring-emerald-500/20"
+              : tracker.previousEditions.length > 0
+              ? "border-indigo-400/70 bg-indigo-500/5 ring-1 ring-indigo-400/20"
+              : "border-slate-300 dark:border-slate-700 hover:border-black dark:hover:border-white";
 
             return (
               <div
                 key={doc.id}
-                className={`theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col justify-between space-y-3 shadow-sm ${
-                  isInMagazine ? "border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/20" : "border-slate-300 dark:border-slate-700 hover:border-black dark:hover:border-white"
-                }`}
+                className={`theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col justify-between space-y-3 shadow-sm ${cardBorderClass}`}
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
                         {doc.category || "GERAL"}
@@ -569,9 +794,9 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1.5">
-                      {isInMagazine ? (
-                        <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      {tracker.isInCurrentMagazine ? (
+                        <div className="flex items-center gap-1 flex-wrap">
                           <span className="bg-emerald-600 text-white font-mono text-[8.5px] font-black px-2 py-0.5 rounded uppercase flex items-center gap-1 shadow-xs">
                             <Check className="w-3 h-3 stroke-[3]" />
                             <span>PUBLICADO NA REVISTA</span>
@@ -581,9 +806,37 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                               {pageBadgeText}
                             </span>
                           )}
-                          {linkedArt?.enabled === false && (
+                          {tracker.previousEditions.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setDocForHistory(doc)}
+                              className="bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-mono text-[8px] font-bold px-1.5 py-0.5 rounded uppercase border border-indigo-300 dark:border-indigo-700 flex items-center gap-1 hover:bg-indigo-200 cursor-pointer"
+                              title="Ver histórico em edições anteriores"
+                            >
+                              <Archive className="w-2.5 h-2.5 text-indigo-600" />
+                              <span>Também na {tracker.previousEditions.map((e) => `Ed. #${e.editionNumber}`).join(", ")}</span>
+                            </button>
+                          )}
+                          {tracker.currentArticle?.enabled === false && (
                             <span className="bg-amber-500/20 text-amber-700 dark:text-amber-400 font-mono text-[8px] font-bold px-1.5 py-0.2 rounded uppercase border border-amber-500/40">
                               PAUSADO
+                            </span>
+                          )}
+                        </div>
+                      ) : tracker.previousEditions.length > 0 ? (
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => setDocForHistory(doc)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-mono text-[8.5px] font-black px-2 py-0.5 rounded uppercase flex items-center gap-1 shadow-xs cursor-pointer"
+                            title="Clique para ver o histórico desta matéria nas edições anteriores"
+                          >
+                            <Archive className="w-3 h-3 text-white" />
+                            <span>PUBLICADO NA {tracker.previousEditions.map((e) => `ED. #${e.editionNumber}`).join(", ")}</span>
+                          </button>
+                          {tracker.previousEditions[0]?.date && (
+                            <span className="font-mono text-[8px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700">
+                              {tracker.previousEditions[0].date}
                             </span>
                           )}
                         </div>
@@ -623,7 +876,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                   </div>
 
                   <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                    {isInMagazine ? (
+                    {tracker.isInCurrentMagazine ? (
                       <>
                         <button
                           type="button"
@@ -635,10 +888,10 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                           <span>Remover da Revista</span>
                         </button>
 
-                        {linkedArt && (
+                        {tracker.currentArticle && (
                           <button
                             type="button"
-                            onClick={() => onOpenArticleEditor(linkedArt)}
+                            onClick={() => onOpenArticleEditor(tracker.currentArticle!)}
                             className="h-7 px-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-all shadow-xs"
                             title="Abrir o editor da matéria diagramada na revista"
                           >
@@ -652,11 +905,23 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                         <Button
                           size="sm"
                           onClick={() => handleDirectAddToMagazine(doc)}
-                          className="h-7 px-2.5 bg-amber-400 hover:bg-amber-500 text-black font-black text-[10px] border border-black shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
-                          title="Inserir diretamente como matéria na revista atual"
+                          className={`h-7 px-2.5 font-black text-[10px] border shadow-xs cursor-pointer flex items-center gap-1 shrink-0 ${
+                            tracker.previousEditions.length > 0
+                              ? "bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-900"
+                              : "bg-amber-400 hover:bg-amber-500 text-black border-black"
+                          }`}
+                          title={
+                            tracker.previousEditions.length > 0
+                              ? "Reutilizar artigo de edição anterior na revista atual"
+                              : "Inserir diretamente como matéria na revista atual"
+                          }
                         >
-                          <Plus className="w-3 h-3 text-black" />
-                          <span>Colocar na Revista</span>
+                          {tracker.previousEditions.length > 0 ? (
+                            <Copy className="w-3 h-3 text-white" />
+                          ) : (
+                            <Plus className="w-3 h-3 text-black" />
+                          )}
+                          <span>{tracker.previousEditions.length > 0 ? "Reutilizar na Revista" : "Colocar na Revista"}</span>
                         </Button>
 
                         <Button
@@ -685,6 +950,15 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                       title="Pré-visualizar / Ler Texto"
                     >
                       <Eye className="w-3.5 h-3.5 text-amber-600" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDocForHistory(doc)}
+                      className="p-1.5 opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 rounded cursor-pointer"
+                      title="Ver / Gerenciar Histórico de Publicações"
+                    >
+                      <Archive className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     </button>
 
                     <button
@@ -731,6 +1005,40 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
               </DialogTitle>
             </DialogHeader>
 
+            {/* Status Editorial Box */}
+            {(() => {
+              const tracker = getDocumentUsageTracker(previewDoc, project, archivedEditions);
+              return (
+                <div
+                  className={`mt-3 p-3 rounded-lg border-2 flex items-center justify-between text-xs ${
+                    tracker.isInCurrentMagazine
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+                      : tracker.previousEditions.length > 0
+                      ? "border-indigo-500 bg-indigo-500/10 text-indigo-800 dark:text-indigo-300"
+                      : "border-amber-500 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {tracker.isInCurrentMagazine ? (
+                      <Check className="w-4 h-4 stroke-[3] text-emerald-600" />
+                    ) : tracker.previousEditions.length > 0 ? (
+                      <Archive className="w-4 h-4 text-indigo-600" />
+                    ) : (
+                      <Sparkles className="w-4 h-4 text-amber-600" />
+                    )}
+                    <span className="font-black uppercase tracking-wide">
+                      Status Editorial: {tracker.statusLabel}
+                    </span>
+                  </div>
+                  {tracker.currentPageNumber && (
+                    <span className="font-mono font-bold text-[10px]">
+                      Página {tracker.currentPageNumber}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+
             <div className="my-4 theme-app-card-subtle p-4 rounded-xl border-2 max-h-[50vh] overflow-y-auto custom-scrollbar font-sans text-xs leading-relaxed whitespace-pre-wrap">
               {previewDoc.rawContent}
             </div>
@@ -772,6 +1080,195 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
                   <span>⚡ Diagramar com IA</span>
                 </Button>
               </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Dialog de Histórico Editorial & Publicações */}
+      {docForHistory && (
+        <Dialog open={Boolean(docForHistory)} onOpenChange={() => setDocForHistory(null)}>
+          <DialogContent className="theme-app-card max-w-lg p-5 font-sans border-2 border-black shadow-2xl">
+            <DialogHeader className="border-b-2 pb-3">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
+                  CONTROLE DE PAUTA
+                </span>
+                <span className="text-[10px] font-mono opacity-70 font-bold">
+                  {docForHistory.wordCount} PALAVRAS
+                </span>
+              </div>
+              <DialogTitle className="text-base font-black uppercase tracking-tight mt-1 flex items-center gap-2">
+                <Archive className="w-4 h-4 text-indigo-500" />
+                <span>Histórico Editorial & Publicações</span>
+              </DialogTitle>
+              <p className="text-xs opacity-75 font-semibold line-clamp-1">
+                "{docForHistory.title}"
+              </p>
+            </DialogHeader>
+
+            <div className="py-3 space-y-4 text-xs">
+              {/* Situação na Edição Atual */}
+              <div className="p-3 rounded-lg border-2 theme-app-card-subtle space-y-2">
+                <span className="text-[10px] font-mono font-black uppercase tracking-wide opacity-75">
+                  EDIÇÃO ATUAL (# {project.editionNumber || "01"})
+                </span>
+                {(() => {
+                  const tracker = getDocumentUsageTracker(docForHistory, project, archivedEditions);
+                  if (tracker.isInCurrentMagazine) {
+                    return (
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                          <Check className="w-4 h-4 stroke-[3]" />
+                          Atualmente na Revista ({tracker.currentPageNumber ? `Pág. ${tracker.currentPageNumber}` : "Diagramado"})
+                        </span>
+                        {tracker.currentArticle && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const art = tracker.currentArticle;
+                              setDocForHistory(null);
+                              if (art) onOpenArticleEditor(art);
+                            }}
+                            className="h-7 text-[10px] font-bold"
+                          >
+                            Abrir no Editor
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="flex items-center justify-between">
+                      <span className="opacity-75 font-medium">
+                        Não está diagramado na edição atual.
+                      </span>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          handleDirectAddToMagazine(docForHistory);
+                          setDocForHistory(null);
+                        }}
+                        className="h-7 bg-amber-400 hover:bg-amber-500 text-black font-black text-[10px] border border-black shadow-xs cursor-pointer"
+                      >
+                        Colocar na Edição Atual
+                      </Button>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Histórico em Edições Anteriores */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono font-black uppercase tracking-wide opacity-75 flex items-center gap-1">
+                  <Archive className="w-3.5 h-3.5 text-indigo-500" />
+                  PUBLICAÇÕES EM EDIÇÕES ANTERIORES
+                </span>
+
+                {(() => {
+                  const tracker = getDocumentUsageTracker(docForHistory, project, archivedEditions);
+                  if (tracker.previousEditions.length === 0) {
+                    return (
+                      <div className="p-3 rounded-lg border theme-app-card-subtle text-[11px] opacity-75">
+                        Este artigo ainda não foi veiculado em nenhuma edição anterior. É um <strong>rascunho 100% inédito</strong>.
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
+                      {tracker.previousEditions.map((ed, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2.5 rounded-lg border-2 border-indigo-400/40 bg-indigo-500/5 flex items-center justify-between"
+                        >
+                          <div>
+                            <div className="font-black text-xs uppercase flex items-center gap-1.5">
+                              <span className="bg-indigo-600 text-white font-mono text-[9px] px-1.5 py-0.2 rounded">
+                                ED. #{ed.editionNumber}
+                              </span>
+                              <span>{ed.editionTitle}</span>
+                            </div>
+                            {ed.date && (
+                              <div className="text-[10px] opacity-70 font-mono mt-0.5">
+                                Publicado em: {ed.date}
+                              </div>
+                            )}
+                          </div>
+                          {ed.isManual && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const updatedProj = toggleDocPublishedEdition(docForHistory.id, project, {
+                                  editionNumber: ed.editionNumber,
+                                });
+                                onUpdateProject(updatedProj);
+                              }}
+                              className="h-6 px-2 text-red-500 hover:text-red-700 text-[10px]"
+                              title="Remover este registro manual"
+                            >
+                              Remover
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Adicionar Edição Manualmente */}
+              <div className="p-3 rounded-lg border theme-app-card-subtle space-y-2">
+                <Label className="text-[10px] font-black uppercase">
+                  Registrar Edição Anterior Manualmente
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={manualEditionInput}
+                    onChange={(e) => setManualEditionInput(e.target.value)}
+                    placeholder="Ex: 01, 00, Especial 2025"
+                    className="h-8 text-xs font-mono font-bold"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && manualEditionInput.trim()) {
+                        e.preventDefault();
+                        const updatedProj = toggleDocPublishedEdition(docForHistory.id, project, {
+                          editionNumber: manualEditionInput.trim(),
+                        });
+                        onUpdateProject(updatedProj);
+                        setManualEditionInput("");
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (!manualEditionInput.trim()) return;
+                      const updatedProj = toggleDocPublishedEdition(docForHistory.id, project, {
+                        editionNumber: manualEditionInput.trim(),
+                      });
+                      onUpdateProject(updatedProj);
+                      setManualEditionInput("");
+                    }}
+                    className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 cursor-pointer"
+                  >
+                    + Registrar
+                  </Button>
+                </div>
+                <p className="text-[10px] opacity-60">
+                  Ideal para textos que já foram publicados em edições impressas anteriores à criação desta ferramenta.
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="border-t pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDocForHistory(null)}
+                className="h-8 text-xs font-bold"
+              >
+                Fechar
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -93,9 +93,14 @@ test.describe("Jornada Crítica: Ação Principal (Criação, Edição de Matér
     await authenticatedPage.getByTestId("tab-repository").click();
     await expect(authenticatedPage.getByText("Repositório de Arquivos & Gerador de Artigos por IA")).toBeVisible();
 
-    // 2. Verificar presença dos filtros dinâmicos
-    await expect(authenticatedPage.getByRole("button", { name: /^Rascunhos Disponíveis/i })).toBeVisible();
-    await expect(authenticatedPage.getByRole("button", { name: /^Na Revista/i })).toBeVisible();
+    // 2. Verificar presença do dashboard de inventário e dos filtros dinâmicos
+    await expect(authenticatedPage.getByTestId("stat-card-unused")).toBeVisible();
+    await expect(authenticatedPage.getByTestId("stat-card-current")).toBeVisible();
+    await expect(authenticatedPage.getByTestId("stat-card-previous")).toBeVisible();
+
+    await expect(authenticatedPage.getByTestId("filter-tab-draft")).toBeVisible();
+    await expect(authenticatedPage.getByTestId("filter-tab-current")).toBeVisible();
+    await expect(authenticatedPage.getByTestId("filter-tab-previous")).toBeVisible();
 
     // 3. Testar inserção direta na revista e posterior remoção
     const addBtn = authenticatedPage.getByRole("button", { name: /Colocar na Revista/i }).first();

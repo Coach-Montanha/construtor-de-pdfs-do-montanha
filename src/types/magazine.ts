@@ -298,6 +298,14 @@ export type BodyFontOption =
   | "barlow"       // Barlow (Athletic Clean Sans)
   | "jakarta";     // Plus Jakarta Sans (Modern Geometric Reading Sans)
 
+export interface RepositoryDocumentPublishedEdition {
+  editionNumber: string;
+  editionTitle?: string;
+  date?: string;
+  publishedAt?: string;
+  isManual?: boolean;
+}
+
 export interface RepositoryDocument {
   id: string;
   title: string;
@@ -307,6 +315,7 @@ export interface RepositoryDocument {
   sourceFileName?: string;
   wordCount: number;
   status: "draft" | "ready" | "published";
+  publishedEditions?: RepositoryDocumentPublishedEdition[];
   createdAt: string;
   updatedAt: string;
 }

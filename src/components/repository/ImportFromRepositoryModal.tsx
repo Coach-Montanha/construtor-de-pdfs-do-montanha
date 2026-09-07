@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   MagazineProject,
   RepositoryDocument,
@@ -21,7 +21,11 @@ import {
   Clock,
   Check,
   ArrowRight,
+  Archive,
+  Sparkles,
+  Copy,
 } from "lucide-react";
+import { getDocumentUsageTracker } from "../../lib/editions-archive";
 
 interface ImportFromRepositoryModalProps {
   isOpen: boolean;
@@ -41,14 +45,31 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
   onNavigateToAcervo,
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filterMode, setFilterMode] = useState<"all" | "unused" | "current" | "previous">("all");
   const documents = project.contentRepository || [];
 
-  const filteredDocs = documents.filter((doc) => {
-    return (
+  const docsWithTracker = useMemo(() => {
+    return documents.map((doc) => {
+      const tracker = getDocumentUsageTracker(doc, project);
+      return { doc, tracker };
+    });
+  }, [documents, project]);
+
+  const unusedCount = docsWithTracker.filter((item) => item.tracker.isUnusedDraft).length;
+  const currentCount = docsWithTracker.filter((item) => item.tracker.isInCurrentMagazine).length;
+  const previousCount = docsWithTracker.filter((item) => item.tracker.previousEditions.length > 0).length;
+
+  const filteredDocs = docsWithTracker.filter(({ doc, tracker }) => {
+    const matchesSearch =
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.rawContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (doc.category && doc.category.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+      (doc.category && doc.category.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    if (!matchesSearch) return false;
+    if (filterMode === "unused") return tracker.isUnusedDraft;
+    if (filterMode === "current") return tracker.isInCurrentMagazine;
+    if (filterMode === "previous") return tracker.previousEditions.length > 0;
+    return true;
   });
 
   return (
@@ -69,15 +90,60 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
           </p>
         </DialogHeader>
 
-        {/* Search Bar */}
-        <div className="relative my-3">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 opacity-50" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar nos artigos e rascunhos do acervo..."
-            className="theme-app-input pl-9 text-xs h-9 border-2 w-full"
-          />
+        {/* Search & Filter Bar */}
+        <div className="space-y-2.5 my-3">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-2.5 opacity-50" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Pesquisar nos artigos e rascunhos do acervo..."
+              className="theme-app-input pl-9 text-xs h-9 border-2 w-full"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-bold opacity-75 uppercase mr-1">Filtrar:</span>
+            <button
+              type="button"
+              onClick={() => setFilterMode("all")}
+              className={`px-2.5 py-0.5 rounded text-[11px] font-bold border transition-all cursor-pointer ${
+                filterMode === "all" ? "bg-amber-400 text-black font-black border-black" : "opacity-70 hover:opacity-100"
+              }`}
+            >
+              Todos ({documents.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterMode("unused")}
+              className={`px-2.5 py-0.5 rounded text-[11px] font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+                filterMode === "unused" ? "bg-amber-400 text-black font-black border-black" : "opacity-70 hover:opacity-100"
+              }`}
+            >
+              <Sparkles className="w-2.5 h-2.5 text-amber-600" />
+              <span>Inéditos ({unusedCount})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterMode("current")}
+              className={`px-2.5 py-0.5 rounded text-[11px] font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+                filterMode === "current" ? "bg-emerald-600 text-white font-black border-emerald-800" : "opacity-70 hover:opacity-100"
+              }`}
+            >
+              <Check className="w-2.5 h-2.5 stroke-[3]" />
+              <span>Na Revista ({currentCount})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterMode("previous")}
+              className={`px-2.5 py-0.5 rounded text-[11px] font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+                filterMode === "previous" ? "bg-indigo-600 text-white font-black border-indigo-800" : "opacity-70 hover:opacity-100"
+              }`}
+            >
+              <Archive className="w-2.5 h-2.5" />
+              <span>Edições Anteriores ({previousCount})</span>
+            </button>
+          </div>
         </div>
 
         {/* Document Cards List */}
@@ -104,23 +170,20 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
             </div>
           ) : filteredDocs.length === 0 ? (
             <div className="text-center py-8 opacity-75 text-xs font-bold">
-              Nenhum texto corresponde à pesquisa "{searchQuery}".
+              Nenhum texto corresponde aos filtros ativos.
             </div>
           ) : (
-            filteredDocs.map((doc) => {
-              const linkedArticle = project.articles.find(
-                (a) =>
-                  (a.sourceDocId && a.sourceDocId === doc.id) ||
-                  (doc.id && a.id === doc.id) ||
-                  a.title.trim().toLowerCase() === doc.title.trim().toLowerCase()
-              );
-              const isInMagazine = !!linkedArticle;
+            filteredDocs.map(({ doc, tracker }) => {
+              const cardBorder = tracker.isInCurrentMagazine
+                ? "border-emerald-500/70 bg-emerald-500/5 ring-1 ring-emerald-500/20"
+                : tracker.previousEditions.length > 0
+                ? "border-indigo-400/70 bg-indigo-500/5 ring-1 ring-indigo-400/20"
+                : "";
+
               return (
                 <div
                   key={doc.id}
-                  className={`theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col justify-between space-y-2.5 shadow-xs hover:border-amber-500 ${
-                    isInMagazine ? "border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/20" : ""
-                  }`}
+                  className={`theme-app-card p-4 rounded-xl border-2 transition-all flex flex-col justify-between space-y-2.5 shadow-xs hover:border-amber-500 ${cardBorder}`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -128,14 +191,14 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
                         {doc.category || "GERAL"}
                       </span>
                       {doc.sourceFileName && (
-                        <span className="text-[9px] font-mono opacity-60 flex items-center gap-1">
-                          <FileText className="w-3 h-3" />
-                          {doc.sourceFileName}
+                        <span className="text-[9px] font-mono opacity-60 flex items-center gap-1 truncate max-w-[130px]">
+                          <FileText className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{doc.sourceFileName}</span>
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 font-mono text-[9.5px] font-bold text-amber-600">
+                    <div className="flex items-center gap-2 font-mono text-[9.5px] font-bold text-amber-600 flex-wrap">
                       <span className="flex items-center gap-1">
                         <FileText className="w-3 h-3" />
                         {doc.wordCount} palavras
@@ -145,14 +208,21 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
                         <Clock className="w-3 h-3" />
                         ~{Math.max(1, Math.round(doc.wordCount / 130))} min
                       </span>
-                      {isInMagazine ? (
+
+                      {tracker.isInCurrentMagazine ? (
                         <span className="bg-emerald-600 text-white text-[8.5px] font-black px-2 py-0.5 rounded uppercase ml-1 flex items-center gap-1 shadow-xs">
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
-                          NA REVISTA
+                          NA REVISTA {tracker.currentPageNumber ? `(PÁG. ${tracker.currentPageNumber})` : ""}
+                        </span>
+                      ) : tracker.previousEditions.length > 0 ? (
+                        <span className="bg-indigo-600 text-white text-[8.5px] font-black px-2 py-0.5 rounded uppercase ml-1 flex items-center gap-1 shadow-xs">
+                          <Archive className="w-2.5 h-2.5" />
+                          PUBLICADO NA {tracker.previousEditions.map((e) => `ED. #${e.editionNumber}`).join(", ")}
                         </span>
                       ) : (
-                        <span className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[8.5px] font-bold px-2 py-0.5 rounded uppercase ml-1 border border-slate-300 dark:border-slate-700">
-                          RASCUNHO
+                        <span className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[8.5px] font-bold px-2 py-0.5 rounded uppercase ml-1 border border-slate-300 dark:border-slate-700 flex items-center gap-1">
+                          <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                          <span>INÉDITO</span>
                         </span>
                       )}
                     </div>
@@ -177,8 +247,18 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
                       }}
                       className="h-8 text-xs font-bold border-2 border-current cursor-pointer flex items-center gap-1"
                     >
-                      <FileDown className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{isInMagazine ? "Importar Novamente" : "Importar Direto (Manual)"}</span>
+                      {tracker.previousEditions.length > 0 && !tracker.isInCurrentMagazine ? (
+                        <Copy className="w-3.5 h-3.5 text-indigo-500" />
+                      ) : (
+                        <FileDown className="w-3.5 h-3.5 text-amber-500" />
+                      )}
+                      <span>
+                        {tracker.isInCurrentMagazine
+                          ? "Importar Novamente"
+                          : tracker.previousEditions.length > 0
+                          ? "Reutilizar da Ed. Anterior"
+                          : "Importar Direto (Manual)"}
+                      </span>
                     </Button>
 
                     <Button
@@ -190,7 +270,7 @@ export const ImportFromRepositoryModal: React.FC<ImportFromRepositoryModalProps>
                       className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black shadow-xs cursor-pointer flex items-center gap-1"
                     >
                       <Wand2 className="w-3.5 h-3.5 text-black" />
-                      <span>⚡ {isInMagazine ? "Rediagramar com IA" : "Analisar & Diagramar com IA"}</span>
+                      <span>⚡ {tracker.isInCurrentMagazine ? "Rediagramar com IA" : "Analisar & Diagramar com IA"}</span>
                     </Button>
                   </div>
                 </div>
