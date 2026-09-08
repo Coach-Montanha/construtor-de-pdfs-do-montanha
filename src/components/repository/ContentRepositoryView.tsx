@@ -43,6 +43,10 @@ import {
   History,
   Tag,
   Copy,
+  FolderSync,
+  RefreshCw,
+  CloudDownload,
+  ExternalLink,
 } from "lucide-react";
 import {
   getArchivedEditions,
@@ -51,6 +55,16 @@ import {
   ArchivedEdition,
   DocumentUsageTracker,
 } from "../../lib/editions-archive";
+import {
+  getGoogleDriveStatus,
+  connectGoogleDrive,
+  syncProjectToGoogleDrive,
+  uploadSingleDocumentToGoogleDrive,
+  pullNewTextsFromGoogleDrive,
+  getGoogleDriveFolderUrl,
+  GoogleDriveStatus,
+  DEDICATED_FOLDER_NAME,
+} from "../../lib/google-drive-sync";
 
 interface ContentRepositoryViewProps {
   project: MagazineProject;
@@ -103,6 +117,92 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
   const [docToDelete, setDocToDelete] = useState<RepositoryDocument | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Google Drive Sync State
+  const [driveStatus, setDriveStatus] = useState<GoogleDriveStatus>(() => getGoogleDriveStatus());
+  const [isSyncingDrive, setIsSyncingDrive] = useState<boolean>(false);
+  const [isPullingDrive, setIsPullingDrive] = useState<boolean>(false);
+  const [driveFeedback, setDriveFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleDriveChange = () => setDriveStatus(getGoogleDriveStatus());
+    window.addEventListener("montanha-gdrive-status-changed", handleDriveChange);
+    return () => window.removeEventListener("montanha-gdrive-status-changed", handleDriveChange);
+  }, []);
+
+  const handleConnectDrive = async () => {
+    setIsSyncingDrive(true);
+    setDriveFeedback(null);
+    try {
+      const res = await connectGoogleDrive();
+      if (res.success) {
+        setDriveFeedback(`✓ Conectado ao Google Drive (${res.email})! Sincronizando acervo...`);
+        await syncProjectToGoogleDrive(project);
+        setDriveFeedback(`✓ Conectado e acervo sincronizado com "${DEDICATED_FOLDER_NAME}"!`);
+      } else {
+        setDriveFeedback(`Aviso: ${res.error || "Não foi possível conectar."}`);
+      }
+    } catch (e: any) {
+      setDriveFeedback(`Erro ao conectar: ${e?.message || e}`);
+    } finally {
+      setIsSyncingDrive(false);
+      setDriveStatus(getGoogleDriveStatus());
+    }
+  };
+
+  const handleSyncToDrive = async () => {
+    setIsSyncingDrive(true);
+    setDriveFeedback(null);
+    try {
+      const res = await syncProjectToGoogleDrive(project);
+      if (res.success) {
+        const time = new Date().toLocaleTimeString("pt-BR");
+        setDriveFeedback(`✓ Acervo salvo no Google Drive às ${time}! (${project.contentRepository?.length || 0} textos)`);
+      } else {
+        setDriveFeedback(`Falha ao salvar no Drive: ${res.error}`);
+      }
+    } catch (e: any) {
+      setDriveFeedback(`Erro: ${e?.message || e}`);
+    } finally {
+      setIsSyncingDrive(false);
+    }
+  };
+
+  const handlePullFromDrive = async () => {
+    setIsPullingDrive(true);
+    setDriveFeedback(null);
+    try {
+      const result = await pullNewTextsFromGoogleDrive(project.contentRepository || []);
+      let updatedRepo = [...(project.contentRepository || [])];
+
+      if (result.updatedDocs.length > 0) {
+        const updateMap = new Map(result.updatedDocs.map((d) => [d.id, d]));
+        updatedRepo = updatedRepo.map((d) => updateMap.get(d.id) || d);
+      }
+
+      if (result.newDocs.length > 0) {
+        updatedRepo = [...result.newDocs, ...updatedRepo];
+      }
+
+      if (result.newDocs.length > 0 || result.updatedDocs.length > 0) {
+        const updatedProj = {
+          ...project,
+          contentRepository: updatedRepo,
+          updatedAt: new Date().toISOString(),
+        };
+        onUpdateProject(updatedProj);
+        setDriveFeedback(
+          `✓ Puxado do Drive com sucesso: ${result.newDocs.length} novo(s) texto(s), ${result.updatedDocs.length} atualizado(s)!`
+        );
+      } else {
+        setDriveFeedback("✓ Pasta do Google Drive em dia. Nenhum novo arquivo encontrado.");
+      }
+    } catch (e: any) {
+      setDriveFeedback(`Erro ao puxar do Drive: ${e?.message || e}`);
+    } finally {
+      setIsPullingDrive(false);
+    }
+  };
 
   const documents = project.contentRepository || [];
 
@@ -158,32 +258,57 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
+    const fileList = Array.from(files);
+    const newDocsToAdd: RepositoryDocument[] = [];
+    let processedCount = 0;
+
+    fileList.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const textContent = (event.target?.result as string) || "";
-        if (!textContent.trim()) return;
+        if (textContent.trim()) {
+          const wordCount = countWords(textContent);
+          const autoTitle = file.name
+            .replace(/\.[^/.]+$/, "")
+            .replace(/[-_]/g, " ")
+            .trim()
+            .toUpperCase();
 
-        const wordCount = countWords(textContent);
-        const autoTitle = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ").toUpperCase();
+          const newDoc: RepositoryDocument = {
+            id: "doc-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5),
+            title: autoTitle || "NOVO DOCUMENTO IMPORTADO",
+            rawContent: textContent,
+            category: "GERAL",
+            sourceFileName: file.name,
+            wordCount,
+            status: "draft",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          newDocsToAdd.push(newDoc);
+        }
 
-        const newDoc: RepositoryDocument = {
-          id: "doc-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5),
-          title: autoTitle || "NOVO DOCUMENTO IMPORTADO",
-          rawContent: textContent,
-          category: "GERAL",
-          sourceFileName: file.name,
-          wordCount,
-          status: "draft",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        processedCount++;
+        if (processedCount === fileList.length && newDocsToAdd.length > 0) {
+          const updatedRepo = [...newDocsToAdd, ...(project.contentRepository || [])];
+          const updatedProj: MagazineProject = {
+            ...project,
+            contentRepository: updatedRepo,
+            updatedAt: new Date().toISOString(),
+          };
+          onUpdateProject(updatedProj);
 
-        onUpdateProject({
-          ...project,
-          contentRepository: [newDoc, ...(project.contentRepository || [])],
-          updatedAt: new Date().toISOString(),
-        });
+          // Se Google Drive estiver conectado, sincronizar imediatamente na nuvem!
+          if (driveStatus.isConnected) {
+            syncProjectToGoogleDrive(updatedProj).then((res) => {
+              if (res.success) {
+                setDriveFeedback(
+                  `✓ ${newDocsToAdd.length} texto(s) importado(s) e sincronizado(s) no Google Drive!`
+                );
+              }
+            });
+          }
+        }
       };
       reader.readAsText(file);
     });
@@ -259,11 +384,25 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
       updatedList = [newDoc, ...documents];
     }
 
-    onUpdateProject({
+    const updatedProj: MagazineProject = {
       ...project,
       contentRepository: updatedList,
       updatedAt: now,
-    });
+    };
+
+    onUpdateProject(updatedProj);
+
+    // Se Google Drive estiver conectado, salvar o rascunho na nuvem!
+    if (driveStatus.isConnected) {
+      const savedDoc = updatedList.find((d) => (editingDraftId ? d.id === editingDraftId : d.title === draftTitle));
+      if (savedDoc) {
+        uploadSingleDocumentToGoogleDrive(savedDoc).then((ok) => {
+          if (ok) {
+            setDriveFeedback(`✓ Rascunho "${savedDoc.title}" sincronizado no Google Drive!`);
+          }
+        });
+      }
+    }
 
     setIsDraftEditorOpen(false);
   };
@@ -430,6 +569,57 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
             className="hidden"
           />
 
+          {/* Google Drive Status & Controls */}
+          {driveStatus.isConnected ? (
+            <div className="flex items-center gap-1.5 bg-emerald-500/10 border-2 border-emerald-500/40 rounded-lg p-1">
+              <span className="inline-flex items-center gap-1 font-mono text-[9px] font-black px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                DRIVE CONECTADO
+              </span>
+              <Button
+                size="sm"
+                onClick={handleSyncToDrive}
+                disabled={isSyncingDrive}
+                className="h-7 px-2 bg-amber-400 hover:bg-amber-500 text-black font-black text-[11px] border border-black cursor-pointer flex items-center gap-1"
+                title="Salvar acervo completo na pasta do Google Drive"
+              >
+                {isSyncingDrive ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                <span>Salvar no Drive</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handlePullFromDrive}
+                disabled={isPullingDrive}
+                className="h-7 px-2 font-bold text-[11px] border cursor-pointer flex items-center gap-1 hover:bg-amber-400/20"
+                title="Importar novos textos colocados na pasta do Google Drive"
+              >
+                {isPullingDrive ? <Loader2 className="w-3 h-3 animate-spin text-amber-500" /> : <CloudDownload className="w-3 h-3 text-amber-500" />}
+                <span>Puxar do Drive</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => window.open(getGoogleDriveFolderUrl(driveStatus.folderId), "_blank")}
+                className="h-7 px-1.5 text-[11px] cursor-pointer"
+                title="Abrir pasta no Google Drive"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-amber-500" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={handleConnectDrive}
+              disabled={isSyncingDrive}
+              variant="outline"
+              className="h-9 border-2 border-current font-bold text-xs cursor-pointer flex items-center gap-1.5 hover:bg-amber-400/20"
+              title="Conectar ao Google Drive para sincronizar textos em nuvem entre aparelhos"
+            >
+              <FolderSync className="w-4 h-4 text-amber-500" />
+              <span>Conectar Google Drive</span>
+            </Button>
+          )}
+
           <Button
             onClick={() => fileInputRef.current?.click()}
             className="h-9 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black shadow-xs cursor-pointer flex items-center gap-1.5"
@@ -447,6 +637,22 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Drive Feedback Alert Banner */}
+      {driveFeedback && (
+        <div className="p-3 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center justify-between gap-2 shadow-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{driveFeedback}</span>
+          </div>
+          <button
+            onClick={() => setDriveFeedback(null)}
+            className="text-[11px] underline opacity-70 hover:opacity-100 cursor-pointer"
+          >
+            fechar
+          </button>
+        </div>
+      )}
 
       {/* Draft Editor Modal / Drawer */}
       {isDraftEditorOpen && (

@@ -26,6 +26,7 @@ import { getCurrentUser, logoutUser, UserProfile } from "../lib/auth-state";
 import { analyzeAndDiagramEditorialText, EditorialAnalysisResult } from "../lib/ai-service";
 import { formatPageNumber, countWords, getEffectiveArticlePageSpan, calculateRequiredArticlePages } from "../lib/magazine-utils";
 import { RepositoryDocument } from "../types/magazine";
+import { getGoogleDriveStatus } from "../lib/google-drive-sync";
 import {
   Sparkles,
   BookOpen,
@@ -85,6 +86,19 @@ function Index() {
   const [isMockupStudioOpen, setIsMockupStudioOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
+  const [isDriveConnected, setIsDriveConnected] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return getGoogleDriveStatus().isConnected;
+  });
+
+  useEffect(() => {
+    const handleGdriveStatus = () => {
+      setIsDriveConnected(getGoogleDriveStatus().isConnected);
+    };
+    window.addEventListener("montanha-gdrive-status-changed", handleGdriveStatus);
+    return () => window.removeEventListener("montanha-gdrive-status-changed", handleGdriveStatus);
+  }, []);
+
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
 
   // Editions Archive Count State
@@ -138,7 +152,13 @@ function Index() {
     setSaveStatus("Salvando...");
     const timer = setTimeout(() => {
       syncProjectToCloud(project).then((res) => {
-        setSaveStatus(res?.success ? "Nuvem Sincronizada" : "Salvo Localmente");
+        if (res?.mode === "google-drive") {
+          setSaveStatus("Drive Sincronizado");
+        } else if (res?.success) {
+          setSaveStatus("Nuvem Sincronizada");
+        } else {
+          setSaveStatus("Salvo Localmente");
+        }
       });
     }, 1000);
 
@@ -430,16 +450,32 @@ function Index() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Cloud Sync Status (Only cloud icon) */}
+          {/* Cloud Sync Status */}
           <Button
             size="sm"
             data-testid="btn-open-cloud-sync"
             onClick={() => setIsCloudSyncOpen(true)}
-            className="h-8 sm:h-9 px-2.5 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer"
-            title={saveStatus ? `Sincronização em Nuvem: ${saveStatus}` : "Sincronização em Nuvem & Compartilhamento"}
+            className="h-8 sm:h-9 px-2.5 theme-app-card hover:opacity-90 border-2 border-current font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer relative"
+            title={
+              isDriveConnected
+                ? `Google Drive Conectado em Tempo Real — ${saveStatus}`
+                : saveStatus
+                ? `Sincronização em Nuvem: ${saveStatus}`
+                : "Sincronização em Nuvem & Compartilhamento"
+            }
             aria-label="Sincronização em Nuvem"
           >
             <Cloud className="w-4 h-4 text-amber-500" />
+            {isDriveConnected ? (
+              <span className="flex items-center gap-1 font-mono text-[9px] text-emerald-600 dark:text-emerald-400 font-black uppercase hidden sm:inline-flex">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Drive Conectado
+              </span>
+            ) : (
+              <span className="text-[10px] font-mono hidden md:inline opacity-70">
+                {saveStatus}
+              </span>
+            )}
           </Button>
 
           {/* Gerador de Mockups de Divulgação com IA */}

@@ -22,6 +22,10 @@ import {
   ExternalLink,
   Key,
   AlertCircle,
+  FolderOpen,
+  RefreshCw,
+  LogOut,
+  FolderSync,
 } from "lucide-react";
 import {
   syncProjectToCloud,
@@ -30,6 +34,17 @@ import {
   importProjectFromFile,
   generateShareUrl,
 } from "../../lib/cloud-sync";
+import {
+  getGoogleDriveStatus,
+  connectGoogleDrive,
+  disconnectGoogleDrive,
+  syncProjectToGoogleDrive,
+  fetchProjectFromGoogleDrive,
+  pullNewTextsFromGoogleDrive,
+  getGoogleDriveFolderUrl,
+  GoogleDriveStatus,
+  DEDICATED_FOLDER_NAME,
+} from "../../lib/google-drive-sync";
 
 interface CloudSyncDialogProps {
   isOpen: boolean;
@@ -53,6 +68,14 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
   const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
   const [qrError, setQrError] = useState<boolean>(false);
 
+  // Google Drive State
+  const [driveStatus, setDriveStatus] = useState<GoogleDriveStatus>(() => getGoogleDriveStatus());
+  const [isConnectingDrive, setIsConnectingDrive] = useState<boolean>(false);
+  const [isSyncingDrive, setIsSyncingDrive] = useState<boolean>(false);
+  const [isPullingDrive, setIsPullingDrive] = useState<boolean>(false);
+  const [driveMessage, setDriveMessage] = useState<string | null>(null);
+  const [driveError, setDriveError] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -61,14 +84,133 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
       if (savedCode) {
         setSyncCode(savedCode.toUpperCase());
       }
+      setDriveStatus(getGoogleDriveStatus());
     }
   }, [isOpen]);
+
+  // Escutar eventos de sincronização do Google Drive
+  useEffect(() => {
+    const handleStatusChanged = () => {
+      setDriveStatus(getGoogleDriveStatus());
+    };
+    window.addEventListener("montanha-gdrive-status-changed", handleStatusChanged);
+    return () => window.removeEventListener("montanha-gdrive-status-changed", handleStatusChanged);
+  }, []);
 
   const cleanCode = (syncCode || "MONTANHA").trim().toUpperCase();
   const shareUrl = typeof window !== "undefined" ? generateShareUrl(cleanCode) : "";
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(
     shareUrl
   )}&bgcolor=FFFFFF&color=000000&margin=2`;
+
+  // --- Handlers do Google Drive ---
+  const handleConnectDrive = async () => {
+    setIsConnectingDrive(true);
+    setDriveMessage(null);
+    setDriveError(null);
+    try {
+      const res = await connectGoogleDrive();
+      if (res.success) {
+        setDriveMessage(
+          `✓ Conectado ao Google Drive com sucesso (${res.email})! Pasta dedicada: "${DEDICATED_FOLDER_NAME}". Sincronizando acervo...`
+        );
+        // Sincronizar imediatamente o projeto atual e os documentos
+        const syncRes = await syncProjectToGoogleDrive(project);
+        if (syncRes.success) {
+          setDriveMessage(
+            `✓ Conectado (${res.email}) e acervo salvo na pasta "${DEDICATED_FOLDER_NAME}" no seu Google Drive!`
+          );
+        }
+      } else {
+        setDriveError(res.error || "Falha ao conectar com o Google Drive.");
+      }
+    } catch (err: any) {
+      setDriveError(err?.message || "Erro inesperado ao autenticar com o Google.");
+    } finally {
+      setIsConnectingDrive(false);
+      setDriveStatus(getGoogleDriveStatus());
+    }
+  };
+
+  const handleDisconnectDrive = () => {
+    if (window.confirm("Deseja desconectar sua conta do Google Drive deste dispositivo?")) {
+      disconnectGoogleDrive();
+      setDriveStatus(getGoogleDriveStatus());
+      setDriveMessage("Google Drive desconectado deste navegador.");
+    }
+  };
+
+  const handleSyncDriveNow = async () => {
+    setIsSyncingDrive(true);
+    setDriveMessage(null);
+    setDriveError(null);
+    try {
+      const res = await syncProjectToGoogleDrive(project);
+      if (res.success) {
+        const timeStr = new Date().toLocaleTimeString("pt-BR");
+        setDriveMessage(
+          `✓ Sincronizado com o Google Drive às ${timeStr}! Todos os ${project.contentRepository?.length || 0} textos do acervo e a revista estão salvos na pasta "${DEDICATED_FOLDER_NAME}".`
+        );
+      } else {
+        setDriveError(res.error || "Falha ao salvar no Google Drive.");
+      }
+    } catch (err: any) {
+      setDriveError(err?.message || "Erro ao sincronizar com o Drive.");
+    } finally {
+      setIsSyncingDrive(false);
+      setDriveStatus(getGoogleDriveStatus());
+    }
+  };
+
+  const handlePullFromDrive = async () => {
+    setIsPullingDrive(true);
+    setDriveMessage(null);
+    setDriveError(null);
+    try {
+      // 1. Puxar projeto mestre se disponível
+      const projRes = await fetchProjectFromGoogleDrive();
+      let currentProj = project;
+      let projUpdated = false;
+      if (projRes.project && Array.isArray(projRes.project.articles)) {
+        currentProj = projRes.project;
+        projUpdated = true;
+      }
+
+      // 2. Puxar novos arquivos .txt / .md soltos na pasta do Drive
+      const textsRes = await pullNewTextsFromGoogleDrive(currentProj.contentRepository || []);
+      let updatedDocsList = [...(currentProj.contentRepository || [])];
+
+      if (textsRes.updatedDocs.length > 0) {
+        const updateMap = new Map(textsRes.updatedDocs.map((d) => [d.id, d]));
+        updatedDocsList = updatedDocsList.map((d) => updateMap.get(d.id) || d);
+      }
+
+      if (textsRes.newDocs.length > 0) {
+        updatedDocsList = [...textsRes.newDocs, ...updatedDocsList];
+      }
+
+      if (textsRes.newDocs.length > 0 || textsRes.updatedDocs.length > 0 || projUpdated) {
+        const finalProj: MagazineProject = {
+          ...currentProj,
+          contentRepository: updatedDocsList,
+          updatedAt: new Date().toISOString(),
+        };
+        onUpdateProject(finalProj);
+        setDriveMessage(
+          `✓ Recuperado do Google Drive: ${textsRes.newDocs.length} novo(s) texto(s) adicionado(s), ${textsRes.updatedDocs.length} atualizado(s).${
+            projUpdated ? " Edição mestre sincronizada." : ""
+          }`
+        );
+      } else {
+        setDriveMessage(`✓ Pasta no Google Drive verificada: Todos os textos e o projeto já estão em dia.`);
+      }
+    } catch (err: any) {
+      setDriveError(err?.message || "Falha ao recuperar dados do Google Drive.");
+    } finally {
+      setIsPullingDrive(false);
+      setDriveStatus(getGoogleDriveStatus());
+    }
+  };
 
   const handleManualPushToCloud = async () => {
     setIsSyncing(true);
@@ -180,6 +322,140 @@ export const CloudSyncDialog: React.FC<CloudSyncDialogProps> = ({
         )}
 
         <div className="space-y-4 my-2">
+          {/* SEÇÃO PRINCIPAL: GOOGLE DRIVE (TEMPO REAL E PASTA DEDICADA) */}
+          <div className="theme-app-card p-4 rounded-xl border-2 space-y-3 shadow-md bg-amber-500/5 border-amber-500/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/30 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-400 text-black flex items-center justify-center font-black border border-black shadow-xs">
+                  <FolderSync className="w-4 h-4 text-black" />
+                </div>
+                <div>
+                  <h4 className="font-black text-xs uppercase tracking-tight flex items-center gap-1.5">
+                    <span>Google Drive — Pasta Dedicada em Tempo Real</span>
+                  </h4>
+                  <p className="text-[10px] opacity-75">
+                    Pasta: <strong className="text-amber-500 font-mono">📁 {DEDICATED_FOLDER_NAME}</strong>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {driveStatus.isConnected ? (
+                  <span className="inline-flex items-center gap-1.5 font-mono text-[9px] font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500 uppercase shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    CONECTADO ({driveStatus.email || "OK"})
+                  </span>
+                ) : (
+                  <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-400 uppercase">
+                    NÃO CONECTADO
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {driveMessage && (
+              <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="leading-snug">{driveMessage}</span>
+              </div>
+            )}
+
+            {driveError && (
+              <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/40 text-red-700 dark:text-red-300 text-xs font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span className="leading-snug">{driveError}</span>
+              </div>
+            )}
+
+            <div className="text-xs space-y-2">
+              <p className="opacity-90 leading-snug">
+                Sincroniza todos os textos, matérias e projetos diretamente na sua pasta do Google Drive. Cada texto fica salvo como arquivo Markdown legível (<code className="font-mono bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded text-[11px]">[Acervo] Titulo.md</code>) para você abrir, editar ou compartilhar em qualquer dispositivo e plataforma.
+              </p>
+
+              {driveStatus.isConnected ? (
+                <div className="space-y-3 pt-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleSyncDriveNow}
+                      disabled={isSyncingDrive}
+                      className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black shrink-0 cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                      {isSyncingDrive ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 text-black" />}
+                      <span>Salvar / Sincronizar no Drive</span>
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handlePullFromDrive}
+                      disabled={isPullingDrive}
+                      className="h-8 font-black text-xs border-2 shrink-0 cursor-pointer flex items-center gap-1.5 hover:bg-amber-400/20"
+                    >
+                      {isPullingDrive ? <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" /> : <CloudDownload className="w-3.5 h-3.5 text-amber-500" />}
+                      <span>Puxar Textos do Drive</span>
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(getGoogleDriveFolderUrl(driveStatus.folderId), "_blank")}
+                      className="h-8 text-xs font-bold border-2 shrink-0 cursor-pointer flex items-center gap-1"
+                      title="Abrir pasta no Google Drive"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Abrir no Drive</span>
+                      <ExternalLink className="w-3 h-3 opacity-60" />
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleDisconnectDrive}
+                      className="h-8 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500/10 cursor-pointer flex items-center gap-1 ml-auto"
+                      title="Desconectar conta Google"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Desconectar</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-2">
+                  <Button
+                    onClick={handleConnectDrive}
+                    disabled={isConnectingDrive}
+                    className="h-9 bg-black hover:bg-zinc-900 text-amber-400 font-black text-xs border-2 border-black shadow-sm cursor-pointer flex items-center gap-2"
+                  >
+                    {isConnectingDrive ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                    ) : (
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                        />
+                      </svg>
+                    )}
+                    <span>Conectar com Google Drive</span>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* 1. Direct Transfer via QR Code (Instant 1-Click for Mobile) */}
           <div className="theme-app-card p-4 rounded-xl border-2 space-y-3 shadow-sm bg-amber-400/5">
             <div className="flex items-center justify-between border-b pb-2">

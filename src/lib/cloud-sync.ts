@@ -1,5 +1,10 @@
 import { MagazineProject } from "../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT } from "./sample-data";
+import {
+  syncProjectToGoogleDrive,
+  fetchProjectFromGoogleDrive,
+  getValidGoogleAccessToken,
+} from "./google-drive-sync";
 
 const LOCAL_STORAGE_KEY = "montanha_magazine_project";
 const LOCAL_STORAGE_TIMESTAMP_KEY = "montanha_last_saved_at";
@@ -64,7 +69,25 @@ export async function syncProjectToCloud(
     console.warn("Aviso ao sincronizar via /api/project:", err);
   }
 
-  // 3. Backup direto na nuvem persistente (redundância para tráfego multi-borda)
+  // 3. Sincronização em Tempo Real com o Google Drive (se conectado)
+  const gdToken = getValidGoogleAccessToken();
+  if (gdToken) {
+    try {
+      const gdRes = await syncProjectToGoogleDrive(projectWithTimestamp);
+      if (gdRes.success) {
+        return {
+          success: true,
+          syncedAt: now,
+          code,
+          mode: "google-drive",
+        };
+      }
+    } catch (gdErr) {
+      console.warn("Aviso ao sincronizar com Google Drive:", gdErr);
+    }
+  }
+
+  // 4. Backup direto na nuvem persistente (redundância para tráfego multi-borda)
   try {
     const cloudRes = await fetch(CLOUD_API_URL, {
       method: "PUT",
@@ -202,7 +225,34 @@ export async function loadLatestProject(): Promise<MagazineProject> {
     return urlProject;
   }
 
-  // 3. Prioridade 3: Cache do localStorage deste dispositivo
+  // 3. Prioridade 3: Sincronização em Nuvem com Google Drive (se conectado)
+  const gdToken = getValidGoogleAccessToken();
+  if (gdToken) {
+    try {
+      const gdRes = await fetchProjectFromGoogleDrive();
+      if (gdRes?.project && Array.isArray(gdRes.project.articles)) {
+        const gdProj = normalizeProject(gdRes.project);
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        let localTimestamp = 0;
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            localTimestamp = new Date(parsed.updatedAt || 0).getTime();
+          } catch {}
+        }
+        const gdTimestamp = new Date(gdProj.updatedAt || gdRes.syncedAt || 0).getTime();
+
+        if (gdTimestamp >= localTimestamp) {
+          saveToLocalCache(gdProj, "MONTANHA");
+          return gdProj;
+        }
+      }
+    } catch (gdErr) {
+      console.warn("Aviso ao carregar do Google Drive no boot:", gdErr);
+    }
+  }
+
+  // 4. Prioridade 4: Cache do localStorage deste dispositivo
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try {
@@ -215,7 +265,7 @@ export async function loadLatestProject(): Promise<MagazineProject> {
     }
   }
 
-  // 4. Fallback padrão
+  // 5. Fallback padrão
   return INITIAL_MAGAZINE_PROJECT;
 }
 
