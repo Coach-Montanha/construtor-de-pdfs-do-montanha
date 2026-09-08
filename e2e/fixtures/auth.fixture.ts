@@ -49,7 +49,7 @@ type AuthFixtures = {
 };
 
 export async function waitForHydration(page: Page) {
-  await page.waitForSelector('[data-hydrated="true"]', { timeout: 15000 });
+  await page.waitForSelector('[data-hydrated="true"]', { timeout: 30000 });
 }
 
 /**

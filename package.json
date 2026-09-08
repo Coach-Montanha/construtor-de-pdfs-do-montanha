@@ -12,7 +12,11 @@
     "format": "prettier --write .",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "aas:search": "bun run scripts/aas-catalog.ts search",
+    "aas:get": "bun run scripts/aas-catalog.ts get",
+    "aas:install": "bun run scripts/aas-catalog.ts install",
+    "aas:mcp": "bun run scripts/aas-mcp-server.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
