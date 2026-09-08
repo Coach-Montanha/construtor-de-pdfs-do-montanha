@@ -137,12 +137,18 @@ function Index() {
 
   // Initial Load from Cloud API / URL / Local Storage
   useEffect(() => {
-    loadLatestProject().then((loaded) => {
-      if (loaded) {
-        setProject(loaded);
-      }
-      setIsInitialLoaded(true);
-    });
+    loadLatestProject()
+      .then((loaded) => {
+        if (loaded) {
+          setProject(loaded);
+        }
+      })
+      .catch((err) => {
+        console.warn("Erro ao carregar projeto inicial:", err);
+      })
+      .finally(() => {
+        setIsInitialLoaded(true);
+      });
   }, []);
 
   // Sync project to Cloud + LocalStorage on every modification

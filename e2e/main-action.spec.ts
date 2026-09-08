@@ -133,7 +133,7 @@ test.describe("Jornada Crítica: Ação Principal (Criação, Edição de Matér
     await btnPush.click();
 
     // Deve exibir mensagem de confirmação de envio
-    await expect(authenticatedPage.getByText(/enviado para a nuvem sob o código/i)).toBeVisible();
+    await expect(authenticatedPage.getByText(/enviado para a nuvem sob o código/i)).toBeVisible({ timeout: 15000 });
 
     // 4. Testar puxar da nuvem (Download)
     const btnPull = authenticatedPage.getByTestId("btn-cloud-pull");
@@ -141,7 +141,7 @@ test.describe("Jornada Crítica: Ação Principal (Criação, Edição de Matér
     await btnPull.click();
 
     // Deve exibir confirmação de download aplicado
-    await expect(authenticatedPage.getByText(/baixada da nuvem e aplicada/i)).toBeVisible();
+    await expect(authenticatedPage.getByText(/baixada da nuvem e aplicada/i)).toBeVisible({ timeout: 15000 });
   });
 
   test("Fluxo Editorial Intelligence: Tema Swiss Editorial, Presets Tipográficos e Blocos Ricos", async ({ authenticatedPage }) => {

@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Montanha Magazine Studio - Construtor de PDFs" },
       { name: "description", content: "Construtor de Revistas Digitais, PDFs e Diagramação Editorial com Inteligência Artificial" },
       { name: "author", content: "Coach Montanha" },
-      { name: "theme-color", content: "#FACC15" },
+      { name: "theme-color", content: "#0B0F19" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
@@ -89,6 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Montanha Magazine Studio" },
       { property: "og:description", content: "Construtor de Revistas Digitais, PDFs e Diagramação Editorial com Inteligência Artificial" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/splash-mobile.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -100,8 +101,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", href: "/icons/icon-512.png", type: "image/png" },
       { rel: "icon", href: "/icons/icon.svg", type: "image/svg+xml" },
-      { rel: "apple-touch-icon", href: "/icons/icon.svg" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "shortcut icon", href: "/favicon.ico" },
     ],
   }),
@@ -118,6 +120,46 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        {/* Instantaneous First-Paint Luxury Editorial Preloader */}
+        <div id="app-preloader" aria-hidden="true">
+          <div className="preloader-emblem-wrap">
+            <div className="preloader-aura-ring"></div>
+            <div className="preloader-aura-ring-inner"></div>
+            <img
+              src="/icons/icon-512.png"
+              alt="Montanha Magazine Studio"
+              className="preloader-logo-img"
+              width={104}
+              height={104}
+              loading="eager"
+            />
+          </div>
+          <div className="preloader-title">MONTANHA</div>
+          <div className="preloader-subtitle">MAGAZINE STUDIO</div>
+          <div className="preloader-progress-track">
+            <div className="preloader-progress-bar"></div>
+          </div>
+        </div>
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              function dismiss(){
+                var p = document.getElementById('app-preloader');
+                if(p && !p.classList.contains('preloader-hidden')){
+                  p.classList.add('preloader-hidden');
+                }
+              }
+              if (document.readyState === 'complete') {
+                setTimeout(dismiss, 100);
+              } else {
+                window.addEventListener('load', function(){ setTimeout(dismiss, 100); });
+                setTimeout(dismiss, 1000);
+              }
+            })();`,
+          }}
+        />
+
         {children}
         <Scripts />
       </body>
@@ -127,6 +169,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Dismiss preloader smoothly once React is mounted & hydrated
+  useEffect(() => {
+    const preloader = document.getElementById("app-preloader");
+    if (preloader) {
+      const timer = setTimeout(() => {
+        preloader.classList.add("preloader-hidden");
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Register PWA Service Worker on client load
   useEffect(() => {
