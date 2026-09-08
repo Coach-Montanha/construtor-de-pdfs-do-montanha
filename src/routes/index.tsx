@@ -18,6 +18,7 @@ import { PwaInstallPrompt } from "../components/pwa/PwaInstallPrompt";
 import { ContentRepositoryView } from "../components/repository/ContentRepositoryView";
 import { ImportFromRepositoryModal } from "../components/repository/ImportFromRepositoryModal";
 import { AiApprovalModal } from "../components/repository/AiApprovalModal";
+import { PdfImportModal } from "../components/repository/PdfImportModal";
 import { AuthModal } from "../components/auth/AuthModal";
 import { SubscriptionModal } from "../components/subscription/SubscriptionModal";
 import { EditionsArchiveView } from "../components/archive/EditionsArchiveView";
@@ -85,6 +86,7 @@ function Index() {
   const [layoutMode, setLayoutMode] = useState<MagazineLayoutMode>("print");
   const [isMockupStudioOpen, setIsMockupStudioOpen] = useState<boolean>(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState<boolean>(false);
+  const [isPdfRouterOpen, setIsPdfRouterOpen] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("Sincronizado");
   const [isDriveConnected, setIsDriveConnected] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -494,6 +496,19 @@ function Index() {
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">Mockups com IA</span>
             <span className="sm:hidden">Mockup</span>
+          </Button>
+
+          {/* Importação Inteligente de PDFs com Router */}
+          <Button
+            size="sm"
+            data-testid="btn-header-pdf-import"
+            onClick={() => setIsPdfRouterOpen(true)}
+            className="h-8 sm:h-9 bg-zinc-950 text-amber-400 hover:bg-zinc-900 border-2 border-amber-400 font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+            title="Importar PDFs (artigos, revistas, protocolos) com o pdf-conversion-router"
+          >
+            <FileText className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden md:inline">Importar PDF</span>
+            <span className="md:hidden">PDF</span>
           </Button>
 
           <Button
@@ -1016,6 +1031,22 @@ function Index() {
         onImportWithAi={handleImportWithAiFromRepo}
         onImportDirect={handleImportDirectFromRepo}
         onNavigateToAcervo={() => setActiveTab("repository")}
+      />
+
+      <PdfImportModal
+        isOpen={isPdfRouterOpen}
+        onClose={() => setIsPdfRouterOpen(false)}
+        project={project}
+        onUpdateProject={(updated) => {
+          setProject(updated);
+          syncProjectToCloud(updated);
+        }}
+        onOpenArticleEditor={(art) => {
+          setEditingArticle(art);
+          setIsArticleModalOpen(true);
+        }}
+        onNavigateToViewer={() => setActiveTab("viewer")}
+        onSuccessMessage={(msg) => setSaveStatus(msg)}
       />
 
       <AiApprovalModal

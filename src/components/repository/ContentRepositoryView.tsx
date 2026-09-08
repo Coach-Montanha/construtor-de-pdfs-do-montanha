@@ -15,11 +15,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../ui/dialog";
-import {
-  analyzeAndDiagramEditorialText,
-  EditorialAnalysisResult,
-} from "../../lib/ai-service";
+import { analyzeAndDiagramEditorialText, EditorialAnalysisResult } from "../../lib/ai-service";
 import { AiApprovalModal } from "./AiApprovalModal";
+import { PdfImportModal } from "./PdfImportModal";
 import { countWords, calculateRequiredArticlePages } from "../../lib/magazine-utils";
 import {
   FolderOpen,
@@ -113,6 +111,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
   const [analysisResult, setAnalysisResult] = useState<EditorialAnalysisResult | null>(null);
   const [selectedSourceDoc, setSelectedSourceDoc] = useState<RepositoryDocument | null>(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState<boolean>(false);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState<boolean>(false);
   const [previewDoc, setPreviewDoc] = useState<RepositoryDocument | null>(null);
   const [docToDelete, setDocToDelete] = useState<RepositoryDocument | null>(null);
 
@@ -259,6 +258,12 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     if (!files || files.length === 0) return;
 
     const fileList = Array.from(files);
+    const hasPdf = fileList.some((f) => f.name.toLowerCase().endsWith(".pdf"));
+    if (hasPdf) {
+      setIsPdfModalOpen(true);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     const newDocsToAdd: RepositoryDocument[] = [];
     let processedCount = 0;
 
@@ -564,7 +569,7 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".txt,.md,.json,.doc,.docx"
+            accept=".txt,.md,.json,.doc,.docx,.pdf"
             onChange={handleFileUpload}
             className="hidden"
           />
@@ -620,12 +625,24 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
             </Button>
           )}
 
+          {/* Importação Inteligente de PDFs via pdf-conversion-router */}
+          <Button
+            onClick={() => setIsPdfModalOpen(true)}
+            className="h-9 bg-zinc-950 hover:bg-zinc-900 text-amber-400 hover:text-amber-300 font-black text-xs border-2 border-amber-400 shadow-sm cursor-pointer flex items-center gap-1.5"
+            title="Importar PDF Inteligente com classificação e roteamento de matérias"
+            data-testid="btn-open-pdf-router"
+          >
+            <FileText className="w-4 h-4 text-amber-400" />
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            <span>Importar PDF (Router)</span>
+          </Button>
+
           <Button
             onClick={() => fileInputRef.current?.click()}
             className="h-9 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black shadow-xs cursor-pointer flex items-center gap-1.5"
           >
             <Upload className="w-4 h-4 text-black" />
-            <span>Upload de Arquivos (.txt / .md)</span>
+            <span>Upload (.txt / .md)</span>
           </Button>
 
           <Button
@@ -1491,6 +1508,17 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
           handleApproveArticle(draftArticle, selectedSourceDoc?.id);
           onOpenArticleEditor(draftArticle);
         }}
+      />
+
+      {/* PDF Conversion Router Modal */}
+      <PdfImportModal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        project={project}
+        onUpdateProject={onUpdateProject}
+        onOpenArticleEditor={onOpenArticleEditor}
+        onNavigateToViewer={onNavigateToViewer}
+        onSuccessMessage={(msg) => setDriveFeedback(msg)}
       />
 
       {/* Dialog de Confirmação de Exclusão do Acervo */}

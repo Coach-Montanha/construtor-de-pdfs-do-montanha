@@ -121,7 +121,7 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {/* Instantaneous First-Paint Luxury Editorial Preloader */}
-        <div id="app-preloader" aria-hidden="true">
+        <div id="app-preloader" aria-hidden="true" suppressHydrationWarning>
           <div className="preloader-emblem-wrap">
             <div className="preloader-aura-ring"></div>
             <div className="preloader-aura-ring-inner"></div>
