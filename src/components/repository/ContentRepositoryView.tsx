@@ -45,6 +45,7 @@ import {
   RefreshCw,
   CloudDownload,
   ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import {
   getArchivedEditions,
@@ -657,9 +658,19 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
 
       {/* Drive Feedback Alert Banner */}
       {driveFeedback && (
-        <div className="p-3 rounded-lg bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center justify-between gap-2 shadow-xs">
+        <div
+          className={`p-3 rounded-lg border-2 text-xs font-bold flex items-center justify-between gap-2 shadow-xs ${
+            driveFeedback.startsWith("Aviso") || driveFeedback.startsWith("Erro")
+              ? "bg-amber-500/15 border-amber-500/50 text-amber-900 dark:text-amber-200"
+              : "bg-emerald-500/10 border-emerald-500/40 text-emerald-800 dark:text-emerald-200"
+          }`}
+        >
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            {driveFeedback.startsWith("Aviso") || driveFeedback.startsWith("Erro") ? (
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            )}
             <span>{driveFeedback}</span>
           </div>
           <button

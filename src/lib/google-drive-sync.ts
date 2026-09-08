@@ -41,6 +41,7 @@ export const MASTER_PROJECT_FILENAME = "montanha_magazine_projeto.json";
 
 export interface GoogleDriveStatus {
   isConnected: boolean;
+  isConfigured: boolean;
   email: string | null;
   folderId: string | null;
   folderName: string;
@@ -75,14 +76,25 @@ export function loadGoogleGisScript(): Promise<void> {
 }
 
 /**
+ * Verifica se um Client ID real e válido foi configurado pelo usuário
+ */
+export function isGoogleClientIdConfigured(): boolean {
+  if (typeof window === "undefined") return false;
+  const saved = localStorage.getItem(GD_CLIENT_ID_KEY);
+  return Boolean(
+    saved &&
+      saved.trim().length > 20 &&
+      saved.includes(".apps.googleusercontent.com") &&
+      !saved.includes("64581q4c5q2tpt3n67vh38d33194cksk")
+  );
+}
+
+/**
  * Obtém o Client ID configurado (salvo pelo usuário ou padrão)
  */
 export function getGoogleClientId(): string {
-  if (typeof window === "undefined") return DEFAULT_GOOGLE_CLIENT_ID;
-  return (
-    localStorage.getItem(GD_CLIENT_ID_KEY) ||
-    DEFAULT_GOOGLE_CLIENT_ID
-  );
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem(GD_CLIENT_ID_KEY) || "";
 }
 
 /**
@@ -90,7 +102,13 @@ export function getGoogleClientId(): string {
  */
 export function setGoogleClientId(clientId: string): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(GD_CLIENT_ID_KEY, clientId.trim());
+  const trimmed = clientId.trim();
+  if (trimmed) {
+    localStorage.setItem(GD_CLIENT_ID_KEY, trimmed);
+  } else {
+    localStorage.removeItem(GD_CLIENT_ID_KEY);
+  }
+  notifyStatusChanged();
 }
 
 /**
@@ -100,25 +118,28 @@ export function getGoogleDriveStatus(): GoogleDriveStatus {
   if (typeof window === "undefined") {
     return {
       isConnected: false,
+      isConfigured: false,
       email: null,
       folderId: null,
       folderName: DEDICATED_FOLDER_NAME,
       lastSync: null,
-      clientId: DEFAULT_GOOGLE_CLIENT_ID,
+      clientId: "",
     };
   }
 
   const token = localStorage.getItem(GD_TOKEN_KEY);
   const expiresAt = Number(localStorage.getItem(GD_EXPIRES_AT_KEY) || "0");
   const isExpired = Date.now() >= expiresAt;
+  const configured = isGoogleClientIdConfigured();
 
   return {
     isConnected: !!token && !isExpired,
+    isConfigured: configured,
     email: localStorage.getItem(GD_EMAIL_KEY),
     folderId: localStorage.getItem(GD_FOLDER_ID_KEY),
     folderName: DEDICATED_FOLDER_NAME,
     lastSync: localStorage.getItem(GD_LAST_SYNC_KEY),
-    clientId: getGoogleClientId(),
+    clientId: configured ? getGoogleClientId() : "",
   };
 }
 
@@ -160,9 +181,17 @@ export async function connectGoogleDrive(customClientId?: string): Promise<{
     };
   }
 
-  const clientId = (customClientId || getGoogleClientId()).trim();
+  const clientId = (
+    customClientId ||
+    (isGoogleClientIdConfigured() ? getGoogleClientId() : "")
+  ).trim();
+
   if (!clientId) {
-    return { success: false, error: "Google Client ID não informado." };
+    return {
+      success: false,
+      error:
+        "O Google Drive requer uma chave de cliente (OAuth Client ID) do Google Cloud Console. Para sincronizar agora sem precisar criar chaves no Google Cloud, utilize a Sincronização Direta em Nuvem (1-Clique via QR Code / Código) logo abaixo!",
+    };
   }
 
   return new Promise((resolve) => {
