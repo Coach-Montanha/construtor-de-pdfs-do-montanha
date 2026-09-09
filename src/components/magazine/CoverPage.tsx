@@ -78,17 +78,17 @@ export const CoverPage: React.FC<CoverPageProps> = ({
           style={{ borderColor: `${coverPrimary}30` }}
         >
           <div
-            className="w-full flex items-center justify-between text-[9px] font-mono font-black uppercase"
+            className="w-full flex items-center justify-between text-[8.5px] font-mono font-black uppercase whitespace-nowrap flex-nowrap gap-2"
             style={{ color: mobileMuted }}
           >
             <span
-              className="px-2 py-0.5 rounded font-bold"
+              className="px-2 py-0.5 rounded font-bold whitespace-nowrap shrink-0"
               style={{ backgroundColor: coverBadgeBg, color: coverBadgeTextColor }}
             >
               {coverConfig.issueBadge || "MOBILE EDITION"}
             </span>
-            <span>{coverConfig.issueDate || project.date}</span>
-            <span>{coverConfig.priceBadge || "DIGITAL"}</span>
+            <span className="whitespace-nowrap shrink-0">{coverConfig.issueDate || project.date}</span>
+            <span className="whitespace-nowrap shrink-0">{coverConfig.priceBadge || "DIGITAL"}</span>
           </div>
 
           <h1
@@ -248,16 +248,16 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         />
 
         {/* Top Header Grid */}
-        <div className="absolute top-[2.5%] inset-x-[4%] flex justify-between items-center z-20">
+        <div className="absolute top-[2.5%] inset-x-[4%] flex justify-between items-center z-20 whitespace-nowrap flex-nowrap gap-2">
           <div
-            className="bg-[#111] text-white font-extrabold px-3 py-1 uppercase shadow-md flex items-center gap-1.5"
+            className="bg-[#111] text-white font-extrabold px-3 py-1 uppercase shadow-md flex items-center gap-1.5 whitespace-nowrap shrink-0"
             style={{ fontSize: `${9.5 * scale}pt` }}
           >
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>{coverConfig.issueBadge || "PRO EDITION"}</span>
+            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+            <span className="whitespace-nowrap">{coverConfig.issueBadge || "PRO EDITION"}</span>
           </div>
           <div
-            className="font-extrabold uppercase text-[#111] tracking-wider"
+            className="font-extrabold uppercase text-[#111] tracking-wider whitespace-nowrap shrink-0"
             style={{ fontSize: `${9.5 * scale}pt` }}
           >
             {coverConfig.issueDate || "SETEMBRO 2026"}
@@ -444,35 +444,39 @@ export const CoverPage: React.FC<CoverPageProps> = ({
         {/* Top Header Bar / Masthead Section */}
         <div className="relative z-10 p-4 sm:p-5 md:p-6 flex flex-col items-center">
           {/* Top Metadata Strip */}
-          <div className="w-full flex items-center justify-between border-b border-[#171e2c] pb-2 text-[9px] sm:text-[10px] font-medium text-[#9ea6b6]">
-            <div className="flex items-center gap-2">
+          <div className="w-full flex items-center justify-between border-b border-[#171e2c] pb-2 text-[8.5px] sm:text-[9.5px] font-medium text-[#9ea6b6] whitespace-nowrap flex-nowrap gap-2 overflow-hidden select-none">
+            <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
               {/* Pill Badge with Purple-to-Magenta Gradient + Inset Highlight */}
               <div
-                className="px-3 py-1 font-bold text-[8.5px] uppercase text-white flex items-center gap-1.5 shadow-md"
+                className="px-3 py-1 font-bold text-[8.5px] uppercase text-white flex items-center gap-1.5 shadow-md whitespace-nowrap shrink-0"
                 style={{
                   background: "linear-gradient(90deg, #6958e2 20%, #7317d5)",
                   borderRadius: "999px",
                   boxShadow: "inset 0 -3px 6px rgba(255, 255, 255, 0.35)",
                 }}
               >
-                <Zap className="w-3 h-3 text-white fill-white" />
-                <span>{resolvedHexBadge}</span>
+                <Zap className="w-3 h-3 text-white fill-white shrink-0" />
+                <span className="whitespace-nowrap leading-none">{resolvedHexBadge}</span>
               </div>
-              <span className="hidden sm:inline text-xs text-[#eaeaea] font-semibold">
-                {coverConfig.issueBadge}
-              </span>
+              {coverConfig.issueBadge && (
+                <span className="text-xs text-[#eaeaea] font-semibold whitespace-nowrap shrink-0">
+                  {coverConfig.issueBadge}
+                </span>
+              )}
             </div>
-            <span className="text-[#9ea6b6]">{coverConfig.issueDate}</span>
-            <span
-              className="px-2.5 py-0.5 rounded-full text-[8.5px] font-medium border border-[#171e2c]"
-              style={{
-                backgroundColor: "rgba(234, 234, 234, 0.04)",
-                color: "#eaeaea",
-                boxShadow: "inset 0 -2px 4px rgba(255, 255, 255, 0.15)",
-              }}
-            >
-              {coverConfig.priceBadge || "Edição Digital"}
-            </span>
+            <span className="text-[#9ea6b6] whitespace-nowrap shrink-0">{coverConfig.issueDate}</span>
+            {coverConfig.priceBadge && (
+              <span
+                className="px-2.5 py-0.5 rounded-full text-[8.5px] font-medium border border-[#171e2c] whitespace-nowrap shrink-0"
+                style={{
+                  backgroundColor: "rgba(234, 234, 234, 0.04)",
+                  color: "#eaeaea",
+                  boxShadow: "inset 0 -2px 4px rgba(255, 255, 255, 0.15)",
+                }}
+              >
+                {coverConfig.priceBadge}
+              </span>
+            )}
           </div>
 
           {/* Masthead Logo */}
@@ -701,27 +705,31 @@ export const CoverPage: React.FC<CoverPageProps> = ({
       {/* Top Header Bar / Masthead Section */}
       <div className="relative z-10 p-4 sm:p-5 md:p-6 flex flex-col items-center">
         {/* Top Metadata Strip */}
-        <div className="w-full flex items-center justify-between border-b-2 border-white/20 pb-1.5 text-[9px] sm:text-[10px] font-mono font-bold tracking-widest uppercase text-slate-200">
-          <div className="flex items-center gap-2">
+        <div className="w-full flex items-center justify-between border-b-2 border-white/20 pb-1.5 text-[8.5px] sm:text-[9.5px] font-mono font-bold tracking-wider uppercase text-slate-200 whitespace-nowrap flex-nowrap gap-2 overflow-hidden select-none">
+          <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             {/* Hexagon / Tactical Badge */}
             <div
-              className="px-2 py-0.5 font-black text-[9px] tracking-tight uppercase rounded-sm flex items-center gap-1 shadow-sm"
+              className="px-2 py-0.5 font-black text-[8.5px] tracking-tight uppercase rounded-sm flex items-center gap-1 shadow-sm whitespace-nowrap shrink-0"
               style={{ backgroundColor: coverBadgeBg, color: coverBadgeTextColor }}
             >
-              <Zap className="w-3 h-3 fill-current" style={{ color: coverBadgeTextColor }} />
-              <span>{resolvedHexBadge}</span>
+              <Zap className="w-3 h-3 fill-current shrink-0" style={{ color: coverBadgeTextColor }} />
+              <span className="whitespace-nowrap leading-none">{resolvedHexBadge}</span>
             </div>
-            <span className="hidden sm:inline font-bold" style={{ color: coverPrimary }}>
-              {coverConfig.issueBadge}
-            </span>
+            {coverConfig.issueBadge && (
+              <span className="font-bold whitespace-nowrap shrink-0" style={{ color: coverPrimary }}>
+                {coverConfig.issueBadge}
+              </span>
+            )}
           </div>
-          <span className="text-white font-mono">{coverConfig.issueDate}</span>
-          <span
-            className="border px-2 py-0.5 rounded text-[8.5px] font-mono font-bold"
-            style={{ backgroundColor: "rgba(15,23,42,0.9)", borderColor: coverPrimary, color: coverPrimary }}
-          >
-            {coverConfig.priceBadge}
-          </span>
+          <span className="text-white font-mono whitespace-nowrap shrink-0">{coverConfig.issueDate}</span>
+          {coverConfig.priceBadge && (
+            <span
+              className="border px-2 py-0.5 rounded text-[8px] sm:text-[8.5px] font-mono font-bold whitespace-nowrap shrink-0"
+              style={{ backgroundColor: "rgba(15,23,42,0.9)", borderColor: coverPrimary, color: coverPrimary }}
+            >
+              {coverConfig.priceBadge}
+            </span>
+          )}
         </div>
 
         {/* Masthead Logo */}
