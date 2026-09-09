@@ -468,35 +468,61 @@ export const CoverCustomizer: React.FC<CoverCustomizerProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-          <div>
-            <Label className="text-xs font-bold">BADGE DE EDIÇÃO</Label>
-            <Input
-              value={coverConfig.issueBadge}
-              onChange={(e) => updateField("issueBadge", e.target.value.toUpperCase())}
-              placeholder="Ex: EDIÇÃO ESPECIAL // Nº 01"
-              className="theme-app-input font-mono text-xs mt-1 border-2"
-            />
+        {/* Faixa Superior de Metadados da Capa (Top Metadata Strip) */}
+        <div className="p-3.5 rounded-xl bg-amber-400/5 border-2 border-amber-500/30 space-y-3">
+          <div className="flex items-center gap-1.5 text-xs font-black uppercase text-amber-600 dark:text-amber-400">
+            <Zap className="w-4 h-4" />
+            <span>Faixa Superior de Metadados da Capa (Top Metadata Strip)</span>
           </div>
 
-          <div>
-            <Label className="text-xs font-bold">SELO DE PREÇO / CATEGORIA</Label>
-            <Input
-              value={coverConfig.priceBadge}
-              onChange={(e) => updateField("priceBadge", e.target.value.toUpperCase())}
-              placeholder="Ex: EDIÇÃO PREMIUM"
-              className="theme-app-input font-mono text-xs mt-1 border-2"
-            />
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <Label className="text-xs font-bold flex items-center gap-1">
+                <Zap className="w-3 h-3 text-amber-500" />
+                <span>VOLUME & ISSUE (TAG ⚡)</span>
+              </Label>
+              <Input
+                data-testid="input-cover-hex-badge"
+                value={coverConfig.hexBadgeText ?? ""}
+                onChange={(e) => updateField("hexBadgeText", e.target.value.toUpperCase())}
+                placeholder="Ex: VOL. 01 // ISSUE 01"
+                className="theme-app-input font-mono text-xs mt-1 border-2"
+              />
+              <p className="text-[10px] opacity-60 mt-0.5">Selo com raio no topo da capa</p>
+            </div>
 
-          <div>
-            <Label className="text-xs font-bold">DATA DE LANÇAMENTO</Label>
-            <Input
-              value={coverConfig.issueDate}
-              onChange={(e) => updateField("issueDate", e.target.value.toUpperCase())}
-              placeholder="Ex: SETEMBRO 2026"
-              className="theme-app-input font-mono text-xs mt-1 border-2"
-            />
+            <div>
+              <Label className="text-xs font-bold">BADGE DE EDIÇÃO</Label>
+              <Input
+                value={coverConfig.issueBadge}
+                onChange={(e) => updateField("issueBadge", e.target.value.toUpperCase())}
+                placeholder="Ex: EDIÇÃO #02"
+                className="theme-app-input font-mono text-xs mt-1 border-2"
+              />
+              <p className="text-[10px] opacity-60 mt-0.5">Ex: EDIÇÃO #02</p>
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold">DATA DE LANÇAMENTO</Label>
+              <Input
+                value={coverConfig.issueDate}
+                onChange={(e) => updateField("issueDate", e.target.value.toUpperCase())}
+                placeholder="Ex: SETEMBRO 2026"
+                className="theme-app-input font-mono text-xs mt-1 border-2"
+              />
+              <p className="text-[10px] opacity-60 mt-0.5">Mês e ano da edição</p>
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold">SELO DE PREÇO / CATEGORIA</Label>
+              <Input
+                value={coverConfig.priceBadge}
+                onChange={(e) => updateField("priceBadge", e.target.value.toUpperCase())}
+                placeholder="Ex: EDIÇÃO PREMIER"
+                className="theme-app-input font-mono text-xs mt-1 border-2"
+              />
+              <p className="text-[10px] opacity-60 mt-0.5">Ex: EDIÇÃO PREMIER</p>
+            </div>
           </div>
         </div>
 

@@ -44,6 +44,13 @@ export const CoverPage: React.FC<CoverPageProps> = ({
   const effectiveLayoutMode = layoutMode || project.layoutMode || "print";
   const isMobile = effectiveLayoutMode === "mobile";
 
+  // Texto dinâmico da tag superior da capa (Vol & Issue)
+  const resolvedHexBadge =
+    coverConfig.hexBadgeText ||
+    (project.volume
+      ? `${project.volume} // ISSUE ${project.editionNumber || "01"}`
+      : "VOL. 01 // ISSUE 01");
+
   /* -------------------------------------------------------------
    * VARIANT: MOBILE DIGITAL READER (Clean Vertical Flow, Separated Full-Width Image, Minimal Footer)
    * ------------------------------------------------------------- */
@@ -449,7 +456,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
                 }}
               >
                 <Zap className="w-3 h-3 text-white fill-white" />
-                <span>{coverConfig.hexBadgeText || coverConfig.issueBadge || "Edição Oficial"}</span>
+                <span>{resolvedHexBadge}</span>
               </div>
               <span className="hidden sm:inline text-xs text-[#eaeaea] font-semibold">
                 {coverConfig.issueBadge}
@@ -702,7 +709,7 @@ export const CoverPage: React.FC<CoverPageProps> = ({
               style={{ backgroundColor: coverBadgeBg, color: coverBadgeTextColor }}
             >
               <Zap className="w-3 h-3 fill-current" style={{ color: coverBadgeTextColor }} />
-              <span>{coverConfig.hexBadgeText || "VOL. 01 // ISSUE 01"}</span>
+              <span>{resolvedHexBadge}</span>
             </div>
             <span className="hidden sm:inline font-bold" style={{ color: coverPrimary }}>
               {coverConfig.issueBadge}

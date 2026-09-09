@@ -230,6 +230,7 @@ export function duplicateEditionForNextRelease(
       issueBadge: `EDIÇÃO #${nextNum}`,
       issueDate: nextDate.toUpperCase(),
       editionNumber: nextNum,
+      hexBadgeText: snapshot.volume ? `${snapshot.volume} // ISSUE ${nextNum}` : `VOL. 01 // ISSUE ${nextNum}`,
       mainHeadline:
         options?.mode === "clean-articles"
           ? "MANCHETE PRINCIPAL DA NOVA EDIÇÃO"

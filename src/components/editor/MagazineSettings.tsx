@@ -340,7 +340,21 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
             <Label className="text-xs font-bold uppercase">Número da Edição</Label>
             <Input
               value={project.editionNumber || ""}
-              onChange={(e) => onChange({ ...project, editionNumber: e.target.value })}
+              onChange={(e) => {
+                const newEd = e.target.value;
+                onChange({
+                  ...project,
+                  editionNumber: newEd,
+                  coverConfig: {
+                    ...project.coverConfig,
+                    editionNumber: newEd,
+                    issueBadge: newEd ? `EDIÇÃO #${newEd}` : project.coverConfig.issueBadge,
+                    hexBadgeText: project.volume
+                      ? `${project.volume} // ISSUE ${newEd || "01"}`
+                      : `VOL. 01 // ISSUE ${newEd || "01"}`,
+                  },
+                });
+              }}
               placeholder="Ex: 01"
               className="theme-app-input font-mono font-bold text-xs mt-1 border-2"
             />
@@ -350,7 +364,19 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
             <Label className="text-xs font-bold uppercase">Volume</Label>
             <Input
               value={project.volume || ""}
-              onChange={(e) => onChange({ ...project, volume: e.target.value })}
+              onChange={(e) => {
+                const newVol = e.target.value;
+                onChange({
+                  ...project,
+                  volume: newVol,
+                  coverConfig: {
+                    ...project.coverConfig,
+                    hexBadgeText: newVol
+                      ? `${newVol} // ISSUE ${project.editionNumber || "01"}`
+                      : `VOL. 01 // ISSUE ${project.editionNumber || "01"}`,
+                  },
+                });
+              }}
               placeholder="Ex: VOL. 01"
               className="theme-app-input font-mono font-bold text-xs mt-1 border-2"
             />
@@ -360,12 +386,25 @@ export const MagazineSettings: React.FC<MagazineSettingsProps> = ({
             <Label className="text-xs font-bold uppercase">Mês e Ano da Edição</Label>
             <Input
               value={project.date || ""}
-              onChange={(e) => onChange({ ...project, date: e.target.value.toUpperCase() })}
+              onChange={(e) => {
+                const newDate = e.target.value.toUpperCase();
+                onChange({
+                  ...project,
+                  date: newDate,
+                  coverConfig: {
+                    ...project.coverConfig,
+                    issueDate: newDate,
+                  },
+                });
+              }}
               placeholder="Ex: SETEMBRO 2026"
               className="theme-app-input font-mono font-bold text-xs mt-1 border-2"
             />
           </div>
         </div>
+        <p className="text-[11px] opacity-70 mt-2">
+          💡 <strong>Dica:</strong> Você também pode personalizar o texto exato da tag da capa (ex: <code className="font-mono bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded">VOL. 01 // ISSUE 01</code>) diretamente na aba <strong>"Capa & Contracapa da Revista"</strong>.
+        </p>
       </div>
 
       {/* 0. GERENCIADOR DE PÁGINAS ATIVAS & ESTRUTURA DO PDF */}
