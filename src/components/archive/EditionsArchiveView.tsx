@@ -38,7 +38,10 @@ import {
   Clock,
   Check,
   Palette,
+  LayoutGrid,
+  GitCommit,
 } from "lucide-react";
+import { Timeline, TimelineItem } from "../ui/timeline";
 
 interface EditionsArchiveViewProps {
   currentProject: MagazineProject;
@@ -50,6 +53,7 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
   onLoadEditionIntoStudio,
 }) => {
   const [editions, setEditions] = useState<ArchivedEdition[]>([]);
+  const [viewMode, setViewMode] = useState<"cards" | "timeline">("cards");
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [archiveNotes, setArchiveNotes] = useState("");
   const [archiveStatus, setArchiveStatus] = useState<"approved" | "published" | "archived">("approved");
@@ -246,16 +250,50 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
         </div>
       </div>
 
-      {/* Grid of Archived Editions */}
+      {/* Grid or Timeline of Archived Editions */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
-            <BookOpen className="w-4 h-4 text-amber-500" />
-            <span>Edições Aprovadas & Catalogadas ({editions.length})</span>
-          </h3>
-          <span className="text-[11px] opacity-75 font-mono">
-            Clique em "Reeditar" para carregar no estúdio
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-2">
+          <div className="flex items-center gap-2">
+            <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <BookOpen className="w-4 h-4 text-amber-500" />
+              <span>Edições Aprovadas & Catalogadas ({editions.length})</span>
+            </h3>
+            <span className="text-[11px] opacity-75 font-mono hidden sm:inline">
+              — Clique em "Reeditar" para carregar no estúdio
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold opacity-75 uppercase mr-1">Visualização:</span>
+            <div className="inline-flex rounded-lg border-2 border-zinc-800 p-0.5 bg-zinc-900">
+              <button
+                type="button"
+                data-testid="archive-view-cards"
+                onClick={() => setViewMode("cards")}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "cards"
+                    ? "bg-amber-400 text-black font-black shadow-xs"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Cards</span>
+              </button>
+              <button
+                type="button"
+                data-testid="archive-view-timeline"
+                onClick={() => setViewMode("timeline")}
+                className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "timeline"
+                    ? "bg-amber-400 text-black font-black shadow-xs"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <GitCommit className="w-3.5 h-3.5" />
+                <span>Linha do Tempo</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {editions.length === 0 ? (
@@ -273,6 +311,110 @@ export const EditionsArchiveView: React.FC<EditionsArchiveViewProps> = ({
               Aprovar Edição Atual Agora
             </Button>
           </div>
+        ) : viewMode === "timeline" ? (
+          <Timeline
+            items={editions.map((edition) => ({
+              id: edition.id,
+              date: edition.date,
+              title: `Edição #${edition.editionNumber} — ${edition.title}`,
+              subtitle: edition.subtitle || edition.mainHeadline,
+              status:
+                edition.status === "approved"
+                  ? "✓ Aprovada"
+                  : edition.status === "published"
+                  ? "● Publicada"
+                  : "Arquivada",
+              statusVariant:
+                edition.status === "approved"
+                  ? "success"
+                  : edition.status === "published"
+                  ? "info"
+                  : "neutral",
+              icon: BookOpen,
+              content: (
+                <div className="flex gap-4 pt-1 items-start">
+                  {edition.coverImage ? (
+                    <img
+                      src={edition.coverImage}
+                      alt={`Capa #${edition.editionNumber}`}
+                      className="w-16 h-22 object-cover rounded-lg border-2 border-zinc-700 shadow-sm shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-22 rounded-lg border-2 border-dashed border-zinc-700 flex flex-col items-center justify-center shrink-0 bg-amber-400/5">
+                      <BookOpen className="w-5 h-5 text-amber-500" />
+                      <span className="text-[8px] font-mono font-bold mt-1">ED. #{edition.editionNumber}</span>
+                    </div>
+                  )}
+                  <div className="space-y-1.5 text-xs flex-1 min-w-0">
+                    {edition.mainHeadline && (
+                      <p className="font-bold text-amber-500 italic">
+                        "{edition.mainHeadline}"
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5 font-mono text-[10px] opacity-80 pt-0.5">
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">
+                        {edition.totalPages} Págs A4
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">
+                        {edition.totalArticles} Matérias
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">
+                        {edition.totalWords} Palavras
+                      </span>
+                    </div>
+                    {edition.notes && (
+                      <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">
+                        <strong className="text-amber-400">Nota:</strong> {edition.notes}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ),
+              actions: (
+                <div className="flex items-center gap-2 w-full justify-between pt-1 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      onClick={() => handleLoadEdition(edition)}
+                      className="h-8 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs border-2 border-black cursor-pointer flex items-center gap-1 shadow-xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Reeditar no Estúdio</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleOpenNextEditionModal(edition)}
+                      className="h-8 font-bold text-xs border-2 cursor-pointer flex items-center gap-1"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Duplicar p/ Próxima</span>
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => exportProjectToFile(edition.projectSnapshot)}
+                      className="h-8 px-2 border-2 cursor-pointer"
+                      title="Baixar arquivo de backup (.JSON) desta edição"
+                    >
+                      <Download className="w-3.5 h-3.5 text-slate-300" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(edition)}
+                      className="h-8 px-2 text-red-400 hover:bg-red-950/40 border-2 cursor-pointer"
+                      title="Excluir edição"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ),
+            }))}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {editions.map((edition) => (

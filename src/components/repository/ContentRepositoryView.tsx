@@ -46,7 +46,12 @@ import {
   CloudDownload,
   ExternalLink,
   AlertCircle,
+  LayoutGrid,
+  Table as TableIcon,
+  Columns as KanbanViewIcon,
 } from "lucide-react";
+import { DataGrid, DataGridColumn, DataGridAction } from "../ui/data-grid";
+import { Kanban, KanbanColumnDef, KanbanItemDef } from "../ui/kanban";
 import {
   getArchivedEditions,
   getDocumentUsageTracker,
@@ -84,6 +89,8 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
   const [filterStatus, setFilterStatus] = useState<
     "all" | "unused" | "current" | "previous" | "draft" | "published"
   >("all");
+  const [repoViewMode, setRepoViewMode] = useState<"cards" | "table" | "kanban">("cards");
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
 
   // Edições Arquivadas & Controle de Pauta
   const [archivedEditions, setArchivedEditions] = useState<ArchivedEdition[]>([]);
@@ -544,6 +551,335 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
     }
   };
 
+  // Bulk Add Selected Documents to Magazine
+  const handleBulkAddToMagazine = (selectedItems: Array<{ doc: RepositoryDocument; tracker: DocumentUsageTracker }>) => {
+    const toAdd = selectedItems.filter((item) => !item.tracker.isInCurrentMagazine);
+    if (toAdd.length === 0) {
+      alert("Todos os textos selecionados já estão na revista atual.");
+      return;
+    }
+
+    const newArticles: Article[] = toAdd.map(({ doc }) => ({
+      id: "art-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5),
+      sourceDocId: doc.id,
+      title: doc.title,
+      subtitle: `Artigo do acervo editorial // ${doc.category || "Alta Performance"}.`,
+      category: doc.category || "MONTANHA METHOD",
+      author: "Coach Montanha",
+      authorBio: "Master Coach & Fundador",
+      authorPhoto: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=300&q=80",
+      heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+      heroImageCaption: "Foto editorial // Montanha Media",
+      content: doc.rawContent,
+      pullQuotes: [],
+      keyTakeaways: [],
+      layoutTemplate: doc.wordCount > 650 ? "editorial-lead" : "two-column-quote",
+      pageSpan: calculateRequiredArticlePages({
+        content: doc.rawContent,
+        heroImage: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80",
+      } as any),
+      quotePlacement: "end",
+      textDensity: "normal",
+      tags: [doc.category || "Geral", "Alta Performance"],
+      estimatedReadTime: Math.max(1, Math.round(doc.wordCount / 130)),
+      featuredOnCover: false,
+      enabled: true,
+    }));
+
+    const updatedArticles = [...project.articles, ...newArticles];
+    const addedDocIds = new Set(toAdd.map((item) => item.doc.id));
+    const updatedDocs = documents.map((d) =>
+      addedDocIds.has(d.id)
+        ? { ...d, status: "published" as const, updatedAt: new Date().toISOString() }
+        : d
+    );
+
+    onUpdateProject({
+      ...project,
+      articles: updatedArticles,
+      contentRepository: updatedDocs,
+      updatedAt: new Date().toISOString(),
+    });
+    setSelectedDocIds([]);
+    alert(`✓ ${toAdd.length} artigo(s) adicionado(s) à revista atual!`);
+  };
+
+  // Bulk Delete Selected Documents
+  const handleBulkDeleteDocs = (selectedItems: Array<{ doc: RepositoryDocument; tracker: DocumentUsageTracker }>) => {
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir ${selectedItems.length} documento(s) selecionado(s) do acervo?\nEsta ação não poderá ser desfeita.`
+      )
+    ) {
+      return;
+    }
+    const idsToDelete = new Set(selectedItems.map((item) => item.doc.id));
+    onUpdateProject({
+      ...project,
+      contentRepository: documents.filter((d) => !idsToDelete.has(d.id)),
+      updatedAt: new Date().toISOString(),
+    });
+    setSelectedDocIds([]);
+  };
+
+  // Kanban Move Item Handler
+  const handleKanbanMove = (docId: string, targetColId: string) => {
+    const item = docsWithTracker.find((d) => d.doc.id === docId);
+    if (!item) return;
+    const { doc, tracker } = item;
+
+    if (targetColId === "current") {
+      if (!tracker.isInCurrentMagazine) {
+        handleDirectAddToMagazine(doc);
+      }
+    } else if (targetColId === "unused") {
+      if (tracker.isInCurrentMagazine) {
+        handleRemoveFromMagazine(doc);
+      }
+    } else if (targetColId === "previous") {
+      if (tracker.isInCurrentMagazine) {
+        handleRemoveFromMagazine(doc);
+      }
+      const edNum = project.editionNumber || "01";
+      if (!(doc.publishedEditions || []).some((e) => e.editionNumber === edNum)) {
+        const updatedList = documents.map((d) =>
+          d.id === doc.id
+            ? {
+                ...d,
+                publishedEditions: [
+                  ...(d.publishedEditions || []),
+                  {
+                    editionNumber: edNum,
+                    editionTitle: `Edição #${edNum}`,
+                    isManual: true,
+                    publishedAt: new Date().toISOString(),
+                  },
+                ],
+                updatedAt: new Date().toISOString(),
+              }
+            : d
+        );
+        onUpdateProject({
+          ...project,
+          contentRepository: updatedList,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    }
+  };
+
+  // DataGrid Columns Definition
+  const dataGridColumns: DataGridColumn<{ doc: RepositoryDocument; tracker: DocumentUsageTracker }>[] = [
+    {
+      key: "title",
+      header: "Artigo / Título",
+      sortable: true,
+      render: ({ doc }) => (
+        <div className="space-y-0.5">
+          <p
+            className="font-bold text-xs uppercase tracking-tight text-zinc-100 hover:text-amber-400 transition-colors cursor-pointer"
+            onClick={() => setPreviewDoc(doc)}
+          >
+            {doc.title}
+          </p>
+          <div className="flex items-center gap-2 text-[10px] text-zinc-400">
+            {doc.sourceFileName && (
+              <span className="flex items-center gap-1 font-mono truncate max-w-[140px]">
+                <FileText className="w-3 h-3 text-amber-500" /> {doc.sourceFileName}
+              </span>
+            )}
+            <span className="line-clamp-1 italic text-zinc-500 max-w-sm">
+              {doc.rawContent.slice(0, 80)}...
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "category",
+      header: "Categoria",
+      width: "130px",
+      sortable: true,
+      render: ({ doc }) => (
+        <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
+          {doc.category || "GERAL"}
+        </span>
+      ),
+    },
+    {
+      key: "wordCount",
+      header: "Volume",
+      width: "110px",
+      sortable: true,
+      render: ({ doc }) => (
+        <div className="font-mono text-xs">
+          <span className="font-bold text-amber-500">{doc.wordCount}</span>
+          <span className="text-[10px] text-zinc-400 ml-1">palavras</span>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status Editorial",
+      width: "170px",
+      render: ({ tracker }) => {
+        if (tracker.isInCurrentMagazine) {
+          return (
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="bg-emerald-600 text-white font-mono text-[8.5px] font-black px-2 py-0.5 rounded uppercase flex items-center gap-1 shadow-xs">
+                <Check className="w-3 h-3 stroke-[3]" />
+                <span>NA REVISTA</span>
+              </span>
+              {tracker.currentPageNumber && (
+                <span className="font-mono text-[8.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-700">
+                  PÁG. {tracker.currentPageNumber.toString().padStart(2, "0")}
+                </span>
+              )}
+            </div>
+          );
+        }
+        if (tracker.previousEditions.length > 0) {
+          return (
+            <span className="bg-indigo-600 text-white font-mono text-[8.5px] font-black px-2 py-0.5 rounded uppercase flex items-center gap-1 shadow-xs">
+              <Archive className="w-3 h-3 text-white" />
+              <span>ED. #{tracker.previousEditions.map((e) => e.editionNumber).join(", ")}</span>
+            </span>
+          );
+        }
+        return (
+          <span className="bg-zinc-800 text-zinc-300 font-mono text-[8.5px] font-bold px-2 py-0.5 rounded uppercase flex items-center gap-1 border border-zinc-700">
+            <FileEdit className="w-3 h-3 text-amber-500" />
+            <span>RASCUNHO DISPONÍVEL</span>
+          </span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "Ações",
+      width: "210px",
+      align: "right",
+      render: ({ doc, tracker }) => {
+        const isDocAnalyzing = isAnalyzing && analyzingDocId === doc.id;
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            {tracker.isInCurrentMagazine ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleRemoveFromMagazine(doc)}
+                className="h-7 px-2 text-[10px] font-bold border border-amber-500/50 text-amber-400 hover:bg-amber-400/10 cursor-pointer"
+                title="Remover da revista"
+              >
+                <Undo2 className="w-3 h-3 mr-1" />
+                <span>Remover</span>
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => handleDirectAddToMagazine(doc)}
+                className="h-7 px-2 bg-amber-400 hover:bg-amber-500 text-black font-black text-[10px] border border-black cursor-pointer shadow-xs"
+                title="Inserir na revista atual"
+              >
+                <Plus className="w-3 h-3 mr-0.5" />
+                <span>Colocar</span>
+              </Button>
+            )}
+
+            <Button
+              size="sm"
+              onClick={() => handleTriggerAiAnalysis(doc)}
+              disabled={isDocAnalyzing}
+              className="h-7 px-2 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-[10px] border border-zinc-700 cursor-pointer"
+              title="Diagramar com IA"
+            >
+              {isDocAnalyzing ? <Loader2 className="w-3 h-3 animate-spin text-amber-400" /> : <Wand2 className="w-3 h-3 text-amber-400" />}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => handleEditDraft(doc)}
+              className="p-1.5 opacity-70 hover:opacity-100 hover:bg-white/10 rounded cursor-pointer"
+              title="Editar rascunho"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDocToDelete(doc)}
+              className="p-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded cursor-pointer"
+              title="Excluir documento"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  // DataGrid Bulk Actions
+  const dataGridBulkActions: DataGridAction<{ doc: RepositoryDocument; tracker: DocumentUsageTracker }>[] = [
+    {
+      label: "Adicionar Selecionados à Revista",
+      icon: Plus,
+      variant: "default",
+      className: "bg-amber-400 hover:bg-amber-500 text-black border-black",
+      onClick: (selectedRows) => handleBulkAddToMagazine(selectedRows),
+    },
+    {
+      label: "Excluir Selecionados",
+      icon: Trash2,
+      variant: "destructive",
+      onClick: (selectedRows) => handleBulkDeleteDocs(selectedRows),
+    },
+  ];
+
+  // Kanban Columns Definition
+  const kanbanColumns: KanbanColumnDef[] = [
+    {
+      id: "unused",
+      title: "Rascunhos Inéditos",
+      icon: Sparkles,
+      badgeColor: "bg-amber-400 text-black border-black",
+      description: "Textos livres no acervo, prontos para diagramar.",
+    },
+    {
+      id: "current",
+      title: "Na Revista Atual",
+      icon: Check,
+      badgeColor: "bg-emerald-600 text-white border-emerald-800",
+      description: `Matérias diagramadas na Edição #${project.editionNumber || "01"}.`,
+    },
+    {
+      id: "previous",
+      title: "Edições Anteriores",
+      icon: Archive,
+      badgeColor: "bg-indigo-600 text-white border-indigo-800",
+      description: "Artigos veiculados em edições passadas do acervo.",
+    },
+  ];
+
+  const kanbanItems: KanbanItemDef[] = filteredDocsWithTracker.map(({ doc, tracker }) => {
+    let colId = "unused";
+    if (tracker.isInCurrentMagazine) {
+      colId = "current";
+    } else if (tracker.previousEditions.length > 0) {
+      colId = "previous";
+    }
+
+    return {
+      id: doc.id,
+      columnId: colId,
+      title: doc.title,
+      category: doc.category || "GERAL",
+      meta: `${doc.wordCount} pal.`,
+      description: doc.rawContent.slice(0, 110) + "...",
+      rawItem: doc,
+    };
+  });
+
   return (
     <div className="space-y-6 font-sans">
       {/* Header Bar */}
@@ -964,7 +1300,61 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
         </div>
       </div>
 
-      {/* Documents Grid / List */}
+      {/* View Switcher: Cards | Tabela | Kanban */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono font-bold uppercase text-zinc-400">
+            {filteredDocsWithTracker.length} {filteredDocsWithTracker.length === 1 ? "texto listado" : "textos listados"}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold opacity-75 uppercase mr-1">Visualização:</span>
+          <div className="inline-flex rounded-lg border-2 border-zinc-800 p-0.5 bg-zinc-900">
+            <button
+              type="button"
+              data-testid="repo-view-cards"
+              onClick={() => setRepoViewMode("cards")}
+              className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                repoViewMode === "cards"
+                  ? "bg-amber-400 text-black font-black shadow-xs"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Cards</span>
+            </button>
+            <button
+              type="button"
+              data-testid="repo-view-table"
+              onClick={() => setRepoViewMode("table")}
+              className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                repoViewMode === "table"
+                  ? "bg-amber-400 text-black font-black shadow-xs"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              <span>Tabela</span>
+            </button>
+            <button
+              type="button"
+              data-testid="repo-view-kanban"
+              onClick={() => setRepoViewMode("kanban")}
+              className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                repoViewMode === "kanban"
+                  ? "bg-amber-400 text-black font-black shadow-xs"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <KanbanViewIcon className="w-3.5 h-3.5" />
+              <span>Kanban</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Documents Grid / Table / Kanban */}
       {filteredDocsWithTracker.length === 0 ? (
         <div className="theme-app-card p-10 rounded-xl border-2 text-center space-y-3">
           <FolderOpen className="w-12 h-12 text-amber-500 mx-auto opacity-50" />
@@ -990,6 +1380,25 @@ export const ContentRepositoryView: React.FC<ContentRepositoryViewProps> = ({
             </Button>
           </div>
         </div>
+      ) : repoViewMode === "table" ? (
+        <DataGrid
+          data={filteredDocsWithTracker}
+          columns={dataGridColumns}
+          keyExtractor={(item) => item.doc.id}
+          selectedIds={selectedDocIds}
+          onSelectionChange={setSelectedDocIds}
+          bulkActions={dataGridBulkActions}
+        />
+      ) : repoViewMode === "kanban" ? (
+        <Kanban
+          columns={kanbanColumns}
+          items={kanbanItems}
+          onMoveItem={handleKanbanMove}
+          onItemClick={(item) => {
+            const found = filteredDocsWithTracker.find((d) => d.doc.id === item.id);
+            if (found) setPreviewDoc(found.doc);
+          }}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredDocsWithTracker.map(({ doc, tracker }) => {

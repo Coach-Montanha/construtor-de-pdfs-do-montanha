@@ -30,7 +30,11 @@ import {
   Wand2,
   Edit3,
   Sliders,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
 } from "lucide-react";
+import { Stepper, StepItem } from "../ui/stepper";
 
 interface AiApprovalModalProps {
   isOpen: boolean;
@@ -76,10 +80,19 @@ export const AiApprovalModal: React.FC<AiApprovalModalProps> = ({
   );
   const [pullQuotes, setPullQuotes] = useState<string[]>(analysis.pullQuotes);
   const [keyTakeaways, setKeyTakeaways] = useState<string[]>(analysis.keyTakeaways);
+  const [currentStep, setCurrentStep] = useState<number>(0);
+
+  const steps: StepItem[] = [
+    { id: "template", title: "Enquadramento", description: "Páginas & Formato", icon: Layers },
+    { id: "headlines", title: "Manchetes", description: "Título & Autoria", icon: FileText },
+    { id: "visuals", title: "Visual & Fotos", description: "Imagens & Citações", icon: Wand2 },
+    { id: "review", title: "Revisão", description: "Texto & Aprovação", icon: CheckCircle2 },
+  ];
 
   // Synchronize when analysis or sourceDoc changes
   React.useEffect(() => {
     if (analysis) {
+      setCurrentStep(0);
       const resolvedTitle = sourceDoc?.title?.trim()
         ? sourceDoc.title.trim().toUpperCase()
         : analysis.title;
@@ -161,227 +174,293 @@ export const AiApprovalModal: React.FC<AiApprovalModalProps> = ({
           </p>
         </DialogHeader>
 
-        {/* AI Rationale Diagnostic Banner */}
-        <div className="my-2 p-3.5 rounded-xl border-2 border-amber-500/40 bg-amber-500/10 space-y-1.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-black uppercase text-amber-700">
-              <Wand2 className="w-4 h-4 text-amber-600" />
-              <span>Diagnóstico & Parecer de Enquadramento:</span>
-            </div>
-            <div className="flex items-center gap-2 font-mono text-[10px] font-bold">
-              <span className="bg-white/80 px-2 py-0.5 rounded border border-black/20 text-black">
-                {analysis.wordCount} PALAVRAS
-              </span>
-              <span className="bg-white/80 px-2 py-0.5 rounded border border-black/20 text-black">
-                {analysis.estimatedReadTime} MIN DE LEITURA
-              </span>
-            </div>
-          </div>
-          <p className="text-xs font-bold leading-snug opacity-90">
-            {analysis.rationale}
-          </p>
+        {/* Stepper Navigation Bar */}
+        <div className="py-2 px-1 border-b border-zinc-800/80">
+          <Stepper
+            steps={steps}
+            activeStep={currentStep}
+            onStepClick={(stepIndex) => setCurrentStep(stepIndex)}
+          />
         </div>
 
-        <div className="space-y-4 my-2">
-          {/* 1. Page Span & Layout Template Selection */}
-          <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-3">
-            <h4 className="font-black text-xs uppercase tracking-tight flex items-center gap-1.5 text-amber-600">
-              <Layers className="w-4 h-4 text-amber-500" />
-              <span>1. Enquadramento de Páginas & Template Editorial</span>
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs font-bold">EXTENSÃO DO ARTIGO NA REVISTA</Label>
-                <select
-                  value={pageSpan}
-                  onChange={(e) => setPageSpan(parseInt(e.target.value) || 1)}
-                  className="w-full theme-app-input text-xs font-black mt-1 border-2 p-2 rounded cursor-pointer"
-                >
-                  <option value={1}>1 Página A4 (Compacto / Padrão)</option>
-                  <option value={2}>2 Páginas A4 (Página Dupla Especial)</option>
-                  <option value={3}>3 Páginas A4 (Matéria Aprofundada)</option>
-                  <option value={4}>4 Páginas A4 (Dossiê Especial / Reportagem Completa)</option>
-                </select>
+        {/* Dynamic Wizard Steps Container */}
+        <div className="space-y-4 my-2 min-h-[300px]">
+          {/* STEP 0: Enquadramento de Páginas & Template */}
+          {currentStep === 0 && (
+            <div className="space-y-4 animate-in fade-in-50 duration-200">
+              {/* AI Rationale Diagnostic Banner */}
+              <div className="p-3.5 rounded-xl border-2 border-amber-500/40 bg-amber-500/10 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase text-amber-700 dark:text-amber-300">
+                    <Wand2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span>Diagnóstico & Parecer de Enquadramento:</span>
+                  </div>
+                  <div className="flex items-center gap-2 font-mono text-[10px] font-bold">
+                    <span className="bg-white/80 dark:bg-zinc-800 px-2 py-0.5 rounded border border-black/20 text-black dark:text-white">
+                      {analysis.wordCount} PALAVRAS
+                    </span>
+                    <span className="bg-white/80 dark:bg-zinc-800 px-2 py-0.5 rounded border border-black/20 text-black dark:text-white">
+                      {analysis.estimatedReadTime} MIN DE LEITURA
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs font-bold leading-snug opacity-90">
+                  {analysis.rationale}
+                </p>
               </div>
 
-              <div>
-                <Label className="text-xs font-bold">TEMPLATE DE DIAGRAMAÇÃO</Label>
-                <select
-                  value={layoutTemplate}
-                  onChange={(e) => setLayoutTemplate(e.target.value as LayoutTemplate)}
-                  className="w-full theme-app-input text-xs font-bold mt-1 border-2 p-2 rounded cursor-pointer"
-                >
-                  <option value="editorial-lead">Standard Feature (Colunas Fluidas + Drop Cap)</option>
-                  <option value="workout-protocol">Workout Protocol (Clusters A1/A2 + QR Code)</option>
-                  <option value="product-ad">Product Promotion (Anúncio Full + Cupom)</option>
-                  <option value="facility-spotlight">Facility Spotlight (Fotos + Spec Sheet)</option>
-                  <option value="two-column-quote">2 Colunas Clássicas com Citação Central</option>
-                  <option value="infographic-tips">Infográfico Prático com Dicas</option>
-                </select>
+              <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-3">
+                <h4 className="font-black text-xs uppercase tracking-tight flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <Layers className="w-4 h-4 text-amber-500" />
+                  <span>Enquadramento de Páginas & Template Editorial</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-bold">EXTENSÃO DO ARTIGO NA REVISTA</Label>
+                    <select
+                      value={pageSpan}
+                      onChange={(e) => setPageSpan(parseInt(e.target.value) || 1)}
+                      className="w-full theme-app-input text-xs font-black mt-1 border-2 p-2 rounded cursor-pointer"
+                    >
+                      <option value={1}>1 Página A4 (Compacto / Padrão)</option>
+                      <option value={2}>2 Páginas A4 (Página Dupla Especial)</option>
+                      <option value={3}>3 Páginas A4 (Matéria Aprofundada)</option>
+                      <option value={4}>4 Páginas A4 (Dossiê Especial / Reportagem Completa)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-bold">TEMPLATE DE DIAGRAMAÇÃO</Label>
+                    <select
+                      value={layoutTemplate}
+                      onChange={(e) => setLayoutTemplate(e.target.value as LayoutTemplate)}
+                      className="w-full theme-app-input text-xs font-bold mt-1 border-2 p-2 rounded cursor-pointer"
+                    >
+                      <option value="editorial-lead">Standard Feature (Colunas Fluidas + Drop Cap)</option>
+                      <option value="workout-protocol">Workout Protocol (Clusters A1/A2 + QR Code)</option>
+                      <option value="product-ad">Product Promotion (Anúncio Full + Cupom)</option>
+                      <option value="facility-spotlight">Facility Spotlight (Fotos + Spec Sheet)</option>
+                      <option value="two-column-quote">2 Colunas Clássicas com Citação Central</option>
+                      <option value="infographic-tips">Infográfico Prático com Dicas</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* 2. Headlines, Subtitle & Metadata */}
-          <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-3">
-            <h4 className="font-black text-xs uppercase tracking-tight flex items-center gap-1.5 text-amber-600">
-              <FileText className="w-4 h-4 text-amber-500" />
-              <span>2. Manchete, Subtítulo & Categoria da Edição</span>
-            </h4>
+          {/* STEP 1: Manchetes, Subtítulo & Autoria */}
+          {currentStep === 1 && (
+            <div className="space-y-4 animate-in fade-in-50 duration-200">
+              <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-3">
+                <h4 className="font-black text-xs uppercase tracking-tight flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                  <FileText className="w-4 h-4 text-amber-500" />
+                  <span>Manchete, Subtítulo & Categoria da Edição</span>
+                </h4>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="sm:col-span-2">
-                <Label className="text-xs font-bold">MANCHETE PRINCIPAL (H1)</Label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value.toUpperCase())}
-                  className="theme-app-input font-black text-xs mt-1 border-2"
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs font-bold">MANCHETE PRINCIPAL (H1)</Label>
+                    <Input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value.toUpperCase())}
+                      className="theme-app-input font-black text-xs mt-1 border-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-bold">CATEGORIA</Label>
+                    <Input
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value.toUpperCase())}
+                      className="theme-app-input font-mono font-bold text-xs mt-1 border-2 text-amber-600 dark:text-amber-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-bold">SUBTÍTULO / DECK EDITORIAL</Label>
+                  <Input
+                    value={subtitle}
+                    onChange={(e) => setSubtitle(e.target.value)}
+                    className="theme-app-input text-xs mt-1 border-2 font-medium"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <Label className="text-xs font-bold">AUTOR DA MATÉRIA</Label>
+                    <Input
+                      value={author}
+                      onChange={(e) => setAuthor(e.target.value)}
+                      className="theme-app-input text-xs mt-1 border-2 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-bold">BIO / CREDENCIAL</Label>
+                    <Input
+                      value={authorBio}
+                      onChange={(e) => setAuthorBio(e.target.value)}
+                      className="theme-app-input text-xs mt-1 border-2"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Fotografia & Destaques */}
+          {currentStep === 2 && (
+            <div className="space-y-4 animate-in fade-in-50 duration-200">
+              {/* Photography Selection */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
+                  <ImagePicker
+                    label="Foto Principal de Abertura (Hero)"
+                    value={heroImage}
+                    onChange={(url) => setHeroImage(url)}
+                    aspectRatio="landscape"
+                    placeholderPrompt={analysis.heroImagePrompt}
+                    helperText="Upload ou IA"
+                  />
+                </div>
+
+                {pageSpan > 1 ? (
+                  <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
+                    <ImagePicker
+                      label="Foto Secundária (Página 2)"
+                      value={secondaryImage}
+                      onChange={(url) => setSecondaryImage(url)}
+                      aspectRatio="landscape"
+                      placeholderPrompt={analysis.secondaryImagePrompt || "Athletic training details..."}
+                      helperText="Exibida na 2ª página"
+                    />
+                  </div>
+                ) : (
+                  <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 flex flex-col justify-center items-center text-center opacity-70">
+                    <p className="text-xs font-bold uppercase text-zinc-400">Foto Secundária Opcional</p>
+                    <p className="text-[11px] text-zinc-500 mt-1 max-w-xs">
+                      Este artigo está configurado para 1 página. Ao aumentar para 2 páginas no Passo 1, uma foto secundária de página inteira é ativada.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Pull Quotes & Key Takeaways */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
+                  <Label className="text-xs font-black uppercase flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                    <Quote className="w-3.5 h-3.5" />
+                    <span>Citação de Impacto (Pull Quote)</span>
+                  </Label>
+                  <Textarea
+                    value={pullQuotes[0] || ""}
+                    onChange={(e) => setPullQuotes([e.target.value, ...pullQuotes.slice(1)])}
+                    className="theme-app-input text-xs h-20 italic font-bold border-2"
+                    placeholder="Frase célebre de impacto posicionada ao final do artigo..."
+                  />
+                </div>
+
+                <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
+                  <Label className="text-xs font-black uppercase flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                    <Lightbulb className="w-3.5 h-3.5" />
+                    <span>Pontos-Chave & Conclusões</span>
+                  </Label>
+                  <Textarea
+                    value={keyTakeaways.join("\n")}
+                    onChange={(e) =>
+                      setKeyTakeaways(e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))
+                    }
+                    className="theme-app-input text-xs h-20 font-mono border-2"
+                    placeholder="1 ponto chave por linha..."
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Revisão do Texto & Aprovação Final */}
+          {currentStep === 3 && (
+            <div className="space-y-4 animate-in fade-in-50 duration-200">
+              {/* Summary Card */}
+              <div className="p-3 rounded-lg border-2 border-amber-500/40 bg-amber-500/10 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[9px] font-black px-2 py-0.5 rounded bg-amber-400 text-black border border-black uppercase">
+                    {category}
+                  </span>
+                  <span className="text-xs font-black uppercase truncate max-w-xs">{title}</span>
+                </div>
+                <div className="flex items-center gap-2 font-mono text-[10px] opacity-80">
+                  <span>{pageSpan} Pág(s)</span>
+                  <span>•</span>
+                  <span>{layoutTemplate}</span>
+                  <span>•</span>
+                  <span>Por {author}</span>
+                </div>
+              </div>
+
+              {/* Formatted Content */}
+              <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-black uppercase flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Texto Formatado pela IA (Destaques & Parágrafos)</span>
+                  </Label>
+                  <span className="text-[10px] font-mono opacity-75">
+                    Você pode editar livremente antes de aprovar
+                  </span>
+                </div>
+
+                <Textarea
+                  value={formattedContent}
+                  onChange={(e) => setFormattedContent(e.target.value)}
+                  className="theme-app-input text-xs h-48 font-sans leading-relaxed border-2"
+                  placeholder="Conteúdo do artigo..."
                 />
               </div>
-
-              <div>
-                <Label className="text-xs font-bold">CATEGORIA</Label>
-                <Input
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value.toUpperCase())}
-                  className="theme-app-input font-mono font-bold text-xs mt-1 border-2 text-amber-600"
-                />
-              </div>
             </div>
-
-            <div>
-              <Label className="text-xs font-bold">SUBTÍTULO / DECK EDITORIAL</Label>
-              <Input
-                value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
-                className="theme-app-input text-xs mt-1 border-2 font-medium"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
-                <Label className="text-xs font-bold">AUTOR DA MATÉRIA</Label>
-                <Input
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                  className="theme-app-input text-xs mt-1 border-2 font-bold"
-                />
-              </div>
-              <div>
-                <Label className="text-xs font-bold">BIO / CREDENCIAL</Label>
-                <Input
-                  value={authorBio}
-                  onChange={(e) => setAuthorBio(e.target.value)}
-                  className="theme-app-input text-xs mt-1 border-2"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Pull Quotes & Key Takeaways Extracted */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Pull Quotes */}
-            <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
-              <Label className="text-xs font-black uppercase flex items-center gap-1 text-amber-600">
-                <Quote className="w-3.5 h-3.5" />
-                <span>Citação de Impacto Extraída (Pull Quote)</span>
-              </Label>
-              <Textarea
-                value={pullQuotes[0] || ""}
-                onChange={(e) => setPullQuotes([e.target.value, ...pullQuotes.slice(1)])}
-                className="theme-app-input text-xs h-20 italic font-bold border-2"
-                placeholder="Frase célebre de impacto posicionada ao final do artigo..."
-              />
-            </div>
-
-            {/* Key Takeaways */}
-            <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
-              <Label className="text-xs font-black uppercase flex items-center gap-1 text-amber-600">
-                <Lightbulb className="w-3.5 h-3.5" />
-                <span>Pontos-Chave & Conclusões</span>
-              </Label>
-              <Textarea
-                value={keyTakeaways.join("\n")}
-                onChange={(e) =>
-                  setKeyTakeaways(e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))
-                }
-                className="theme-app-input text-xs h-20 font-mono border-2"
-                placeholder="1 ponto chave por linha..."
-              />
-            </div>
-          </div>
-
-          {/* 4. Photography Selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
-              <ImagePicker
-                label="Foto Principal de Abertura (Hero)"
-                value={heroImage}
-                onChange={(url) => setHeroImage(url)}
-                aspectRatio="landscape"
-                placeholderPrompt={analysis.heroImagePrompt}
-                helperText="Upload ou IA"
-              />
-            </div>
-
-            {pageSpan > 1 && (
-              <div className="theme-app-card-subtle p-3.5 rounded-xl border-2 space-y-2">
-                <ImagePicker
-                  label="Foto Secundária (Página 2)"
-                  value={secondaryImage}
-                  onChange={(url) => setSecondaryImage(url)}
-                  aspectRatio="landscape"
-                  placeholderPrompt={analysis.secondaryImagePrompt || "Athletic training details..."}
-                  helperText="Exibida na 2ª página"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* 5. Formatted Text Content Preview */}
-          <div className="theme-app-card-subtle p-4 rounded-xl border-2 space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-black uppercase flex items-center gap-1.5 text-amber-600">
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Texto Formatado pela IA (com Destaques, Subtítulos e Marca-Texto)</span>
-              </Label>
-              <span className="text-[10px] font-mono opacity-75">
-                Você pode editar antes de aprovar
-              </span>
-            </div>
-
-            <Textarea
-              value={formattedContent}
-              onChange={(e) => setFormattedContent(e.target.value)}
-              className="theme-app-input text-xs h-36 font-sans leading-relaxed border-2"
-              placeholder="Conteúdo do artigo..."
-            />
-          </div>
+          )}
         </div>
 
-        {/* Footer Actions */}
+        {/* Footer Actions with Stepper Navigation */}
         <DialogFooter className="border-t pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <Button
-            variant="outline"
-            onClick={handleEditFurther}
-            className="h-9 font-bold text-xs border-2 flex items-center gap-1 cursor-pointer w-full sm:w-auto"
-          >
-            <Sliders className="w-3.5 h-3.5 text-amber-500" />
-            <span>Ajustar no Editor Avançado</span>
-          </Button>
-
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
-              onClick={onClose}
-              className="h-9 font-bold text-xs border-2 flex-1 sm:flex-initial"
+              onClick={handleEditFurther}
+              className="h-9 font-bold text-xs border-2 flex items-center gap-1 cursor-pointer w-full sm:w-auto"
             >
-              Cancelar
+              <Sliders className="w-3.5 h-3.5 text-amber-500" />
+              <span>Ajustar no Editor Avançado</span>
             </Button>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            {currentStep > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
+                className="h-9 font-bold text-xs border-2 flex items-center gap-1 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Voltar</span>
+              </Button>
+            )}
+
+            {currentStep < steps.length - 1 ? (
+              <Button
+                onClick={() => setCurrentStep((prev) => Math.min(steps.length - 1, prev + 1))}
+                className="h-9 bg-zinc-900 hover:bg-zinc-800 text-amber-400 font-black text-xs px-4 border-2 border-amber-400 cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Próximo Passo</span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            ) : null}
+
             <Button
               onClick={handleConfirmApproval}
-              className="h-9 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs px-5 border-2 border-black shadow-md cursor-pointer flex items-center gap-1.5 flex-1 sm:flex-initial"
+              className="h-9 bg-amber-400 hover:bg-amber-500 text-black font-black text-xs px-5 border-2 border-black shadow-md cursor-pointer flex items-center gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4 text-black" />
               <span>✓ Aprovar & Inserir na Revista</span>

@@ -9,6 +9,7 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { FileUpload } from "../ui/file-upload";
 import {
   extractPdfContent,
   classifyPdfDocument,
@@ -243,48 +244,22 @@ export const PdfImportModal: React.FC<PdfImportModalProps> = ({
             </div>
           )}
 
-          {/* Estado Inicial: Dropzone de Upload */}
+          {/* Estado Inicial: Dropzone de Upload ReUI */}
           {!file && !isLoading && (
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                  processPdfFile(e.dataTransfer.files[0]);
+            <FileUpload
+              accept=".pdf"
+              maxSizeMB={100}
+              multiple={false}
+              inputTestId="pdf-file-input"
+              title="Arraste seu PDF aqui ou clique para selecionar"
+              description="Suporta revistas antigas, apostilas de treino, livros, relatórios técnicos ou lâminas de slides. O roteador identificará títulos, seções e descartará ruídos automaticamente."
+              tags={["PDF Nativo", "Multi-página", "Filtro de Ruído"]}
+              onFilesSelected={(files) => {
+                if (files[0]) {
+                  processPdfFile(files[0]);
                 }
               }}
-              className="border-2 border-dashed border-zinc-700 hover:border-amber-400/60 bg-zinc-900/40 hover:bg-zinc-900/80 rounded-xl p-10 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-4 group"
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf"
-                data-testid="pdf-file-input"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    processPdfFile(e.target.files[0]);
-                  }
-                }}
-              />
-              <div className="w-16 h-16 rounded-2xl bg-zinc-800/80 group-hover:bg-amber-400/10 border border-zinc-700 group-hover:border-amber-400/40 flex items-center justify-center text-zinc-400 group-hover:text-amber-400 transition-colors">
-                <Upload className="w-8 h-8" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider">
-                  Arraste seu PDF aqui ou clique para selecionar
-                </h3>
-                <p className="text-xs text-zinc-400 max-w-md mx-auto">
-                  Suporta revistas antigas, apostilas de treino, livros, relatórios técnicos ou lâminas de slides. O roteador identificará títulos, seções e descartará números de páginas repetidos automaticamente.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-mono">
-                <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">PDF Nativo</span>
-                <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">Multi-página</span>
-                <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700">Filtro de Ruído</span>
-              </div>
-            </div>
+            />
           )}
 
           {/* Estado de Carregamento & Extração */}
