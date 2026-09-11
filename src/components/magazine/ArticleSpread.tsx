@@ -629,8 +629,10 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
   // Quote & Takeaways visibility (always at the very end of the article)
   const hasPullQuote = Boolean(article.pullQuotes && article.pullQuotes.length > 0 && article.pullQuotes[0]?.trim());
   const hasTakeaways = Boolean(article.keyTakeaways && article.keyTakeaways.length > 0 && article.keyTakeaways.some(t => t.trim()));
+  const hasReferences = Boolean(article.references && article.references.trim());
   const showQuoteOnThisPage = hasPullQuote && isLastPage;
   const showTakeawaysOnThisPage = hasTakeaways && isLastPage;
+  const showReferencesOnThisPage = hasReferences && isLastPage;
 
   // Permissão explícita para o usuário remover ou desativar a imagem final do artigo:
   const isClosingImageExplicitlyDisabled = article.showClosingImage === false;
@@ -1305,8 +1307,8 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
               </div>
             )}
 
-            {/* Bottom Inset: Pull Quote & Key Takeaways AT THE END OF THE ARTICLE */}
-            {(showQuoteOnThisPage || showTakeawaysOnThisPage) && (
+            {/* Bottom Inset: Pull Quote, Key Takeaways & Scientific References AT THE END OF THE ARTICLE */}
+            {(showQuoteOnThisPage || showTakeawaysOnThisPage || showReferencesOnThisPage) && (
               <div className="shrink-0 space-y-2 pt-1 border-t" style={{ borderColor: `${primaryColor}30` }}>
                 {/* Pull Quote placed cleanly at the end/conclusion of article */}
                 {showQuoteOnThisPage && (
@@ -1344,6 +1346,35 @@ export const ArticleSpread: React.FC<ArticleSpreadProps> = ({
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {/* Scientific References / Footnotes (if present) */}
+                {showReferencesOnThisPage && (
+                  <div
+                    className="p-2 rounded-lg border text-[8px] sm:text-[8.5px] font-mono leading-tight space-y-1"
+                    style={{
+                      backgroundColor: cardBg,
+                      borderColor: `${primaryColor}30`,
+                      color: textMutedColor,
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold uppercase" style={{ color: primaryColor }}>
+                      <span className="text-[7px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">★ FONTES</span>
+                      <span>REFERÊNCIAS & LITERATURA CIENTÍFICA:</span>
+                    </div>
+                    <div className="space-y-0.5 max-h-16 overflow-y-auto">
+                      {article.references!
+                        .split("\n")
+                        .map((line) => line.trim())
+                        .filter(Boolean)
+                        .filter((line) => !line.match(/^\/\/\s*REFER[ÊE]NCIAS/i))
+                        .map((refLine, rIdx) => (
+                          <p key={rIdx} className="opacity-90 leading-snug">
+                            {refLine}
+                          </p>
+                        ))}
+                    </div>
                   </div>
                 )}
               </div>

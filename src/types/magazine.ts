@@ -237,6 +237,7 @@ export interface Article {
   quotePlacement?: "end" | "side" | "none"; // Posição da citação (Padrão: no final do artigo)
   textDensity?: "compact" | "normal" | "spacious";
   content: string; // Markdown or raw text paragraphs
+  references?: string; // Referências bibliográficas, fontes científicas e rodapé — exibidas na última página do artigo
   pullQuotes: string[];
   calloutBox?: {
     title: string;

@@ -640,6 +640,10 @@ Ao combinar protocolos de 10x10 com kettlebells de 32kg ou 40kg, o limiar de lac
         "Mantenha a coluna neutra e a dorsal engatada para proteger a lombar.",
         "Expire com força no topo do movimento criando pressão intra-abdominal máxima.",
       ],
+      references: `// REFERÊNCIAS
+1. MCGILL, S.M.; MARSHALL, L.W. Kettlebell swing, snatch, and bottoms-up carry: Back and hip muscle activation, motion, and low back loads. J Strength Cond Res, 2012.
+2. LAKE, J.P.; LAUDNER, K.G. Kettlebell swing training improves maximal and explosive strength. J Strength Cond Res, 2012.
+3. TSATSOULINE, P. Enter the Kettlebell! Strength Secret of the Soviet Supermen. Dragon Door, 2006.`,
       layoutTemplate: "editorial-lead",
       tags: ["Kettlebell", "Balística", "Cadeia Posterior", "Montanha"],
       estimatedReadTime: 5,

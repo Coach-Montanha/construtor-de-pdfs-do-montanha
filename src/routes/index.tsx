@@ -49,6 +49,7 @@ import {
   FolderArchive,
   Copy,
   Layers,
+  Search,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
@@ -102,6 +103,7 @@ function Index() {
   }, []);
 
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
+  const [articleSearchQuery, setArticleSearchQuery] = useState<string>("");
 
   // Editions Archive Count State
   const [archivedEditionsCount, setArchivedEditionsCount] = useState<number>(() => {
@@ -768,14 +770,59 @@ function Index() {
               );
             })()}
 
+            {/* Article Search Bar & Quick Filter */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-2.5 rounded-xl border-2 theme-app-card-subtle">
+              <div className="relative flex-1 w-full">
+                <Search className="w-3.5 h-3.5 text-amber-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={articleSearchQuery}
+                  onChange={(e) => setArticleSearchQuery(e.target.value)}
+                  placeholder="Buscar matérias por título, autor, categoria ou tag..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs font-medium rounded-lg theme-app-input border border-current/20 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+              {articleSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setArticleSearchQuery("")}
+                  className="text-[10px] font-mono font-bold text-amber-600 hover:underline shrink-0 cursor-pointer"
+                >
+                  Limpar busca
+                </button>
+              )}
+            </div>
+
             {/* Articles List */}
             <div className="space-y-3">
-              {project.articles.map((art, idx) => {
-                const calculatedPageNum = activePages.findIndex((p) => p.id === art.id || p.id === `${art.id}-part1`) + 1;
-                const pageNum = calculatedPageNum > 0 ? calculatedPageNum : idx + 4;
-                const span = getEffectiveArticlePageSpan(art);
-                const isMulti = span > 1;
-                const isEnabled = art.enabled !== false;
+              {(() => {
+                const query = articleSearchQuery.toLowerCase().trim();
+                const filtered = project.articles.filter((a) => {
+                  if (!query) return true;
+                  return (
+                    a.title.toLowerCase().includes(query) ||
+                    (a.subtitle && a.subtitle.toLowerCase().includes(query)) ||
+                    a.category.toLowerCase().includes(query) ||
+                    a.author.toLowerCase().includes(query) ||
+                    (a.tags && a.tags.some((t) => t.toLowerCase().includes(query)))
+                  );
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="p-8 text-center rounded-xl border-2 border-dashed theme-app-card-subtle opacity-75">
+                      <p className="text-xs font-bold">Nenhuma matéria encontrada para "{articleSearchQuery}".</p>
+                    </div>
+                  );
+                }
+
+                return filtered.map((art) => {
+                  const idx = project.articles.findIndex((a) => a.id === art.id);
+                  const calculatedPageNum = activePages.findIndex((p) => p.id === art.id || p.id === `${art.id}-part1`) + 1;
+                  const pageNum = calculatedPageNum > 0 ? calculatedPageNum : idx + 4;
+                  const span = getEffectiveArticlePageSpan(art);
+                  const isMulti = span > 1;
+                  const isEnabled = art.enabled !== false;
 
                 return (
                   <div
@@ -885,7 +932,8 @@ function Index() {
                     </div>
                   </div>
                 );
-              })}
+              });
+            })()}
             </div>
           </div>
         )}

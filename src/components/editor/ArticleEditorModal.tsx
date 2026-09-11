@@ -146,6 +146,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
     if (article) {
       setFormData({
         ...article,
+        references: article.references || "",
         pullQuotes: Array.isArray(article.pullQuotes) ? article.pullQuotes : [],
         keyTakeaways: Array.isArray(article.keyTakeaways) ? article.keyTakeaways : [],
         tags: Array.isArray(article.tags) ? article.tags : [],
@@ -173,6 +174,7 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
         secondaryImagePlacement: "bottom",
         bottomSpotlightPosition: "50% 50%",
         content: "",
+        references: "",
         pullQuotes: [],
         keyTakeaways: [],
         layoutTemplate: "editorial-lead",
@@ -1554,6 +1556,26 @@ export const ArticleEditorModal: React.FC<ArticleEditorModalProps> = ({
                 })}
             </div>
           )}
+
+          {/* References / Scientific Sources Field */}
+          <div className="space-y-1.5 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-black uppercase tracking-tight flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+                REFERÊNCIAS & FONTES (RODAPÉ DA ÚLTIMA PÁGINA)
+              </Label>
+              <span className="text-[9.5px] font-mono text-amber-600 font-bold opacity-80">Opcional</span>
+            </div>
+            <Textarea
+              value={formData.references || ""}
+              onChange={(e) => setFormData({ ...formData, references: e.target.value })}
+              placeholder={"// REFERÊNCIAS\n1. SCHOENFELD, B.J. Science and Development of Muscle Hypertrophy. Human Kinetics, 2010.\n2. ZATSIORSKY, V.M. Science and Practice of Strength Training, 2nd ed. 2006."}
+              className="theme-app-input text-xs h-20 leading-relaxed font-sans border-2 font-mono"
+            />
+            <p className="text-[9.5px] opacity-70 leading-tight">
+              Aparece no rodapé da última página em tipografia miúda editorial. Suporta listas numeradas e o prefixo <code className="bg-black/10 px-1 rounded font-bold">// REFERÊNCIAS</code>.
+            </p>
+          </div>
         </div>
       </div>
     ) : (
