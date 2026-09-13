@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test:e2e": "playwright test",
+    "test:e2e:ci": "playwright test --reporter=github,html",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
     "aas:search": "bun run scripts/aas-catalog.ts search",

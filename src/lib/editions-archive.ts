@@ -1,4 +1,4 @@
-import { MagazineProject, RepositoryDocument, Article } from "../types/magazine";
+import { MagazineProject, Article } from "../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT } from "./sample-data";
 import { calculateMagazineTotalPages, countWords } from "./magazine-utils";
 
