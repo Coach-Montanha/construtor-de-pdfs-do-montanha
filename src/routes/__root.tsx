@@ -146,15 +146,16 @@ function RootShell({ children }: { children: ReactNode }) {
             __html: `(function(){
               function dismiss(){
                 var p = document.getElementById('app-preloader');
-                if(p && !p.classList.contains('preloader-hidden')){
+                if(p){
                   p.classList.add('preloader-hidden');
+                  p.style.display = 'none';
                 }
               }
               if (document.readyState === 'complete') {
-                setTimeout(dismiss, 100);
+                setTimeout(dismiss, 50);
               } else {
-                window.addEventListener('load', function(){ setTimeout(dismiss, 100); });
-                setTimeout(dismiss, 1000);
+                window.addEventListener('load', function(){ setTimeout(dismiss, 50); });
+                setTimeout(dismiss, 500);
               }
             })();`,
           }}
@@ -174,10 +175,8 @@ function RootComponent() {
   useEffect(() => {
     const preloader = document.getElementById("app-preloader");
     if (preloader) {
-      const timer = setTimeout(() => {
-        preloader.classList.add("preloader-hidden");
-      }, 350);
-      return () => clearTimeout(timer);
+      preloader.classList.add("preloader-hidden");
+      preloader.style.display = "none";
     }
   }, []);
 
