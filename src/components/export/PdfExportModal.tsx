@@ -24,6 +24,7 @@ import {
   Loader2,
   Eye,
 } from "lucide-react";
+import { SlideToConfirm } from "../ui/slide-to-confirm";
 
 interface PdfExportModalProps {
   isOpen: boolean;
@@ -426,6 +427,17 @@ export const PdfExportModal: React.FC<PdfExportModalProps> = ({
                   <span>Download concluído! Seu arquivo PDF foi salvo com sucesso.</span>
                 </div>
               )}
+
+              {/* Bencho UI Slide-to-Confirm Export Action */}
+              <div className="pt-1 flex flex-col items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Atalho Rápido Bencho UI</span>
+                <SlideToConfirm
+                  onConfirm={handleDirectDownloadPdf}
+                  text={`Deslize para Gerar PDF (${selectedExportMode === "mobile" ? "Mobile 9:16" : "A4"})`}
+                  confirmedText="Gerando PDF..."
+                  className="w-full"
+                />
+              </div>
 
               {/* Main Prominent Direct Download Button */}
               <Button
