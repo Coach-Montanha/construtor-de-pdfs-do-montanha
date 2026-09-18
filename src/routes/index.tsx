@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MagazineProject, Article, MagazineLayoutMode } from "../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../lib/sample-data";
 import { APP_UI_THEMES, AppUiThemeMode } from "../lib/ui-theme";
@@ -80,6 +80,24 @@ function Index() {
   });
 
   const [activeTab, setActiveTab] = useState<"viewer" | "articles" | "repository" | "cover" | "editorial" | "archive" | "settings">("viewer");
+
+  // Microkit SpotlightIndicator Refs & Effect
+  const spotlightNavRef = useRef<HTMLDivElement>(null);
+  const spotlightBarRef = useRef<HTMLSpanElement>(null);
+  const spotlightButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
+  useEffect(() => {
+    const nav = spotlightNavRef.current;
+    const bar = spotlightBarRef.current;
+    const button = spotlightButtonRefs.current[activeTab];
+    if (!nav || !bar || !button) return;
+    const navRect = nav.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    bar.style.left = `${buttonRect.left - navRect.left + 4}px`;
+    bar.style.width = `${buttonRect.width - 8}px`;
+    bar.style.top = `${buttonRect.top - navRect.top + 4}px`;
+    bar.style.height = `${buttonRect.height - 8}px`;
+  }, [activeTab]);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState<boolean>(false);
   const [isAiStudioOpen, setIsAiStudioOpen] = useState<boolean>(false);
@@ -527,8 +545,10 @@ function Index() {
 
       {/* Subheader Navigation Tabs */}
       <div className="no-print px-4 sm:px-6 flex items-center justify-between overflow-x-auto custom-scrollbar transition-colors theme-app-subnav border-b-2 shadow-xs">
-        <div className="flex items-center gap-1 sm:gap-2 py-1.5">
+        <div ref={spotlightNavRef} className="relative flex items-center gap-1 sm:gap-2 py-1.5">
+          <span ref={spotlightBarRef} className="pointer-events-none absolute rounded-md bg-amber-500/30 border border-amber-500 shadow-[0_0_8px_rgba(245,158,11,.6)] transition-[left,width,top,height] duration-300 ease-[cubic-bezier(.4,0,.2,1)]" />
           <button
+            ref={(el) => { spotlightButtonRefs.current["viewer"] = el; }}
             data-testid="tab-viewer"
             onClick={() => setActiveTab("viewer")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
@@ -542,6 +562,7 @@ function Index() {
           </button>
 
           <button
+            ref={(el) => { spotlightButtonRefs.current["articles"] = el; }}
             data-testid="tab-articles"
             onClick={() => setActiveTab("articles")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
@@ -555,6 +576,7 @@ function Index() {
           </button>
 
           <button
+            ref={(el) => { spotlightButtonRefs.current["repository"] = el; }}
             data-testid="tab-repository"
             onClick={() => setActiveTab("repository")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
@@ -568,6 +590,7 @@ function Index() {
           </button>
 
           <button
+            ref={(el) => { spotlightButtonRefs.current["cover"] = el; }}
             data-testid="tab-cover"
             onClick={() => setActiveTab("cover")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
@@ -581,6 +604,7 @@ function Index() {
           </button>
 
           <button
+            ref={(el) => { spotlightButtonRefs.current["editorial"] = el; }}
             data-testid="tab-editorial"
             onClick={() => setActiveTab("editorial")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
@@ -594,6 +618,7 @@ function Index() {
           </button>
 
           <button
+            ref={(el) => { spotlightButtonRefs.current["archive"] = el; }}
             data-testid="tab-archive"
             onClick={() => setActiveTab("archive")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
@@ -607,6 +632,7 @@ function Index() {
           </button>
 
           <button
+            ref={(el) => { spotlightButtonRefs.current["settings"] = el; }}
             data-testid="tab-settings"
             onClick={() => setActiveTab("settings")}
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-black rounded-lg transition-all border-2 cursor-pointer ${
