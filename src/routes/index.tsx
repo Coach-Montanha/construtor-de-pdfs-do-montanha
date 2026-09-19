@@ -464,14 +464,14 @@ function Index() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-black text-sm sm:text-base tracking-tight uppercase">
-                MONTANHA MAGAZINE STUDIO
+                MONTANHA PDF STUDIO
               </h1>
               <span className="bg-amber-400 text-black text-[9px] font-mono font-black px-2 py-0.5 rounded border border-black uppercase hidden sm:inline">
                 {project.editionNumber ? `ED. #${project.editionNumber}` : "VIRTUAL"}
               </span>
             </div>
             <p className="text-[11px] opacity-75 font-semibold">
-              Construtor de Revistas & Diagramador Editorial de PDFs com IA
+              Diagramação Editorial & Publicações de Alto Nível com IA
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 {
-  "name": "Montanha Magazine Studio",
-  "short_name": "Montanha Mag",
-  "description": "Construtor de Revistas Digitais, PDFs e Diagramação Editorial com Inteligência Artificial",
+  "name": "Montanha PDF Studio",
+  "short_name": "Montanha PDF",
+  "description": "Diagramação Editorial & Publicações de Alto Nível com IA",
   "start_url": "/",
   "id": "/",
   "display": "standalone",

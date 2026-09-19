@@ -73,7 +73,7 @@ export const PwaInstallPrompt: React.FC<{ variant?: "header" | "card" | "banner"
           <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
           <div className="text-xs">
             <span className="font-black block uppercase text-emerald-600">App Instalado no Dispositivo</span>
-            <span className="opacity-80">Você já está utilizando a versão PWA instalada do Montanha Magazine Studio.</span>
+            <span className="opacity-80">Você já está utilizando a versão PWA instalada do Montanha PDF Studio.</span>
           </div>
         </div>
       );
@@ -139,7 +139,7 @@ export const PwaInstallPrompt: React.FC<{ variant?: "header" | "card" | "banner"
         </div>
 
         <p className="text-xs opacity-75 leading-relaxed">
-          Instale o Montanha Magazine Studio como um aplicativo nativo no seu iPhone, celular Android ou computador. Tenha acesso rápido em tela cheia direto do seu ícone na tela inicial.
+          Instale o Montanha PDF Studio como um aplicativo nativo no seu iPhone, celular Android ou computador. Tenha acesso rápido em tela cheia direto do seu ícone na tela inicial.
         </p>
 
         <div className="pt-2">
