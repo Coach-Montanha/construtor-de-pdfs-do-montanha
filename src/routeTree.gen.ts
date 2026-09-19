@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MasterAdminRouteImport } from './routes/master-admin'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as ApiProjectRouteImport } from './routes/api/project'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterAdminRoute = MasterAdminRouteImport.update({
+  id: '/master-admin',
+  path: '/master-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiRoute = ApiAiRouteImport.update({
@@ -31,30 +37,34 @@ const ApiProjectRoute = ApiProjectRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/master-admin': typeof MasterAdminRoute
   '/api/ai': typeof ApiAiRoute
   '/api/project': typeof ApiProjectRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/master-admin': typeof MasterAdminRoute
   '/api/ai': typeof ApiAiRoute
   '/api/project': typeof ApiProjectRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/master-admin': typeof MasterAdminRoute
   '/api/ai': typeof ApiAiRoute
   '/api/project': typeof ApiProjectRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/ai' | '/api/project'
+  fullPaths: '/' | '/master-admin' | '/api/ai' | '/api/project'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/ai' | '/api/project'
-  id: '__root__' | '/' | '/api/ai' | '/api/project'
+  to: '/' | '/master-admin' | '/api/ai' | '/api/project'
+  id: '__root__' | '/' | '/master-admin' | '/api/ai' | '/api/project'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MasterAdminRoute: typeof MasterAdminRoute
   ApiAiRoute: typeof ApiAiRoute
   ApiProjectRoute: typeof ApiProjectRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-admin': {
+      id: '/master-admin'
+      path: '/master-admin'
+      fullPath: '/master-admin'
+      preLoaderRoute: typeof MasterAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ai': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MasterAdminRoute: MasterAdminRoute,
   ApiAiRoute: ApiAiRoute,
   ApiProjectRoute: ApiProjectRoute,
 }

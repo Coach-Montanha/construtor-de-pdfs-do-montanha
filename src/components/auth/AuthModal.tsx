@@ -9,7 +9,8 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { registerUser, loginUser, UserProfile } from "../../lib/auth-state";
-import { LogIn, UserPlus, AlertCircle, CheckCircle2, Lock, Mail, User, Zap, Globe, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { checkAndLockGuestDemo, validateEmailMx, checkProjectAccess } from "../../services/ecosystem-auth-service";
+import { LogIn, UserPlus, AlertCircle, CheckCircle2, Lock, Mail, User, Zap, Globe, Sparkles, ChevronDown, ChevronUp, ShieldCheck } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -101,9 +102,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     onClose();
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    const mx = await validateEmailMx(loginEmail);
+    if (!mx.valid) {
+      setErrorMessage(mx.reason || "E-mail inválido.");
+      return;
+    }
+
+    const access = await checkProjectAccess(null, 'construtor-pdf', loginEmail);
+    if (!access.hasAccess) {
+      setErrorMessage(access.message);
+      return;
+    }
+
     const res = loginUser(loginEmail, loginPassword);
     if (!res.success) {
       setErrorMessage(res.error || "Falha na autenticação.");
@@ -117,9 +131,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }, 600);
   };
 
-  const handleQuickDemo = () => {
+  const handleQuickDemo = async () => {
     setErrorMessage(null);
     const demoEmail = "demo@montanhapdf.app";
+    const lockout = await checkAndLockGuestDemo(demoEmail);
+    if (lockout.locked && !lockout.allowed) {
+      setErrorMessage("Trava Anti-Abuso: O modo demonstração já foi utilizado no ecossistema.");
+      return;
+    }
+
     const demoPass = "demo123";
     setLoginEmail(demoEmail);
     setLoginPassword(demoPass);
@@ -170,15 +190,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <Sparkles className="w-3 h-3 text-amber-400" />
               <span>ECOSSISTEMA MONTANHA</span>
             </span>
-            <button
-              type="button"
-              onClick={() => setShowEcosystem(!showEcosystem)}
-              className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 transition-colors"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>Apps</span>
-              {showEcosystem ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
+            <div className="flex items-center gap-2">
+              <a
+                href="/master-admin"
+                className="text-[11px] text-purple-300 hover:text-white font-bold flex items-center gap-1 transition-colors px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/40"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                <span>Painel Master</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowEcosystem(!showEcosystem)}
+                className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 transition-colors"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>Apps</span>
+                {showEcosystem ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
+            </div>
           </div>
           <DialogTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400">
