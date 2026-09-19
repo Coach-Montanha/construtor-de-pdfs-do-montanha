@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Montanha PDF" },
+      { name: "apple-mobile-web-app-title", content: "Montanha PDF Studio" },
       { name: "application-name", content: "Montanha PDF Studio" },
       { property: "og:title", content: "Montanha PDF Studio" },
       { property: "og:description", content: "Diagramação Editorial & Publicações de Alto Nível com IA" },
@@ -127,7 +127,7 @@ function RootShell({ children }: { children: ReactNode }) {
             <div className="preloader-aura-ring-inner"></div>
             <img
               src="/icons/icon-512.png"
-              alt="Montanha Magazine Studio"
+              alt="Montanha PDF Studio"
               className="preloader-logo-img"
               width={104}
               height={104}
@@ -135,7 +135,7 @@ function RootShell({ children }: { children: ReactNode }) {
             />
           </div>
           <div className="preloader-title">MONTANHA</div>
-          <div className="preloader-subtitle">MAGAZINE STUDIO</div>
+          <div className="preloader-subtitle">PDF STUDIO</div>
           <div className="preloader-progress-track">
             <div className="preloader-progress-bar"></div>
           </div>
@@ -187,7 +187,7 @@ function RootComponent() {
         navigator.serviceWorker
           .register("/sw.js")
           .then((reg) => {
-            console.log("Montanha Magazine PWA Service Worker registrado:", reg.scope);
+            console.log("Montanha PDF Studio PWA Service Worker registrado:", reg.scope);
           })
           .catch((err) => {
             console.warn("Falha ao registrar Service Worker:", err);
