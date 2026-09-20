@@ -73,7 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onSuccess,
   initialTab = "login",
 }) => {
-  const [activeTab, setActiveTab] = useState<"login" | "register">(initialTab);
+  const [activeTab, setActiveTab] = useState<"login" | "register" | "reset">(initialTab);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showEcosystem, setShowEcosystem] = useState(false);
@@ -100,6 +100,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleClose = () => {
     resetForm();
     onClose();
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    if (!loginEmail) {
+      setErrorMessage("Informe seu e-mail.");
+      return;
+    }
+    const mx = await validateEmailMx(loginEmail);
+    if (!mx.valid) {
+      setErrorMessage(mx.reason || "E-mail inválido.");
+      return;
+    }
+    setSuccessMessage(`Instruções de redefinição de senha enviadas para ${loginEmail}!`);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -129,37 +144,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (res.user) onSuccess(res.user);
       handleClose();
     }, 600);
-  };
-
-  const handleQuickDemo = async () => {
-    setErrorMessage(null);
-    const demoEmail = "demo@montanhapdf.app";
-    const lockout = await checkAndLockGuestDemo(demoEmail);
-    if (lockout.locked && !lockout.allowed) {
-      setErrorMessage("Trava Anti-Abuso: O modo demonstração já foi utilizado no ecossistema.");
-      return;
-    }
-
-    const demoPass = "demo123";
-    setLoginEmail(demoEmail);
-    setLoginPassword(demoPass);
-    const res = loginUser(demoEmail, demoPass);
-    if (res.success && res.user) {
-      setSuccessMessage("Entrando no modo Demo Instantânea...");
-      setTimeout(() => {
-        onSuccess(res.user!);
-        handleClose();
-      }, 500);
-    } else {
-      const regRes = registerUser("Coach Montanha Demo", demoEmail, demoPass);
-      if (regRes.success && regRes.user) {
-        setSuccessMessage("Perfil Demo ativado!");
-        setTimeout(() => {
-          onSuccess(regRes.user!);
-          handleClose();
-        }, 500);
-      }
-    }
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -287,12 +271,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    const email = prompt("Informe seu e-mail cadastrado para redefinição de senha:");
-                    if (email) {
-                      setSuccessMessage(`Instruções de redefinição de senha enviadas para ${email}!`);
-                    }
+                    setErrorMessage(null);
+                    setSuccessMessage(null);
+                    setActiveTab("reset");
                   }}
-                  className="text-xs text-amber-400 hover:underline font-medium"
+                  className="text-xs text-amber-400 hover:underline font-medium cursor-pointer"
                 >
                   Esqueci a senha
                 </button>
@@ -315,6 +298,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <LogIn className="w-4 h-4" />
               <span>Acessar Conta</span>
             </Button>
+          </form>
+        )}
+
+        {/* Reset Password Form */}
+        {activeTab === "reset" && (
+          <form onSubmit={handleResetPassword} className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                <span>E-mail para Recuperação</span>
+              </Label>
+              <Input
+                type="email"
+                required
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="seu.email@exemplo.com"
+                className="bg-slate-900/90 border-slate-800 text-slate-100 placeholder:text-slate-500 text-xs rounded-xl focus:border-amber-500 focus:ring-amber-500/20"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full h-10 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Enviar Instruções de Reset</span>
+            </Button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("login")}
+              className="w-full text-center text-xs text-slate-400 hover:text-white transition cursor-pointer"
+            >
+              ← Voltar para o login
+            </button>
           </form>
         )}
 
