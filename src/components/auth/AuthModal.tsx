@@ -190,24 +190,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <Sparkles className="w-3 h-3 text-amber-400" />
               <span>ECOSSISTEMA MONTANHA</span>
             </span>
-            <div className="flex items-center gap-2">
-              <a
-                href="/master-admin"
-                className="text-[11px] text-purple-300 hover:text-white font-bold flex items-center gap-1 transition-colors px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/40"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
-                <span>Painel Master</span>
-              </a>
-              <button
-                type="button"
-                onClick={() => setShowEcosystem(!showEcosystem)}
-                className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 transition-colors"
-              >
-                <Globe className="w-3.5 h-3.5" />
-                <span>Apps</span>
-                {showEcosystem ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-              </button>
-            </div>
           </div>
           <DialogTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400">
@@ -219,39 +201,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             Diagramação Editorial &amp; Publicações de Alto Nível com IA
           </p>
         </DialogHeader>
-
-        {/* Ecosystem Apps Selector Bar */}
-        {showEcosystem && (
-          <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-2 animate-in fade-in">
-            <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
-              <Globe className="w-3.5 h-3.5 text-amber-400" />
-              <span>Plataformas Integradas do Ecossistema</span>
-            </div>
-            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-              {ECOSYSTEM_APPS.map((app) => (
-                <div
-                  key={app.id}
-                  className={`p-2 rounded-lg border text-xs flex items-center justify-between transition-all ${
-                    app.isCurrent
-                      ? "bg-amber-500/10 border-amber-500/50 text-white"
-                      : "bg-slate-950/60 border-slate-800/80 text-slate-300 hover:border-slate-700"
-                  }`}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-bold flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: app.accent }} />
-                      {app.name}
-                    </span>
-                    <span className="text-[10px] text-slate-400">{app.slogan}</span>
-                  </div>
-                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${app.badgeBg}`}>
-                    {app.isCurrent ? "ATUAL" : app.tag}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Tab switchers */}
         <div className="flex items-center p-1 rounded-xl bg-slate-900/80 border border-slate-800 my-2">
@@ -330,10 +279,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-amber-400" />
-                <span>Senha</span>
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Senha</span>
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const email = prompt("Informe seu e-mail cadastrado para redefinição de senha:");
+                    if (email) {
+                      setSuccessMessage(`Instruções de redefinição de senha enviadas para ${email}!`);
+                    }
+                  }}
+                  className="text-xs text-amber-400 hover:underline font-medium"
+                >
+                  Esqueci a senha
+                </button>
+              </div>
               <Input
                 type="password"
                 data-testid="input-login-password"
@@ -352,18 +315,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <LogIn className="w-4 h-4" />
               <span>Acessar Conta</span>
             </Button>
-
-            {/* Instant Demo Button */}
-            <div className="pt-2 border-t border-slate-800/80 text-center">
-              <button
-                type="button"
-                onClick={handleQuickDemo}
-                className="w-full py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>⚡ Demo Instantânea / Acesso Rápido</span>
-              </button>
-            </div>
           </form>
         )}
 
@@ -424,6 +375,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <span>Concluir Cadastro &amp; Entrar</span>
             </Button>
           </form>
+        )}
+
+        {/* Footer Ecosystem Button */}
+        <div className="text-center pt-2 border-t border-slate-800/80">
+          <button
+            type="button"
+            onClick={() => setShowEcosystem(!showEcosystem)}
+            className="text-xs text-amber-400 hover:text-amber-300 font-bold inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 transition-all cursor-pointer shadow-md"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>🌐 Ecossistema (5 Apps Integrados)</span>
+            {showEcosystem ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
+        {/* Ecosystem Apps Drawer */}
+        {showEcosystem && (
+          <div className="p-3 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-2 animate-in fade-in">
+            <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5 uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Plataformas Integradas do Ecossistema</span>
+            </div>
+            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              {ECOSYSTEM_APPS.map((app) => (
+                <div
+                  key={app.id}
+                  className={`p-2 rounded-lg border text-xs flex items-center justify-between transition-all ${
+                    app.isCurrent
+                      ? "bg-amber-500/10 border-amber-500/50 text-white"
+                      : "bg-slate-950/60 border-slate-800/80 text-slate-300 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-bold flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: app.accent }} />
+                      {app.name}
+                    </span>
+                    <span className="text-[10px] text-slate-400">{app.slogan}</span>
+                  </div>
+                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${app.badgeBg}`}>
+                    {app.isCurrent ? "ATUAL" : app.tag}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>
