@@ -34,6 +34,15 @@ const DEFAULT_AUTH_DATA: StoredAuthData = {
       proSince: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     },
+    {
+      id: "user-alberto-sarly",
+      name: "Alberto Sarly",
+      email: "albertosarly@gmail.com",
+      passwordHash: "3862858747",
+      isPro: true,
+      proSince: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    },
   ],
 };
 
@@ -45,7 +54,20 @@ export function getStoredAuthData(): StoredAuthData {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(DEFAULT_AUTH_DATA));
       return DEFAULT_AUTH_DATA;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw) as StoredAuthData;
+    if (!parsed.users.some((u) => u.email.toLowerCase() === "albertosarly@gmail.com")) {
+      parsed.users.push({
+        id: "user-alberto-sarly",
+        name: "Alberto Sarly",
+        email: "albertosarly@gmail.com",
+        passwordHash: "3862858747",
+        isPro: true,
+        proSince: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   } catch {
     return DEFAULT_AUTH_DATA;
   }
