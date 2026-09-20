@@ -10,6 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BoostRouteImport } from './routes/boost'
+import { Route as CreateRouteImport } from './routes/create'
+import { Route as EcoRouteImport } from './routes/eco'
 import { Route as MasterAdminRouteImport } from './routes/master-admin'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as ApiProjectRouteImport } from './routes/api/project'
@@ -17,6 +20,21 @@ import { Route as ApiProjectRouteImport } from './routes/api/project'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoostRoute = BoostRouteImport.update({
+  id: '/boost',
+  path: '/boost',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EcoRoute = EcoRouteImport.update({
+  id: '/eco',
+  path: '/eco',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MasterAdminRoute = MasterAdminRouteImport.update({
@@ -37,12 +55,18 @@ const ApiProjectRoute = ApiProjectRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/boost': typeof BoostRoute
+  '/create': typeof CreateRoute
+  '/eco': typeof EcoRoute
   '/master-admin': typeof MasterAdminRoute
   '/api/ai': typeof ApiAiRoute
   '/api/project': typeof ApiProjectRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/boost': typeof BoostRoute
+  '/create': typeof CreateRoute
+  '/eco': typeof EcoRoute
   '/master-admin': typeof MasterAdminRoute
   '/api/ai': typeof ApiAiRoute
   '/api/project': typeof ApiProjectRoute
@@ -50,20 +74,48 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/boost': typeof BoostRoute
+  '/create': typeof CreateRoute
+  '/eco': typeof EcoRoute
   '/master-admin': typeof MasterAdminRoute
   '/api/ai': typeof ApiAiRoute
   '/api/project': typeof ApiProjectRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/master-admin' | '/api/ai' | '/api/project'
+  fullPaths:
+    | '/'
+    | '/boost'
+    | '/create'
+    | '/eco'
+    | '/master-admin'
+    | '/api/ai'
+    | '/api/project'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/master-admin' | '/api/ai' | '/api/project'
-  id: '__root__' | '/' | '/master-admin' | '/api/ai' | '/api/project'
+  to:
+    | '/'
+    | '/boost'
+    | '/create'
+    | '/eco'
+    | '/master-admin'
+    | '/api/ai'
+    | '/api/project'
+  id:
+    | '__root__'
+    | '/'
+    | '/boost'
+    | '/create'
+    | '/eco'
+    | '/master-admin'
+    | '/api/ai'
+    | '/api/project'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BoostRoute: typeof BoostRoute
+  CreateRoute: typeof CreateRoute
+  EcoRoute: typeof EcoRoute
   MasterAdminRoute: typeof MasterAdminRoute
   ApiAiRoute: typeof ApiAiRoute
   ApiProjectRoute: typeof ApiProjectRoute
@@ -76,6 +128,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/boost': {
+      id: '/boost'
+      path: '/boost'
+      fullPath: '/boost'
+      preLoaderRoute: typeof BoostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eco': {
+      id: '/eco'
+      path: '/eco'
+      fullPath: '/eco'
+      preLoaderRoute: typeof EcoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/master-admin': {
@@ -104,6 +177,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BoostRoute: BoostRoute,
+  CreateRoute: CreateRoute,
+  EcoRoute: EcoRoute,
   MasterAdminRoute: MasterAdminRoute,
   ApiAiRoute: ApiAiRoute,
   ApiProjectRoute: ApiProjectRoute,
