@@ -1,1 +1,0 @@
-import{t as e}from"./routes-BTAFPs2A.js";export default e();
