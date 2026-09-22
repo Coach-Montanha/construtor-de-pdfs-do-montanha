@@ -17,6 +17,7 @@ interface AuthModalProps {
   onClose: () => void;
   onSuccess: (user: UserProfile) => void;
   initialTab?: "login" | "register";
+  canClose?: boolean;
 }
 
 const ECOSYSTEM_APPS = [
@@ -72,6 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onSuccess,
   initialTab = "login",
+  canClose = true,
 }) => {
   const [activeTab, setActiveTab] = useState<"login" | "register" | "reset">(initialTab);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -97,7 +99,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setRegisterPassword("");
   };
 
-  const handleClose = () => {
+  const handleClose = (force: boolean = false) => {
+    if (!canClose && !force) return;
     resetForm();
     onClose();
   };
@@ -121,6 +124,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     setErrorMessage(null);
 
+    if (!/^\d{10}$/.test(loginPassword)) {
+      setErrorMessage("A senha deve conter exatamente 10 dígitos numéricos.");
+      return;
+    }
+
     const mx = await validateEmailMx(loginEmail);
     if (!mx.valid) {
       setErrorMessage(mx.reason || "E-mail inválido.");
@@ -142,13 +150,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setSuccessMessage("Login realizado com sucesso!");
     setTimeout(() => {
       if (res.user) onSuccess(res.user);
-      handleClose();
+      handleClose(true);
     }, 600);
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    if (!/^\d{10}$/.test(registerPassword)) {
+      setErrorMessage("A senha deve conter exatamente 10 dígitos numéricos.");
+      return;
+    }
     const res = registerUser(registerName, registerEmail, registerPassword);
     if (!res.success) {
       setErrorMessage(res.error || "Falha no cadastro.");
@@ -158,15 +170,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setSuccessMessage("Cadastro realizado com sucesso!");
     setTimeout(() => {
       if (res.user) onSuccess(res.user);
-      handleClose();
+      handleClose(true);
     }, 600);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent
         data-testid="auth-modal"
-        className="max-w-md p-6 font-sans bg-slate-950/95 text-slate-100 border border-amber-500/40 shadow-[0_0_50px_rgba(245,158,11,0.2)] backdrop-blur-2xl rounded-2xl"
+        className={`max-w-md p-6 font-sans bg-slate-950/95 text-slate-100 border border-amber-500/40 shadow-[0_0_50px_rgba(245,158,11,0.2)] backdrop-blur-2xl rounded-2xl ${
+          !canClose ? "[&>button]:hidden" : ""
+        }`}
       >
         <DialogHeader className="border-b border-slate-800/80 pb-4">
           <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -268,25 +282,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
                   <span>Senha</span>
                 </Label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setErrorMessage(null);
-                    setSuccessMessage(null);
-                    setActiveTab("reset");
-                  }}
-                  className="text-xs text-amber-400 hover:underline font-medium cursor-pointer"
-                >
-                  Esqueci a senha
-                </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">10 números</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setSuccessMessage(null);
+                      setActiveTab("reset");
+                    }}
+                    className="text-xs text-amber-400 hover:underline font-medium cursor-pointer"
+                  >
+                    Esqueci a senha
+                  </button>
+                </div>
               </div>
               <Input
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={10}
                 data-testid="input-login-password"
                 value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••"
-                className="bg-slate-900/90 border-slate-800 text-slate-100 placeholder:text-slate-500 text-xs rounded-xl focus:border-amber-500 focus:ring-amber-500/20"
+                onChange={(e) => setLoginPassword(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="•••••••••• (10 dígitos)"
+                className="bg-slate-900/90 border-slate-800 text-slate-100 placeholder:text-slate-500 text-xs font-mono tracking-widest rounded-xl focus:border-amber-500 focus:ring-amber-500/20"
               />
             </div>
 
@@ -369,17 +389,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-amber-400" />
-                <span>Senha (Mínimo 6 caracteres)</span>
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Senha (10 dígitos numéricos)</span>
+                </Label>
+                <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">10 números</span>
+              </div>
               <Input
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={10}
                 data-testid="input-register-password"
                 value={registerPassword}
-                onChange={(e) => setRegisterPassword(e.target.value)}
-                placeholder="••••••••"
-                className="bg-slate-900/90 border-slate-800 text-slate-100 placeholder:text-slate-500 text-xs rounded-xl focus:border-amber-500 focus:ring-amber-500/20"
+                onChange={(e) => setRegisterPassword(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="•••••••••• (10 dígitos)"
+                className="bg-slate-900/90 border-slate-800 text-slate-100 placeholder:text-slate-500 text-xs font-mono tracking-widest rounded-xl focus:border-amber-500 focus:ring-amber-500/20"
               />
             </div>
 

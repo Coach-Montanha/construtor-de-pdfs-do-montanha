@@ -1132,9 +1132,17 @@ function Index() {
 
       {/* Modals & Dialogs */}
       <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={(u) => setCurrentUser(u)}
+        isOpen={isAuthModalOpen || !currentUser}
+        canClose={Boolean(currentUser)}
+        onClose={() => {
+          if (currentUser) {
+            setIsAuthModalOpen(false);
+          }
+        }}
+        onSuccess={(u) => {
+          setCurrentUser(u);
+          setIsAuthModalOpen(false);
+        }}
       />
 
       <SubscriptionModal

@@ -21,7 +21,7 @@ const DEFAULT_AUTH_DATA: StoredAuthData = {
       id: "demo-user-1",
       name: "Coach Montanha Demo",
       email: "demo@montanha.com",
-      passwordHash: "senha123",
+      passwordHash: "1234567890",
       isPro: false,
       createdAt: new Date().toISOString(),
     },
@@ -29,7 +29,7 @@ const DEFAULT_AUTH_DATA: StoredAuthData = {
       id: "demo-pro-user",
       name: "Assinante PRO",
       email: "pro@montanha.com",
-      passwordHash: "senha123",
+      passwordHash: "1234567890",
       isPro: true,
       proSince: new Date().toISOString(),
       createdAt: new Date().toISOString(),
@@ -95,8 +95,8 @@ export function registerUser(name: string, email: string, password: string): { s
   if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
     return { success: false, error: "Informe um e-mail válido." };
   }
-  if (!password || password.length < 6) {
-    return { success: false, error: "A senha deve conter no mínimo 6 caracteres." };
+  if (!password || !/^\d{10}$/.test(password)) {
+    return { success: false, error: "A senha deve conter exatamente 10 dígitos numéricos (apenas números)." };
   }
 
   const existing = data.users.find((u) => u.email.toLowerCase() === normalizedEmail);
@@ -131,7 +131,9 @@ export function loginUser(email: string, password: string): { success: boolean; 
   const normalizedEmail = email.trim().toLowerCase();
 
   if (!normalizedEmail) return { success: false, error: "Informe o seu e-mail." };
-  if (!password) return { success: false, error: "Informe a sua senha." };
+  if (!password || !/^\d{10}$/.test(password)) {
+    return { success: false, error: "A senha deve conter exatamente 10 dígitos numéricos." };
+  }
 
   const matched = data.users.find((u) => u.email.toLowerCase() === normalizedEmail);
   if (!matched) {
