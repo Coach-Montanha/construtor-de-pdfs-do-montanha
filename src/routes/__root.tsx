@@ -258,7 +258,7 @@ function RootShell({ children }: { children: ReactNode }) {
             `,
           }}
         />
-        <div id="app-preloader" aria-label="Carregando Montanha PDF Studio...">
+        <div id="app-preloader" aria-label="Carregando Montanha PDF Studio..." suppressHydrationWarning>
           <div className="preloader-emblem-wrap">
             <div className="preloader-aura-ring"></div>
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

@@ -1,9 +1,10 @@
-import { test, expect } from "./fixtures/auth.fixture";
+import { test, expect, waitForHydration } from "./fixtures/auth.fixture";
 
 test.describe("Jornadas de Autenticação (Cadastro, Login, Logout)", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to homepage without pre-seeded user
     await page.goto("/");
+    await waitForHydration(page);
   });
 
   test.describe("1. Cadastro de Usuário (Sign Up)", () => {

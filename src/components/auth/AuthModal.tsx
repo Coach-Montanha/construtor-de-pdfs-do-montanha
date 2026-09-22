@@ -246,7 +246,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Login Tab Form */}
         {activeTab === "login" && (
-          <form onSubmit={handleLogin} className="space-y-4 pt-1">
+          <form onSubmit={handleLogin} noValidate className="space-y-3.5 pt-1">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-amber-400" />
@@ -303,7 +303,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Reset Password Form */}
         {activeTab === "reset" && (
-          <form onSubmit={handleResetPassword} className="space-y-4 pt-1">
+          <form onSubmit={handleResetPassword} noValidate className="space-y-4 pt-1">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-amber-400" />
@@ -337,7 +337,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Register Tab Form */}
         {activeTab === "register" && (
-          <form onSubmit={handleRegister} className="space-y-3.5 pt-1">
+          <form onSubmit={handleRegister} noValidate className="space-y-3.5 pt-1">
             <div className="space-y-1">
               <Label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-amber-400" />

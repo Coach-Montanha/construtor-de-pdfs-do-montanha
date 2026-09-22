@@ -229,4 +229,3 @@ function BoostPage() {
   );
 }
 
-export default BoostPage;

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import React, { useState, useEffect, useRef } from "react";
 import { MagazineProject, Article, MagazineLayoutMode } from "../types/magazine";
 import { INITIAL_MAGAZINE_PROJECT, MAGAZINE_THEMES } from "../lib/sample-data";
@@ -50,6 +50,10 @@ import {
   Copy,
   Layers,
   Search,
+  LogIn,
+  LogOut,
+  Globe,
+  User,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import {
@@ -138,11 +142,12 @@ function Index() {
   }, []);
 
   // User Auth & PRO Subscription State
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
+    setCurrentUser(getCurrentUser());
     const handleAuthSync = () => {
       setCurrentUser(getCurrentUser());
     };
@@ -540,6 +545,71 @@ function Index() {
             <Printer className="w-3.5 h-3.5" />
             <span>Exportar PDF</span>
           </Button>
+
+          {/* User Auth Profile / Login Trigger */}
+          {currentUser ? (
+            <div className="flex items-center gap-1.5 sm:gap-2 pl-2 border-l border-current/20">
+              <div
+                data-testid="user-profile-badge"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/5 border border-current/15 text-xs font-bold"
+                title={`Logado como ${currentUser.name} (${currentUser.email})`}
+              >
+                <div className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-black text-[10px]">
+                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
+                </div>
+                <span className="hidden sm:inline max-w-[120px] truncate">{currentUser.name}</span>
+              </div>
+
+              {currentUser.isPro ? (
+                <span
+                  data-testid="badge-pro-status"
+                  className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] tracking-wider uppercase border border-amber-600 shadow-xs"
+                >
+                  PRO
+                </span>
+              ) : (
+                <Button
+                  size="sm"
+                  data-testid="btn-upgrade-pro"
+                  onClick={() => setIsSubscriptionModalOpen(true)}
+                  className="h-8 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs px-2.5 rounded-lg shadow-sm cursor-pointer"
+                  title="Upgrade para o plano PRO"
+                >
+                  <Sparkles className="w-3.5 h-3.5 mr-1" />
+                  <span className="hidden sm:inline">Assinar PRO</span>
+                  <span className="sm:hidden">PRO</span>
+                </Button>
+              )}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                data-testid="btn-logout"
+                onClick={() => {
+                  logoutUser();
+                  setCurrentUser(null);
+                }}
+                className="h-8 px-2 text-xs font-bold text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg cursor-pointer"
+                title="Desconectar da conta"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden md:inline ml-1">Sair</span>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 pl-2 border-l border-current/20">
+              <Button
+                size="sm"
+                data-testid="btn-auth-trigger"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="h-8 sm:h-9 bg-slate-900 hover:bg-slate-800 text-amber-400 border border-amber-500/50 font-bold text-xs px-3 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+                title="Fazer Login ou Cadastrar no Montanha PDF Studio"
+              >
+                <LogIn className="w-3.5 h-3.5 text-amber-400" />
+                <span>Entrar</span>
+              </Button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -648,6 +718,22 @@ function Index() {
 
         {/* Right utility items */}
         <div className="hidden lg:flex items-center gap-3 text-xs opacity-80">
+          <Link
+            to="/create"
+            className="flex items-center gap-1 font-bold text-amber-500 hover:text-amber-400 transition-colors"
+            title="Abrir Estúdio Criador com IA"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Criador IA</span>
+          </Link>
+          <Link
+            to="/eco"
+            className="flex items-center gap-1 font-bold text-purple-400 hover:text-purple-300 transition-colors"
+            title="Central do Ecossistema Montanha"
+          >
+            <Globe className="w-3.5 h-3.5 text-purple-400" />
+            <span>Ecossistema</span>
+          </Link>
           <button
             onClick={() => setIsCloudSyncOpen(true)}
             className="flex items-center gap-1 font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"

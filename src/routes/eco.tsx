@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import {
   Sparkles,
@@ -15,9 +15,14 @@ import {
   Globe,
   MessageSquare,
   FileDown,
-  Printer
+  Printer,
+  UserCheck,
+  LogIn,
+  KeyRound,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getCurrentUser, UserProfile } from '@/lib/auth-state';
 
 export const Route = createFileRoute('/eco')({
   component: EcoPage,
@@ -82,8 +87,66 @@ const ECOSYSTEM_APPS = [
 ];
 
 function EcoPage() {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => getCurrentUser());
+
+  useEffect(() => {
+    const handleAuthSync = () => {
+      setCurrentUser(getCurrentUser());
+    };
+    window.addEventListener('montanha-auth-changed', handleAuthSync);
+    return () => window.removeEventListener('montanha-auth-changed', handleAuthSync);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8 space-y-8 max-w-7xl mx-auto font-sans">
+      {/* Ecosystem Session & Access Bar */}
+      <div className="rounded-2xl p-4 border border-slate-800 bg-slate-900/80 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-md">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-black">
+            <Globe className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-white text-sm">Central de Acesso do Ecossistema</span>
+              <span className="font-mono text-[9px] uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                5 Apps Sincronizados
+              </span>
+            </div>
+            {currentUser ? (
+              <p className="text-slate-400 text-[11px] mt-0.5">
+                Autenticado como <strong className="text-amber-300">{currentUser.name}</strong> ({currentUser.email}) • {currentUser.isPro ? 'Plano PRO Ativo' : 'Plano Padrão'}
+              </p>
+            ) : (
+              <p className="text-slate-400 text-[11px] mt-0.5">
+                Sessão em modo visitante. Conecte-se para validar suas credenciais cruzadas.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {currentUser ? (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center text-emerald-400 font-bold text-[11px] bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
+                <UserCheck className="w-3.5 h-3.5 mr-1" />
+                Acesso Validado
+              </span>
+              <Button asChild variant="outline" size="sm" className="h-8 text-xs border-slate-700 hover:border-amber-500/50">
+                <Link to="/auth" search={{ next: '/eco' }}>
+                  Alternar Conta
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <Button asChild size="sm" className="h-8 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider rounded-lg shadow-sm">
+              <Link to="/auth" search={{ next: '/eco' }}>
+                <LogIn className="w-3.5 h-3.5 mr-1.5" /> Fazer Login / Validar Acesso
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 p-6 md:p-10 shadow-2xl backdrop-blur-xl">
         <div className="relative z-10 space-y-3">
@@ -107,10 +170,16 @@ function EcoPage() {
           </p>
 
           <div className="flex flex-wrap gap-3 pt-2">
+            <Button asChild className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-lg">
+              <Link to="/">
+                <FileText className="w-4 h-4 mr-2" />
+                Estúdio Principal
+              </Link>
+            </Button>
             <Button asChild className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold shadow-lg">
               <Link to="/create">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Estúdio de Diagramação
+                Criador com IA (/create)
               </Link>
             </Button>
             <Button asChild variant="outline" className="border-amber-500/40 hover:bg-amber-500/10 text-amber-300 font-bold">
@@ -217,7 +286,7 @@ function EcoPage() {
 
                 <div className="pt-2">
                   {app.isLocal ? (
-                    <Button asChild className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold">
+                    <Button asChild className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold cursor-pointer">
                       <Link to={app.url}>
                         Acessar Aplicativo <ArrowRight className="w-4 h-4 ml-1.5" />
                       </Link>
@@ -226,7 +295,7 @@ function EcoPage() {
                     <Button
                       asChild
                       variant="outline"
-                      className="w-full border-slate-700 hover:border-amber-500/50 hover:bg-amber-500/10 font-bold"
+                      className="w-full border-slate-700 hover:border-amber-500/50 hover:bg-amber-500/10 font-bold cursor-pointer"
                     >
                       <a href={app.url} target="_blank" rel="noopener noreferrer">
                         Abrir Módulo <ExternalLink className="w-4 h-4 ml-1.5" />
@@ -242,5 +311,3 @@ function EcoPage() {
     </div>
   );
 }
-
-export default EcoPage;

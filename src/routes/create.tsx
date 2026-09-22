@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   Sparkles,
@@ -8,17 +8,20 @@ import {
   ArrowLeft,
   ArrowRight,
   Plus,
-  Printer,
+  Lock,
+  ShieldCheck,
+  UserCheck,
+  AlertCircle,
+  LogIn,
+  KeyRound,
   CheckCircle2,
-  Copy,
-  BookOpen,
-  Award,
-  DollarSign,
-  Flame
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getCurrentUser, UserProfile, registerUser } from '@/lib/auth-state';
+import { checkAndLockGuestDemo, validateEmailMx, checkProjectAccess } from '@/services/ecosystem-auth-service';
 
 export const Route = createFileRoute('/create')({
   component: CreateStudioPage,
@@ -61,16 +64,68 @@ const DOCUMENT_TEMPLATES = [
 
 function CreateStudioPage() {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => getCurrentUser());
   const [docTitle, setDocTitle] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('ficha-treino');
+
+  // Demo Guest Validation State
+  const [demoEmail, setDemoEmail] = useState('');
+  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
+  const [demoSuccess, setDemoSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleAuthSync = () => {
+      setCurrentUser(getCurrentUser());
+    };
+    window.addEventListener('montanha-auth-changed', handleAuthSync);
+    return () => window.removeEventListener('montanha-auth-changed', handleAuthSync);
+  }, []);
 
   const handleCreateDocument = (e: React.FormEvent) => {
     e.preventDefault();
     navigate({ to: '/' });
   };
 
+  const handleRequestDemoAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDemoError(null);
+    setDemoSuccess(null);
+    setDemoLoading(true);
+
+    try {
+      const clean = demoEmail.trim().toLowerCase();
+      const mx = await validateEmailMx(clean);
+      if (!mx.valid) {
+        setDemoError(mx.reason || 'Informe um e-mail válido.');
+        setDemoLoading(false);
+        return;
+      }
+
+      const lockRes = await checkAndLockGuestDemo(clean);
+      if (!lockRes.allowed) {
+        setDemoError(lockRes.message);
+        setDemoLoading(false);
+        return;
+      }
+
+      // Automatically register or login as demo guest
+      const registerRes = registerUser('Visitante Degustação', clean, 'demo123');
+      if (registerRes.success && registerRes.user) {
+        setCurrentUser(registerRes.user);
+        setDemoSuccess('Acesso demonstração ativado com sucesso! Você já pode criar seu documento.');
+      } else {
+        setDemoError(registerRes.error || 'Não foi possível gerar acesso demo. Faça login.');
+      }
+    } catch (err) {
+      setDemoError('Erro ao validar acesso demonstração.');
+    } finally {
+      setDemoLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8 space-y-8 max-w-7xl mx-auto font-sans">
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/40 p-6 md:p-10 shadow-2xl backdrop-blur-xl">
         <div className="relative z-10 space-y-3">
@@ -83,6 +138,12 @@ function CreateStudioPage() {
               <Layout className="w-3.5 h-3.5 mr-1.5 text-purple-400" />
               Padrão Editorial Suíço
             </span>
+            {currentUser && (
+              <span className="inline-flex items-center rounded-full border border-emerald-500/50 bg-emerald-500/10 text-emerald-300 text-xs font-bold uppercase tracking-wider px-3 py-1">
+                <UserCheck className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+                Acesso Validado ({currentUser.name})
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -115,50 +176,132 @@ function CreateStudioPage() {
         </div>
       </div>
 
-      {/* Creation Form */}
-      <div className="rounded-2xl p-6 border border-slate-800 bg-slate-900/70 backdrop-blur-md space-y-4">
-        <div className="border-b border-slate-800 pb-3">
-          <h3 className="font-extrabold text-base text-white flex items-center gap-2">
-            <Plus className="w-5 h-5 text-amber-400" />
-            Criar Novo Documento Editorial
-          </h3>
-          <p className="text-xs text-muted-foreground">Escolha o modelo de base e configure o título da publicação</p>
+      {/* Access Validation Gate: Show if user is NOT authenticated */}
+      {!currentUser ? (
+        <div className="rounded-3xl p-6 md:p-8 border border-amber-500/40 bg-slate-900/90 backdrop-blur-2xl shadow-2xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400">
+                <Lock className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[10px] font-mono uppercase font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  Acesso Restrito
+                </span>
+                <h2 className="text-lg md:text-xl font-black text-white mt-1">
+                  Validação de Acesso Obrigatória para Criação com IA
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Para gerar novas publicações editoriais e exportar vetores de alta fidelidade, valide sua conta do Ecossistema Montanha.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button asChild className="h-10 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer">
+                <Link to="/auth" search={{ next: '/create' }}>
+                  <LogIn className="w-4 h-4 mr-1.5" /> Fazer Login / Cadastrar
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Quick Demo Option with Anti-Abuse Lockout */}
+          <div className="rounded-2xl p-5 bg-slate-950/60 border border-slate-800 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
+              <Clock className="w-4 h-4 text-amber-400" />
+              <span>Deseja testar sem senha? Degustação Gratuita (Demo):</span>
+            </div>
+
+            {demoError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{demoError}</span>
+              </div>
+            )}
+
+            {demoSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{demoSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleRequestDemoAccess} className="flex flex-col sm:flex-row gap-3">
+              <Input
+                type="email"
+                required
+                value={demoEmail}
+                onChange={(e) => setDemoEmail(e.target.value)}
+                placeholder="Informe seu e-mail profissional para liberar a demo..."
+                className="bg-slate-900 border-slate-800 text-xs flex-1 rounded-xl"
+              />
+              <Button
+                type="submit"
+                disabled={demoLoading}
+                variant="outline"
+                className="border-amber-500/40 hover:bg-amber-500/10 text-amber-300 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                {demoLoading ? 'Validando...' : 'Liberar Degustação Gratuita'}
+              </Button>
+            </form>
+            <p className="text-[10px] text-slate-500">
+              * O acesso de degustação é verificado centralmente contra abusos e domínios descartáveis.
+            </p>
+          </div>
         </div>
-
-        <form onSubmit={handleCreateDocument} className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="docTitle" className="text-xs font-bold">Título do Documento</Label>
-            <Input
-              id="docTitle"
-              placeholder="Ex: Guia de Periodização para Hipertrofia e Endurance 2026"
-              value={docTitle}
-              onChange={(e) => setDocTitle(e.target.value)}
-              className="bg-slate-900 border-slate-800"
-              required
-            />
+      ) : (
+        /* Authenticated Creation Form */
+        <div className="rounded-2xl p-6 border border-slate-800 bg-slate-900/70 backdrop-blur-md space-y-4">
+          <div className="border-b border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="font-extrabold text-base text-white flex items-center gap-2">
+                <Plus className="w-5 h-5 text-amber-400" />
+                Criar Novo Documento Editorial
+              </h3>
+              <p className="text-xs text-muted-foreground">Escolha o modelo de base e configure o título da publicação</p>
+            </div>
+            <div className="text-xs font-mono text-emerald-400 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-xl">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Sessão Ativa: {currentUser.email}</span>
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="tpl" className="text-xs font-bold">Modelo Pré-Configurado</Label>
-            <select
-              id="tpl"
-              value={selectedTemplate}
-              onChange={(e) => setSelectedTemplate(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-500 font-bold"
-            >
-              {DOCUMENT_TEMPLATES.map((t) => (
-                <option key={t.id} value={t.id}>{t.title}</option>
-              ))}
-            </select>
-          </div>
+          <form onSubmit={handleCreateDocument} className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="docTitle" className="text-xs font-bold">Título do Documento</Label>
+              <Input
+                id="docTitle"
+                placeholder="Ex: Guia de Periodização para Hipertrofia e Endurance 2026"
+                value={docTitle}
+                onChange={(e) => setDocTitle(e.target.value)}
+                className="bg-slate-900 border-slate-800"
+                required
+              />
+            </div>
 
-          <div className="sm:col-span-3 flex justify-end">
-            <Button type="submit" className="bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-90 text-white font-bold">
-              <Sparkles className="w-4 h-4 mr-1.5" /> Abrir no Diagramador Visual
-            </Button>
-          </div>
-        </form>
-      </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tpl" className="text-xs font-bold">Modelo Pré-Configurado</Label>
+              <select
+                id="tpl"
+                value={selectedTemplate}
+                onChange={(e) => setSelectedTemplate(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-500 font-bold"
+              >
+                {DOCUMENT_TEMPLATES.map((t) => (
+                  <option key={t.id} value={t.id}>{t.title}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sm:col-span-3 flex justify-end">
+              <Button type="submit" className="bg-gradient-to-r from-amber-600 to-orange-600 hover:opacity-90 text-white font-bold cursor-pointer">
+                <Sparkles className="w-4 h-4 mr-1.5" /> Abrir no Diagramador Visual
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Templates Showcase Grid */}
       <div className="space-y-4">
@@ -192,7 +335,7 @@ function CreateStudioPage() {
               </div>
 
               <div className="pt-2">
-                <Button asChild className="w-full bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:bg-amber-500/10 text-white text-xs font-bold">
+                <Button asChild className="w-full bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:bg-amber-500/10 text-white text-xs font-bold cursor-pointer">
                   <Link to="/">
                     <FileText className="w-3.5 h-3.5 mr-1.5 text-amber-400" /> Usar este Modelo
                   </Link>
@@ -205,5 +348,3 @@ function CreateStudioPage() {
     </div>
   );
 }
-
-export default CreateStudioPage;
