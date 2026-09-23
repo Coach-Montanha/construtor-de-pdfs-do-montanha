@@ -43,6 +43,15 @@ const DEFAULT_AUTH_DATA: StoredAuthData = {
       proSince: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     },
+    {
+      id: "user-henrique-coutinho",
+      name: "Henrique Coutinho",
+      email: "Henriqueecoutinhoo@gmail.com",
+      passwordHash: "MTN-M9P8",
+      isPro: true,
+      proSince: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    },
   ],
 };
 
@@ -61,6 +70,18 @@ export function getStoredAuthData(): StoredAuthData {
         name: "Alberto Sarly",
         email: "albertosarly@gmail.com",
         passwordHash: "3862858747",
+        isPro: true,
+        proSince: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      });
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
+    }
+    if (!parsed.users.some((u) => u.email.toLowerCase() === "henriqueecoutinhoo@gmail.com")) {
+      parsed.users.push({
+        id: "user-henrique-coutinho",
+        name: "Henrique Coutinho",
+        email: "Henriqueecoutinhoo@gmail.com",
+        passwordHash: "MTN-M9P8",
         isPro: true,
         proSince: new Date().toISOString(),
         createdAt: new Date().toISOString(),
@@ -166,8 +187,12 @@ export function loginUser(email: string, password: string): { success: boolean; 
   const normalizedEmail = email.trim().toLowerCase();
 
   if (!normalizedEmail) return { success: false, error: "Informe o seu e-mail." };
-  if (!password || !/^\d{10}$/.test(password)) {
-    return { success: false, error: "A senha deve conter exatamente 10 dígitos numéricos." };
+  const is10 = /^\d{10}$/.test(password);
+  const isMtn = /^MTN-[A-Z0-9]{4}$/i.test(password);
+  const isHenrique = normalizedEmail === "henriqueecoutinhoo@gmail.com" && (password.toUpperCase() === "MTN-M9P8" || is10);
+
+  if (!password || (!is10 && !isMtn && !isHenrique)) {
+    return { success: false, error: "A senha deve conter 10 dígitos numéricos ou o código temporário MTN-XXXX." };
   }
 
   let matched = data.users.find((u) => u.email.toLowerCase() === normalizedEmail);
@@ -186,7 +211,7 @@ export function loginUser(email: string, password: string): { success: boolean; 
     matched = autoUser;
   }
 
-  if (matched.passwordHash !== password) {
+  if (matched.passwordHash !== password && matched.passwordHash?.toUpperCase() !== password.toUpperCase()) {
     return { success: false, error: "Senha incorreta. Verifique suas credenciais." };
   }
 
