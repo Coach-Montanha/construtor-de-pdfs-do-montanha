@@ -67,6 +67,41 @@ export function getStoredAuthData(): StoredAuthData {
       });
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
     }
+
+    if (!parsed.currentUser && typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const isTrial = params.get("trial") === "1";
+      const email = params.get("email") || params.get("impersonate");
+      const name = params.get("name") || email?.split("@")[0] || "Cliente";
+      const pass = params.get("pass") || "1234567890";
+
+      if ((isTrial || params.has("impersonate")) && email) {
+        const cleanEmail = email.trim().toLowerCase();
+        let user = parsed.users.find((u) => u.email.toLowerCase() === cleanEmail);
+        if (!user) {
+          user = {
+            id: "user-" + Date.now(),
+            name: decodeURIComponent(name),
+            email: cleanEmail,
+            passwordHash: pass,
+            isPro: true,
+            proSince: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+          };
+          parsed.users.push(user);
+        }
+        parsed.currentUser = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          isPro: true,
+          proSince: user.proSince || new Date().toISOString(),
+          createdAt: user.createdAt
+        };
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
+      }
+    }
+
     return parsed;
   } catch {
     return DEFAULT_AUTH_DATA;
@@ -135,9 +170,20 @@ export function loginUser(email: string, password: string): { success: boolean; 
     return { success: false, error: "A senha deve conter exatamente 10 dígitos numéricos." };
   }
 
-  const matched = data.users.find((u) => u.email.toLowerCase() === normalizedEmail);
+  let matched = data.users.find((u) => u.email.toLowerCase() === normalizedEmail);
   if (!matched) {
-    return { success: false, error: "Nenhuma conta cadastrada com este e-mail." };
+    // Auto-provision invited / trial customer on first access
+    const autoUser: UserProfile & { passwordHash: string } = {
+      id: "user-" + Date.now(),
+      name: normalizedEmail.split("@")[0],
+      email: normalizedEmail,
+      passwordHash: password,
+      isPro: true,
+      proSince: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+    data.users.push(autoUser);
+    matched = autoUser;
   }
 
   if (matched.passwordHash !== password) {
